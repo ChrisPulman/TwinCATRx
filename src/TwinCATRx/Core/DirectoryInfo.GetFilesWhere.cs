@@ -1,3 +1,6 @@
+// Copyright (c) Chris Pulman. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
 using System;
 using System.IO;
 using System.Linq;
@@ -72,7 +75,7 @@ namespace CP.TwinCatRx.Core
         ///           }
         ///     </code>
         /// </example>
-        public static FileInfo[] GetFilesWhere(this DirectoryInfo @this, Func<FileInfo, bool> predicate) => Directory.EnumerateFiles(@this.FullName).Select(x => new FileInfo(x)).Where(predicate).ToArray();
+        public static FileInfo[] GetFilesWhere(this DirectoryInfo @this, Func<FileInfo, bool> predicate) => Directory.EnumerateFiles(@this?.FullName).Select(x => new FileInfo(x)).Where(predicate).ToArray();
 
         /// <summary>
         /// Returns an enumerable collection of file names that match a search pattern in a specified @this.
@@ -125,7 +128,7 @@ namespace CP.TwinCatRx.Core
         /// }
         /// </code>
         /// </example>
-        public static FileInfo[] GetFilesWhere(this DirectoryInfo @this, string searchPattern, Func<FileInfo, bool> predicate) => Directory.EnumerateFiles(@this.FullName, searchPattern).Select(x => new FileInfo(x)).Where(predicate).ToArray();
+        public static FileInfo[] GetFilesWhere(this DirectoryInfo @this, string searchPattern, Func<FileInfo, bool> predicate) => Directory.EnumerateFiles(@this?.FullName, searchPattern).Select(x => new FileInfo(x)).Where(predicate).ToArray();
 
         /// <summary>
         /// Returns an enumerable collection of file names that match a search pattern in a specified @this, and optionally searches subdirectories.
@@ -182,7 +185,7 @@ namespace CP.TwinCatRx.Core
         /// }
         /// </code>
         /// </example>
-        public static FileInfo[] GetFilesWhere(this DirectoryInfo @this, string searchPattern, SearchOption searchOption, Func<FileInfo, bool> predicate) => Directory.EnumerateFiles(@this.FullName, searchPattern, searchOption).Select(x => new FileInfo(x)).Where(predicate).ToArray();
+        public static FileInfo[] GetFilesWhere(this DirectoryInfo @this, string searchPattern, SearchOption searchOption, Func<FileInfo, bool> predicate) => Directory.EnumerateFiles(@this?.FullName, searchPattern, searchOption).Select(x => new FileInfo(x)).Where(predicate).ToArray();
 
         /// <summary>
         /// Returns an enumerable collection of file names that match a search pattern in a specified @this.
@@ -235,7 +238,15 @@ namespace CP.TwinCatRx.Core
         /// }
         /// </code>
         /// </example>
-        public static FileInfo[] GetFilesWhere(this DirectoryInfo @this, string[] searchPatterns, Func<FileInfo, bool> predicate) => searchPatterns.SelectMany(@this.GetFiles).Distinct().Where(predicate).ToArray();
+        public static FileInfo[] GetFilesWhere(this DirectoryInfo @this, string[] searchPatterns, Func<FileInfo, bool> predicate)
+        {
+            if (@this == null)
+            {
+                throw new ArgumentNullException(nameof(@this));
+            }
+
+            return searchPatterns.SelectMany(@this.GetFiles).Distinct().Where(predicate).ToArray();
+        }
 
         /// <summary>
         /// Returns an enumerable collection of file names that match a search pattern in a specified @this, and optionally searches subdirectories.

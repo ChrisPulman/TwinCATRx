@@ -11,9 +11,9 @@
     <Company>ChrisPulman</Company>
     <NoWarn>CS1591</NoWarn>
     <Nullable>enable</Nullable>
-    <PackageIcon>S7PlcRx.png</PackageIcon>
+    <PackageIcon>TwinCATRx.png</PackageIcon>
     <Configurations>Debug;Release;PreRelease</Configurations>
-    <PackageReleaseNotes>Compatability with Net 6 and netstandard2.0</PackageReleaseNotes>
+    <PackageReleaseNotes>Compatability with Net 6, Net 7 and netstandard2.0</PackageReleaseNotes>
     <PackageTags>Beckhoff;TwinCAT;rx;reactive;extensions;observable;LINQ;net;netstandard</PackageTags>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>

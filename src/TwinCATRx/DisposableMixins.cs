@@ -3,14 +3,7 @@
 
 namespace System.Reactive.Disposables
 {
-#if IsPublicClass
-
-    public static class DisposableMixins
-#else
-
     internal static class DisposableMixins
-
-#endif
     {
         /// <summary>
         /// Ensures the provided disposable is disposed with the specified <see cref="CompositeDisposable"/>.

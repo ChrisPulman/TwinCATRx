@@ -18,7 +18,7 @@ namespace CP.TwinCatRx.Core
     /// Code Generator.
     /// </summary>
     /// <seealso cref="ICodeGenerator"/>
-    public class CodeGenerator : ICodeGenerator
+    internal class CodeGenerator : ICodeGenerator
     {
         /// <summary>
         /// The type list.
@@ -285,7 +285,7 @@ namespace CP.TwinCatRx.Core
         /// </summary>
         /// <param name="selectedTN">The selected tn.</param>
         /// <param name="fileName">Name of the file.</param>
-        /// <param name="isTwinCat3">if set to <c>true</c> [is twin cat3].</param>
+        /// <param name="isTwinCat3">if set to <c>true</c> [is twincat3].</param>
         /// <param name="classNamespace">The class namespace.</param>
         /// <returns>
         /// Result as a Boolean.

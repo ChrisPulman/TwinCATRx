@@ -1,8 +1,10 @@
 ﻿// Copyright (c) Chris Pulman. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
+using System.Reflection;
 using TwinCAT.Ads;
 
 namespace CP.TwinCatRx
@@ -12,6 +14,134 @@ namespace CP.TwinCatRx
     /// </summary>
     public static class ObservableTwinCATExtensions
     {
+        /// <summary>
+        /// <para>Repeats the source observable sequence until it successfully terminates.</para>
+        /// <para>This is same as Retry().</para>
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <returns>A Value.</returns>
+        public static IObservable<TSource?> OnErrorRetry<TSource>(this IObservable<TSource?> source) => source.Retry();
+
+        /// <summary>
+        /// When caught exception, do onError action and repeat observable sequence.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TException">The type of the exception.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="onError">The on error.</param>
+        /// <returns>A Value.</returns>
+        public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError)
+            where TException : Exception => source.OnErrorRetry(onError, TimeSpan.Zero);
+
+        /// <summary>
+        /// When caught exception, do onError action and repeat observable sequence after delay time.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TException">The type of the exception.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="onError">The on error.</param>
+        /// <param name="delay">The delay.</param>
+        /// <returns>A Value.</returns>
+        public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, TimeSpan delay)
+where TException : Exception => source.OnErrorRetry(onError, int.MaxValue, delay);
+
+        /// <summary>
+        /// When caught exception, do onError action and repeat observable sequence during within retryCount.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TException">The type of the exception.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="onError">The on error.</param>
+        /// <param name="retryCount">The retry count.</param>
+        /// <returns>A Value.</returns>
+        public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, int retryCount)
+where TException : Exception => source.OnErrorRetry(onError, retryCount, TimeSpan.Zero);
+
+        /// <summary>
+        /// When caught exception, do onError action and repeat observable sequence after delay time
+        /// during within retryCount.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TException">The type of the exception.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="onError">The on error.</param>
+        /// <param name="retryCount">The retry count.</param>
+        /// <param name="delay">The delay.</param>
+        /// <returns>A Value.</returns>
+        public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, int retryCount, TimeSpan delay)
+where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, Scheduler.Default);
+
+        /// <summary>
+        /// When caught exception, do onError action and repeat observable sequence after delay
+        /// time(work on delayScheduler) during within retryCount.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the source.</typeparam>
+        /// <typeparam name="TException">The type of the exception.</typeparam>
+        /// <param name="source">The source.</param>
+        /// <param name="onError">The on error.</param>
+        /// <param name="retryCount">The retry count.</param>
+        /// <param name="delay">The delay.</param>
+        /// <param name="delayScheduler">The delay scheduler.</param>
+        /// <returns>A Value.</returns>
+        public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, int retryCount, TimeSpan delay, IScheduler delayScheduler)
+            where TException : Exception => Observable.Defer(() =>
+            {
+                var dueTime = (delay.Ticks < 0) ? TimeSpan.Zero : delay;
+                var empty = Observable.Empty<TSource?>();
+                var count = 0;
+                IObservable<TSource?>? self = null;
+                self = source.Catch((TException ex) =>
+                {
+                    onError(ex);
+
+                    return (++count < retryCount)
+                        ? (dueTime == TimeSpan.Zero)
+                            ? self!.SubscribeOn(Scheduler.CurrentThread)
+                            : empty.Delay(dueTime, delayScheduler).Concat(self!).SubscribeOn(Scheduler.CurrentThread)
+                        : Observable.Throw<TSource?>(ex);
+                });
+                return self;
+            });
+
+        /// <summary>
+        /// Loads the Assembly.
+        /// </summary>
+        /// <param name="dllFullName">Full name of the DLL.</param>
+        /// <returns>assembly loaded.</returns>
+        public static Assembly? AssemblyLoad(string dllFullName)
+        {
+            Assembly? assembly = null;
+            if (File.Exists(dllFullName))
+            {
+                using (var fs = File.Open(dllFullName, FileMode.Open, FileAccess.Read))
+                using (var ms = new MemoryStream())
+                {
+                    var buffer = new byte[1024];
+                    int read;
+                    while ((read = fs.Read(buffer, 0, 1024)) > 0)
+                    {
+                        ms.Write(buffer, 0, read);
+                    }
+
+                    assembly = Assembly.Load(ms.ToArray());
+                }
+
+                // Force clean up
+                GC.Collect();
+            }
+
+            return assembly;
+        }
+
+        /// <summary>
+        /// Gets the type.
+        /// </summary>
+        /// <param name="dllFullName">Full name of the DLL.</param>
+        /// <param name="engineType">Type of the engine.</param>
+        /// <returns>A type.</returns>
+        public static Type? GetType(this string dllFullName, string engineType) => AssemblyLoad(dllFullName)?.GetType(engineType);
+
         /// <summary>
         /// The ADS state changed observer.
         /// </summary>

@@ -7,7 +7,7 @@ namespace CP.TwinCatRx.Core
     /// Represents a Node of a Node Collection.
     /// </summary>
     [Serializable]
-    public class NodeEmulator : INodeEmulator
+    internal class NodeEmulator : INodeEmulator
     {
         private bool _disposedValue;
 

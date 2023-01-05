@@ -12,7 +12,7 @@ namespace CP.TwinCatRx.Core
     /// C Sharp Language.
     /// </summary>
     /// <seealso cref="ILanguageService" />
-    public class CSharpLanguage : ILanguageService
+    internal class CSharpLanguage : ILanguageService
     {
         private static readonly IReadOnlyCollection<MetadataReference> _references = new[]
         {
@@ -42,6 +42,11 @@ namespace CP.TwinCatRx.Core
               .AddReferences(_references)
               .AddSyntaxTrees(syntaxTree);
 
+            if (string.IsNullOrWhiteSpace(assemblyFileName))
+            {
+                return false;
+            }
+
             using (var stream = new FileStream(assemblyFileName, FileMode.Create))
             {
                 var emitResult = compilation.Emit(stream);
@@ -65,7 +70,7 @@ namespace CP.TwinCatRx.Core
         /// <returns>The Syntax Tree.</returns>
         public SyntaxTree ParseText(string code, SourceCodeKind kind)
         {
-            var options = new CSharpParseOptions(kind: kind, languageVersion: MaxLanguageVersion);
+            var options = new CSharpParseOptions(languageVersion: MaxLanguageVersion, kind: kind);
 
             // Return a syntax tree of our source code
             return CSharpSyntaxTree.ParseText(code, options);
@@ -84,7 +89,7 @@ namespace CP.TwinCatRx.Core
                 optimizationLevel: enableOptimisations ? OptimizationLevel.Release : OptimizationLevel.Debug,
                 allowUnsafe: true);
 
-            return CSharpCompilation.Create(assemblyName, options: options, references: _references);
+            return CSharpCompilation.Create(assemblyName, references: _references, options: options);
         }
     }
 }

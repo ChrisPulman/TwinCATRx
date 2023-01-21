@@ -1,10 +1,12 @@
 ﻿// Copyright (c) Chris Pulman. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Globalization;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
+using CP.Collections;
 using TwinCAT.Ads;
 
 namespace CP.TwinCatRx
@@ -178,5 +180,56 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, 
                                                                                                          })
                                                                                                      };
                                                                                                  });
+
+        /// <summary>
+        /// Observes the specified variable.
+        /// </summary>
+        /// <typeparam name="T">The Type of the data.</typeparam>
+        /// <param name="this">The this.</param>
+        /// <param name="variable">The variable.</param>
+        /// <returns>An Observable of T.</returns>
+        public static IObservable<T> Observe<T>(this RxTcAdsClient @this, string variable) =>
+            @this?.DataReceived.Where(x => x.Variable == variable && x.Data != null).Select(x => (T)x.Data!)!;
+
+        /// <summary>
+        /// Observes the specified variable.
+        /// </summary>
+        /// <typeparam name="T">The Type of the data.</typeparam>
+        /// <param name="this">The this.</param>
+        /// <param name="variable">The variable.</param>
+        /// <returns>An Observable of T.</returns>
+        public static IObservable<T> Observe<T>(this HashTableRx @this, string variable) =>
+            @this?.ObserveAll.Where(x => x.key == variable && x.value != null).Select(x => (T)x.value!)!;
+
+        /// <summary>
+        /// Creates the hash table rx.
+        /// </summary>
+        /// <param name="this">The this.</param>
+        /// <param name="variable">The variable.</param>
+        /// <returns>A HashTableRx with a link to the PLC.</returns>
+        public static HashTableRx CreateHashTableRx(this RxTcAdsClient @this, string variable) =>
+            new(@this?.DataReceived.Where(x => x.Variable == variable)!);
+
+        /// <summary>
+        /// Values the specified variable.
+        /// </summary>
+        /// <typeparam name="T">The type.</typeparam>
+        /// <param name="this">The this.</param>
+        /// <param name="variable">The variable.</param>
+        /// <returns>The value of the Tag.</returns>
+        public static T? Value<T>(this HashTableRx @this, string? variable)
+        {
+            if (@this == null || @this.Count == 0)
+            {
+                return default;
+            }
+
+            if (@this.UseUpperCase)
+            {
+                variable = variable?.ToUpper(CultureInfo.InvariantCulture);
+            }
+
+            return (T?)@this[variable!];
+        }
     }
 }

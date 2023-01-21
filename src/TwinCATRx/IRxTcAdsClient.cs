@@ -76,7 +76,8 @@ namespace CP.TwinCatRx
         /// <summary>
         /// Writes the specified value.
         /// </summary>
+        /// <param name="variable">The variable.</param>
         /// <param name="value">The value.</param>
-        void Write(string value);
+        void Write(string variable, object value);
     }
 }

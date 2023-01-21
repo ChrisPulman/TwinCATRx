@@ -164,20 +164,21 @@ namespace CP.TwinCatRx
         /// <summary>
         /// Writes the specified variable.
         /// </summary>
+        /// <param name="variable">The variable.</param>
         /// <param name="value">The value.</param>
-        public void Write(string value)
+        public void Write(string variable, object value)
         {
             uint? handle;
-            if (!string.IsNullOrWhiteSpace(value) && ReadWriteHandleInfo.ContainsKey(value!.ToUpper()))
+            if (!string.IsNullOrWhiteSpace(variable) && ReadWriteHandleInfo.ContainsKey(variable!.ToUpper()))
             {
-                handle = ReadWriteHandleInfo[value.ToUpper()];
+                handle = ReadWriteHandleInfo[variable.ToUpper()];
                 WriteHandle(handle, value);
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(value) && WriteHandleInfo.ContainsKey(value!.ToUpper()))
+            if (!string.IsNullOrWhiteSpace(variable) && WriteHandleInfo.ContainsKey(variable!.ToUpper()))
             {
-                handle = WriteHandleInfo[value.ToUpper()];
+                handle = WriteHandleInfo[variable.ToUpper()];
                 WriteHandle(handle, value);
             }
         }

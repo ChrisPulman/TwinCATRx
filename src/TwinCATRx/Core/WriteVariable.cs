@@ -14,10 +14,16 @@ namespace CP.TwinCATRx.Core
     public class WriteVariable : IWriteVariable
     {
         /// <summary>
-        /// Gets or sets the variable.
+        /// Initializes a new instance of the <see cref="WriteVariable" /> class.
+        /// </summary>
+        /// <param name="variable">The variable.</param>
+        public WriteVariable(string? variable) => Variable = variable;
+
+        /// <summary>
+        /// Gets the variable.
         /// </summary>
         /// <value>The variable.</value>
         [DataMember]
-        public string? Variable { get; set; }
+        public string? Variable { get; }
     }
 }

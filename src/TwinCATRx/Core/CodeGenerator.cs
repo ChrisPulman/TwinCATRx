@@ -74,35 +74,35 @@ namespace CP.TwinCatRx.Core
             switch (pLCType)
             {
                 case "STRING(80)":
-                    return "string";
+                    return typeof(string).ToString();
 
                 case "BIT":
                 case "BIT8":
                 case "BOOL":
-                    return "bool";
+                    return typeof(bool).ToString();
 
                 case "WORD":
                 case "BITARR16":
                 case "UINT16":
                 case "UINT":
-                    return "ushort";
+                    return typeof(ushort).ToString();
 
                 case "INT8":
                     return "sbyte";
 
                 case "INT16":
                 case "INT":
-                    return "short";
+                    return typeof(short).ToString();
 
                 case "INT32":
                 case "DINT":
-                    return "int";
+                    return typeof(int).ToString();
 
                 case "BITARR32":
                 case "DWORD":
                 case "UINT32":
                 case "UDINT":
-                    return "uint";
+                    return typeof(uint).ToString();
 
                 case "UINT64":
                 case "ULINT":
@@ -114,17 +114,17 @@ namespace CP.TwinCatRx.Core
 
                 case "FLOAT":
                 case "REAL":
-                    return "float";
+                    return typeof(float).ToString();
 
                 case "DOUBLE":
                 case "LREAL":
-                    return "double";
+                    return typeof(double).ToString();
 
                 case "BITARR8":
                 case "USINT":
                 case "UINT8":
                 case "BYTE":
-                    return "byte";
+                    return typeof(byte).ToString();
 
                 case null:
                     return "NULL";
@@ -134,27 +134,27 @@ namespace CP.TwinCatRx.Core
                     {
                         var s = pLCType.Replace("STRING(", string.Empty);
                         s = s.Replace(")", string.Empty);
-                        return $"string,{s}";
+                        return $"System.String,{s}";
                     }
 
                     if (pLCType.Contains("OF BOOL"))
                     {
-                        return "bool[]";
+                        return typeof(bool[]).ToString();
                     }
 
                     if (pLCType.Contains("OF BIT"))
                     {
-                        return "bool[]";
+                        return typeof(bool[]).ToString();
                     }
 
                     if (pLCType.Contains("OF BIT8"))
                     {
-                        return "bool[]";
+                        return typeof(bool[]).ToString();
                     }
 
                     if (pLCType.Contains("OF BYTE"))
                     {
-                        return "byte[]";
+                        return typeof(byte[]).ToString();
                     }
 
                     if (pLCType.Contains("OF REAL"))
@@ -523,17 +523,17 @@ namespace CP.TwinCatRx.Core
                     else
                     {
                         var c_type = PLCToCSharpTypeConverter(symbol.TypeName);
-                        if (c_type == "bool")
+                        if (c_type == "System.Boolean")
                         {
                             sb.AppendLine("[MarshalAs(UnmanagedType.I1)]")
                                 .Append("public ").Append(c_type).Append(' ').Append(str).AppendLine(";");
                         }
-                        else if (c_type == "string")
+                        else if (c_type == "System.String")
                         {
                             sb.AppendLine("[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 81)]")
                                 .Append("public ").Append(c_type).Append(' ').Append(str).AppendLine(";");
                         }
-                        else if (c_type.Contains("string,"))
+                        else if (c_type.Contains("System.String,"))
                         {
                             var num = int.Parse(c_type.Split(',')[1]);
                             sb.Append("[MarshalAs(UnmanagedType.ByValTStr, SizeConst = ").Append(num + 1).AppendLine(")]")
@@ -560,7 +560,7 @@ namespace CP.TwinCatRx.Core
                             sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")]")
                                 .Append("public System.Int32[] ").Append(str).Append(" = new ").Append("System.Int32[").Append(num).AppendLine("];");
                         }
-                        else if (c_type.Contains("bool[],"))
+                        else if (c_type.Contains("System.Boolean[],"))
                         {
                             var nums = c_type.Split(',')[1];
                             var num = int.Parse(nums.Split('.')[2]);

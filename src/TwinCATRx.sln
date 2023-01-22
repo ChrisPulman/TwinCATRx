@@ -17,6 +17,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ProjectConfig", "ProjectCon
 		..\Version.json = ..\Version.json
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwinCATRx.TestConsole", "TwinCATRx.TestConsole\TwinCATRx.TestConsole.csproj", "{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,6 +32,12 @@ Global
 		{4620B673-4D62-4117-9B1B-314AD216CEAA}.PreRelease|Any CPU.Build.0 = PreRelease|Any CPU
 		{4620B673-4D62-4117-9B1B-314AD216CEAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4620B673-4D62-4117-9B1B-314AD216CEAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}.PreRelease|Any CPU.ActiveCfg = PreRelease|Any CPU
+		{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}.PreRelease|Any CPU.Build.0 = PreRelease|Any CPU
+		{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

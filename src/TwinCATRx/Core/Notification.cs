@@ -12,15 +12,26 @@ namespace CP.TwinCATRx.Core
     public class Notification : INotification
     {
         /// <summary>
-        /// Gets or sets the Notification update rate.
+        /// Initializes a new instance of the <see cref="Notification"/> class.
         /// </summary>
-        /// <value>The update rate.</value>
-        public int UpdateRate { get; set; }
+        /// <param name="updateRate">The update rate.</param>
+        /// <param name="variable">The variable.</param>
+        public Notification(int updateRate, string? variable)
+        {
+            UpdateRate = updateRate;
+            Variable = variable;
+        }
 
         /// <summary>
-        /// Gets or sets the Notification variable name.
+        /// Gets the Notification update rate.
+        /// </summary>
+        /// <value>The update rate.</value>
+        public int UpdateRate { get; }
+
+        /// <summary>
+        /// Gets the Notification variable name.
         /// </summary>
         /// <value>The variable.</value>
-        public string? Variable { get; set; }
+        public string? Variable { get; }
     }
 }

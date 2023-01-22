@@ -6,6 +6,7 @@ using System.Runtime.Serialization;
 
 namespace CP.TwinCatRx.Core
 {
+
     /// <summary>
     /// Exception thrown when a simple type is not supported.
     /// </summary>

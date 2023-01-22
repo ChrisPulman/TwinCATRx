@@ -9,15 +9,15 @@ namespace CP.TwinCATRx.Core
     public interface INotification
     {
         /// <summary>
-        /// Gets or sets the update rate.
+        /// Gets the update rate.
         /// </summary>
         /// <value>The update rate.</value>
-        int UpdateRate { get; set; }
+        int UpdateRate { get;  }
 
         /// <summary>
-        /// Gets or sets the variable.
+        /// Gets the variable.
         /// </summary>
         /// <value>The variable.</value>
-        string? Variable { get; set; }
+        string? Variable { get;  }
     }
 }

@@ -21,27 +21,107 @@ namespace TwinCATRx.TestConsole
         {
             // Create Client
             var client = new RxTcAdsClient();
-            var settings = new Settings { AdsAddress = "1.1.1.1.1.1", Port = 851, SettingsId = "Default" };
-            settings.Notifications.Add(new Notification { UpdateRate = 100, Variable = "Tag" });
+            var settings = new Settings { AdsAddress = "5.35.59.10.1.1", Port = 801, SettingsId = "Default" };
+            settings.Notifications.Add(new Notification(100, ".Tag1"));
+            settings.WriteVariables.Add(new WriteVariable(".AString"));
+            settings.WriteVariables.Add(new WriteVariable(".ABool"));
+            settings.WriteVariables.Add(new WriteVariable(".AByte"));
+            settings.WriteVariables.Add(new WriteVariable(".AInt"));
+            settings.WriteVariables.Add(new WriteVariable(".ADInt"));
+            settings.WriteVariables.Add(new WriteVariable(".AReal"));
+            settings.WriteVariables.Add(new WriteVariable(".ALReal"));
             client.Connect(settings);
 
             // read and write client
-            client.Observe<bool>("Tag").Subscribe(data =>
-                        {
-                        });
-            client.Write("Tag", true);
-
-            // Create hashtable to store data
-            var ht = client.CreateHashTableRx("Tag");
-
-            // read from hashtable as stream
-            ht.Observe<bool>("Tag").Subscribe(value =>
+            client.Observe<string>(".AString").Subscribe(data =>
             {
+                Console.WriteLine(data);
+            });
+            client.Observe<bool>(".ABool").Subscribe(data =>
+            {
+                Console.WriteLine(data);
+            });
+            client.Observe<byte>(".AByte").Subscribe(data =>
+            {
+                Console.WriteLine(data);
+            });
+            client.Observe<short>(".AInt").Subscribe(data =>
+            {
+                Console.WriteLine(data);
+            });
+            client.Observe<int>(".ADInt").Subscribe(data =>
+            {
+                Console.WriteLine(data);
+            });
+            client.Observe<float>(".AReal").Subscribe(data =>
+            {
+                Console.WriteLine(data);
+            });
+            client.Observe<double>(".ALReal").Subscribe(data =>
+            {
+                Console.WriteLine(data);
+            });
+            client.OnWrite.Subscribe(data =>
+            {
+                Console.WriteLine(data);
             });
 
-            // read from hashtable as one time read
-            var tag = ht.Value<bool>("Tag");
             Console.ReadLine();
+            client.Read(".AString");
+            client.Read(".ABool");
+            client.Read(".AByte");
+            client.Read(".AInt");
+            client.Read(".ADInt");
+            client.Read(".AReal");
+            client.Read(".ALReal");
+            Console.ReadLine();
+
+            client.Write(".ABool", true);
+            client.Read(".ABool");
+            Console.ReadLine();
+
+            // Create structure to store data
+            var tag1 = client.CreateStruct(".Tag1", true);
+            tag1.StructureReady().Subscribe(data =>
+            {
+                Console.WriteLine("Structure ready");
+
+                // read from structure as stream
+                data.Observe<bool>("ABool").Subscribe(value => Console.WriteLine(value));
+
+                data.Observe<short>("AInt").Subscribe(value => Console.WriteLine(value));
+
+                data.Observe<string>("AString").Subscribe(value => Console.WriteLine(value));
+
+                // read from structure as one time read from the first level.
+                var tag = data.Value<short>("AInt");
+                Console.WriteLine(tag);
+                Console.WriteLine("Press any key to write structure");
+                Console.ReadLine();
+                data.Value("AInt", (short)(tag + 10));
+                data.Value("AString", $"Int Value {tag + 10}");
+                client.Write(".Tag1", data.GetStucture());
+            });
+            var exit = false;
+            while (!exit)
+            {
+                var key = Console.ReadKey();
+                switch (key.Key)
+                {
+                    case ConsoleKey.Escape:
+                        exit = true;
+                        break;
+                    case ConsoleKey.W:
+                        var tag = tag1.Value<short>("AInt");
+                        tag1.Value("AInt", (short)(tag + 10));
+                        tag1.Value("AString", $"Int Value {tag + 10}");
+                        client.Write(".Tag1", tag1.GetStucture());
+                        break;
+                }
+            }
+
+            client.Dispose();
+            tag1.Dispose();
         }
     }
 }

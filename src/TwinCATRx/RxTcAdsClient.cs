@@ -123,26 +123,26 @@ namespace CP.TwinCatRx
         /// <summary>
         /// Reads the specified variable.
         /// </summary>
-        /// <param name="data">The data.</param>
+        /// <param name="variable">The data.</param>
         /// <param name="parameters">The parameters.</param>
         /// <exception cref="System.ArgumentOutOfRangeException">Parameters - Parameter 0 must be set to the size of the Array.</exception>
-        public void Read(string data, string parameters)
+        public void Read(string variable, string? parameters = null)
         {
-            if (!string.IsNullOrWhiteSpace(data) && WriteHandleInfo.TryGetValue(data!.ToUpper(), out var handle))
+            if (!string.IsNullOrWhiteSpace(variable) && WriteHandleInfo.TryGetValue(variable!.ToUpper(), out var handle))
             {
-                var value = _typeInfo[data.ToUpper()];
-                if (value.IsArray)
+                var type = _typeInfo[variable.ToUpper()];
+                if (type.IsArray)
                 {
                     if (string.IsNullOrWhiteSpace(parameters))
                     {
                         throw new ArgumentOutOfRangeException(nameof(parameters), "Parameter 0 must be set to the size of the Array");
                     }
 
-                    ReadArray(data, int.Parse(parameters));
+                    ReadArray(variable, int.Parse(parameters));
                 }
                 else
                 {
-                    ReadHandle(handle, value);
+                    ReadHandle(handle, type);
                 }
             }
         }
@@ -222,7 +222,7 @@ namespace CP.TwinCatRx
                         continue;
                     }
 
-                    var identifier = DateTime.Now.ToBinary().ToString(CultureInfo.InvariantCulture);
+                    var identifier = DateTime.UtcNow.ToBinary().ToString(CultureInfo.InvariantCulture);
                     var dataTypesFileName = notificationVariable?.StartsWith(".") == true
                         ? "PLC_" + notificationVariable.Remove(0, 1)
                         : "PLC_" + notificationVariable;
@@ -481,7 +481,7 @@ namespace CP.TwinCatRx
                                     if (data != null)
                                     {
                                         client.WriteAny(v.handle.Value, data);
-                                        _onWriteSubject.OnNext(null);
+                                        _onWriteSubject.OnNext("Success");
                                     }
                                 }
                             }

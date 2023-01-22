@@ -2,11 +2,13 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Globalization;
+using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
 using CP.Collections;
+using CP.TwinCatRx.Core;
 using TwinCAT.Ads;
 
 namespace CP.TwinCatRx
@@ -156,30 +158,31 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, 
         /// </summary>
         /// <param name="this">The this.</param>
         /// <returns>Observable State Info.</returns>
-        public static IObservable<StateInfo> AdsStateObserver(this AdsClient @this) => Observable.Create<StateInfo>(obs =>
-                                                                                                 {
-                                                                                                     return new SingleAssignmentDisposable
-                                                                                                     {
-                                                                                                         Disposable = Observable.Interval(TimeSpan.FromSeconds(1)).Subscribe(_ =>
-                                                                                                         {
-                                                                                                             try
-                                                                                                             {
-                                                                                                                 if (!@this.IsConnected)
-                                                                                                                 {
-                                                                                                                     obs.OnNext(new StateInfo { AdsState = AdsState.Invalid });
-                                                                                                                 }
-                                                                                                                 else
-                                                                                                                 {
-                                                                                                                     obs.OnNext(@this.ReadState());
-                                                                                                                 }
-                                                                                                             }
-                                                                                                             catch (Exception ex)
-                                                                                                             {
-                                                                                                                 obs.OnError(ex);
-                                                                                                             }
-                                                                                                         })
-                                                                                                     };
-                                                                                                 });
+        public static IObservable<StateInfo> AdsStateObserver(this AdsClient @this) =>
+            Observable.Create<StateInfo>(obs =>
+                {
+                    return new SingleAssignmentDisposable
+                    {
+                        Disposable = Observable.Interval(TimeSpan.FromSeconds(1)).Subscribe(_ =>
+                        {
+                            try
+                            {
+                                if (!@this.IsConnected)
+                                {
+                                    obs.OnNext(new StateInfo { AdsState = AdsState.Invalid });
+                                }
+                                else
+                                {
+                                    obs.OnNext(@this.ReadState());
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                obs.OnError(ex);
+                            }
+                        })
+                    };
+                });
 
         /// <summary>
         /// Observes the specified variable.
@@ -189,26 +192,38 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, 
         /// <param name="variable">The variable.</param>
         /// <returns>An Observable of T.</returns>
         public static IObservable<T> Observe<T>(this RxTcAdsClient @this, string variable) =>
-            @this?.DataReceived.Where(x => x.Variable == variable && x.Data != null).Select(x => (T)x.Data!)!;
+            @this?.DataReceived.Where(x => x.Variable.ToUpperInvariant().Equals(variable.ToUpperInvariant(), StringComparison.InvariantCulture) && x.Data != null).Select(x => (T)x.Data!)!;
 
         /// <summary>
-        /// Observes the specified variable.
-        /// </summary>
-        /// <typeparam name="T">The Type of the data.</typeparam>
-        /// <param name="this">The this.</param>
-        /// <param name="variable">The variable.</param>
-        /// <returns>An Observable of T.</returns>
-        public static IObservable<T> Observe<T>(this HashTableRx @this, string variable) =>
-            @this?.ObserveAll.Where(x => x.key == variable && x.value != null).Select(x => (T)x.value!)!;
-
-        /// <summary>
-        /// Creates the hash table rx.
+        /// Creates the structure.
         /// </summary>
         /// <param name="this">The this.</param>
         /// <param name="variable">The variable.</param>
-        /// <returns>A HashTableRx with a link to the PLC.</returns>
-        public static HashTableRx CreateHashTableRx(this RxTcAdsClient @this, string variable) =>
-            new(@this?.DataReceived.Where(x => x.Variable == variable)!);
+        /// <param name="useUpperCase">if set to <c>true</c> [use upper case].</param>
+        /// <returns>
+        /// A HashTableRx with a link to the PLC.
+        /// </returns>
+        public static HashTableRx CreateStruct(this RxTcAdsClient @this, string variable, bool useUpperCase)
+        {
+            var ht = new HashTableRx(useUpperCase);
+            @this?.DataReceived.Where(x => x.Variable.ToUpperInvariant().Equals(variable.ToUpperInvariant(), StringComparison.InvariantCulture) && x.Data != null).Subscribe(x => ht[true] = x.Data);
+            return ht;
+        }
+
+        /// <summary>
+        /// Structures the ready.
+        /// </summary>
+        /// <param name="this">The this.</param>
+        /// <returns>An Observable when values have been set.</returns>
+        public static IObservable<HashTableRx> StructureReady(this HashTableRx @this)
+        {
+            if (@this == null)
+            {
+                return default!;
+            }
+
+            return @this.ObserveAll.Where(_ => @this.Count > 0).Take(1).Delay(TimeSpan.FromSeconds(2)).Select(_ => @this);
+        }
 
         /// <summary>
         /// Values the specified variable.
@@ -226,10 +241,61 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, 
 
             if (@this.UseUpperCase)
             {
-                variable = variable?.ToUpper(CultureInfo.InvariantCulture);
+                variable = variable?.ToUpperInvariant();
             }
 
             return (T?)@this[variable!];
+        }
+
+        /// <summary>
+        /// Values the specified variable.
+        /// </summary>
+        /// <typeparam name="T">The Type.</typeparam>
+        /// <param name="this">The this.</param>
+        /// <param name="variable">The variable.</param>
+        /// <param name="value">The value.</param>
+        /// <returns>True if value was set.</returns>
+        public static bool Value<T>(this HashTableRx @this, string? variable, T? value)
+        {
+            if (@this == null || @this.Count == 0)
+            {
+                return false;
+            }
+
+            if (@this?.UseUpperCase == true)
+            {
+                variable = variable?.ToUpperInvariant();
+            }
+
+            if (@this!.Value<T>(variable) == null)
+            {
+                throw new InvalidVariableException(variable);
+            }
+
+            if (@this!.Value<T>(variable)?.GetType() != value?.GetType())
+            {
+                throw new InvalidCastException($"Failed To Set Value, unable to cast from {typeof(T)}");
+            }
+
+            @this![variable!] = value;
+            return true;
+        }
+
+        /// <summary>
+        /// Gets the stucture.
+        /// </summary>
+        /// <param name="this">The this.</param>
+        /// <returns>
+        /// An object of the current values.
+        /// </returns>
+        public static object GetStucture(this HashTableRx @this)
+        {
+            if (@this == null)
+            {
+                return default!;
+            }
+
+            return @this[true]!;
         }
     }
 }

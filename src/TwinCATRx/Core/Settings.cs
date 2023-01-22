@@ -50,8 +50,8 @@ namespace CP.TwinCATRx.Core
             {
                 SettingsId = "Defaults"
             };
-            s.Notifications.Add(new Notification { Variable = ".UIStructure", UpdateRate = 100 });
-            s.WriteVariables.Add(new WriteVariable { Variable = ".FailSafeCounter" });
+            s.Notifications.Add(new Notification(100, ".UIStructure"));
+            s.WriteVariables.Add(new WriteVariable(".FailSafeCounter"));
             return s;
         }
     }

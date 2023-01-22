@@ -11,10 +11,10 @@ namespace CP.TwinCATRx.Core
     public interface IWriteVariable
     {
         /// <summary>
-        /// Gets or sets the variable.
+        /// Gets the variable.
         /// </summary>
         /// <value>The variable.</value>
         [DataMember]
-        string? Variable { get; set; }
+        string? Variable { get; }
     }
 }

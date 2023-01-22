@@ -62,9 +62,9 @@ namespace CP.TwinCatRx
         /// <summary>
         /// Reads the specified data.
         /// </summary>
-        /// <param name="data">The data.</param>
+        /// <param name="variable">The data.</param>
         /// <param name="parameters">The parameters.</param>
-        void Read(string data, string parameters);
+        void Read(string variable, string parameters);
 
         /// <summary>
         /// Reads the array.

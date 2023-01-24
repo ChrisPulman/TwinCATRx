@@ -30,6 +30,17 @@ namespace TwinCATRx.TestConsole
             settings.WriteVariables.Add(new WriteVariable(".ADInt"));
             settings.WriteVariables.Add(new WriteVariable(".AReal"));
             settings.WriteVariables.Add(new WriteVariable(".ALReal"));
+
+            // TODO: Find a way to write arrays of string
+            ////settings.WriteVariables.Add(new WriteVariable(".ArrString"));
+            settings.WriteVariables.Add(new WriteVariable(".ArrBool"));
+            settings.WriteVariables.Add(new WriteVariable(".ArrByte"));
+            settings.WriteVariables.Add(new WriteVariable(".ArrInt"));
+            settings.WriteVariables.Add(new WriteVariable(".ArrDInt"));
+            settings.WriteVariables.Add(new WriteVariable(".ArrReal"));
+
+            // TODO: find out why this is causing a MarshallException
+            settings.WriteVariables.Add(new WriteVariable(".ArrLReal"));
             client.Connect(settings);
 
             // read and write client
@@ -65,6 +76,34 @@ namespace TwinCATRx.TestConsole
             {
                 Console.WriteLine(data);
             });
+            ////client.Observe<string[]>(".ArrString").Subscribe(data =>
+            ////{
+            ////    Console.WriteLine(data);
+            ////});
+            client.Observe<bool[]>(".ArrBool").Subscribe(data =>
+            {
+                Console.WriteLine(data);
+            });
+            client.Observe<byte[]>(".ArrByte").Subscribe(data =>
+            {
+                Console.WriteLine(data);
+            });
+            client.Observe<short[]>(".ArrInt").Subscribe(data =>
+            {
+                Console.WriteLine(data);
+            });
+            client.Observe<int[]>(".ArrDInt").Subscribe(data =>
+            {
+                Console.WriteLine(data);
+            });
+            client.Observe<float[]>(".ArrReal").Subscribe(data =>
+            {
+                Console.WriteLine(data);
+            });
+            client.Observe<double[]>(".ArrLReal").Subscribe(data =>
+            {
+                Console.WriteLine(data);
+            });
 
             Console.ReadLine();
             client.Read(".AString");
@@ -74,6 +113,13 @@ namespace TwinCATRx.TestConsole
             client.Read(".ADInt");
             client.Read(".AReal");
             client.Read(".ALReal");
+            ////client.Read(".ArrString", "11");
+            client.Read(".ArrBool", "11");
+            client.Read(".ArrByte", "11");
+            client.Read(".ArrInt", "11");
+            client.Read(".ArrDInt", "11");
+            client.Read(".ArrReal", "11");
+            client.Read(".ArrLReal", "11");
             Console.ReadLine();
 
             client.Write(".ABool", true);

@@ -130,11 +130,9 @@ namespace CP.TwinCatRx.Core
                     return "NULL";
 
                 default:
-                    if (pLCType.Contains("STRING("))
+                    if (pLCType.Contains("OF STRING"))
                     {
-                        var s = pLCType.Replace("STRING(", string.Empty);
-                        s = s.Replace(")", string.Empty);
-                        return $"System.String,{s}";
+                        return typeof(string[]).ToString();
                     }
 
                     if (pLCType.Contains("OF BOOL"))
@@ -162,6 +160,11 @@ namespace CP.TwinCatRx.Core
                         return "System.Single[]";
                     }
 
+                    if (pLCType.Contains("OF LREAL"))
+                    {
+                        return "System.Double[]";
+                    }
+
                     if (pLCType.Contains("OF FLOAT"))
                     {
                         return "System.Single[]";
@@ -185,6 +188,13 @@ namespace CP.TwinCatRx.Core
                     if (pLCType.Contains("OF INT32"))
                     {
                         return "System.Int32[]";
+                    }
+
+                    if (pLCType.Contains("STRING("))
+                    {
+                        var s = pLCType.Replace("STRING(", string.Empty);
+                        s = s.Replace(")", string.Empty);
+                        return $"System.String,{s}";
                     }
 
                     throw new UnsuportedTypeException("This Type (" + pLCType + ")is not supported in this version, Please contact us for details of next version release");
@@ -533,11 +543,24 @@ namespace CP.TwinCatRx.Core
                             sb.AppendLine("[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 81)]")
                                 .Append("public ").Append(c_type).Append(' ').Append(str).AppendLine(";");
                         }
+                        else if (c_type.Contains("System.String[],"))
+                        {
+                            var num = int.Parse(c_type.Split(',')[1]);
+                            sb.Append("[MarshalAs(UnmanagedType.ByValTStr, SizeConst = ").Append(num + 1).AppendLine(")]")
+                                .Append("public System.String[] ").Append(str).Append(" = new ").Append("System.String[").Append(num).AppendLine("];");
+                        }
                         else if (c_type.Contains("System.String,"))
                         {
                             var num = int.Parse(c_type.Split(',')[1]);
                             sb.Append("[MarshalAs(UnmanagedType.ByValTStr, SizeConst = ").Append(num + 1).AppendLine(")]")
                                 .Append("public string ").Append(str).AppendLine(";");
+                        }
+                        else if (c_type.Contains("System.Double[],"))
+                        {
+                            var nums = c_type.Split(',')[1];
+                            var num = int.Parse(nums.Split('.')[2]);
+                            sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")]")
+                                .Append("public System.Double[] ").Append(str).Append(" = new ").Append("System.Double[").Append(num).AppendLine("];");
                         }
                         else if (c_type.Contains("System.Single[],"))
                         {

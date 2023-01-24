@@ -6,10 +6,13 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+using System.Reflection.Metadata;
 using System.ServiceProcess;
 using CP.TwinCatRx.Core;
 using CP.TwinCATRx.Core;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using TwinCAT.Ads;
+using TwinCAT.PlcOpen;
 using TwinCAT.TypeSystem;
 
 namespace CP.TwinCatRx
@@ -28,7 +31,7 @@ namespace CP.TwinCatRx
         private readonly ISubject<(uint? handle, Type type, int length)> _readPLC = new Subject<(uint? handle, Type type, int length)>();
         private readonly ISubject<ServiceStatus> _serviceStatus = new Subject<ServiceStatus>();
         private readonly IDictionary<string, Type> _typeInfo = new Dictionary<string, Type>();
-        private readonly ISubject<(uint? handle, object value)> _writePLC = new Subject<(uint? handle, object value)>();
+        private readonly ISubject<(uint? handle, object value, int length)> _writePLC = new Subject<(uint? handle, object value, int length)>();
         private CompositeDisposable? _cleanup;
         private ICodeGenerator? _codeGenerator;
         private IDisposable? _plcCleanup;
@@ -78,7 +81,7 @@ namespace CP.TwinCatRx
         /// Gets the write handle information.
         /// </summary>
         /// <value>The write handle information.</value>
-        public IDictionary<string, uint?> WriteHandleInfo { get; } = new Dictionary<string, uint?>();
+        public IDictionary<string, (uint? Handle, int ArrayLength)> WriteHandleInfo { get; } = new Dictionary<string, (uint? Handle, int ArrayLength)>();
 
         /// <summary>
         /// Connects the specified settings.
@@ -128,36 +131,28 @@ namespace CP.TwinCatRx
         /// <exception cref="System.ArgumentOutOfRangeException">Parameters - Parameter 0 must be set to the size of the Array.</exception>
         public void Read(string variable, string? parameters = null)
         {
-            if (!string.IsNullOrWhiteSpace(variable) && WriteHandleInfo.TryGetValue(variable!.ToUpper(), out var handle))
+            if (!string.IsNullOrWhiteSpace(variable) && WriteHandleInfo.TryGetValue(variable!.ToUpper(), out var item))
             {
                 var type = _typeInfo[variable.ToUpper()];
-                if (type.IsArray)
+                if (type.IsArray || type == typeof(string))
                 {
+                    if (item.ArrayLength > 0)
+                    {
+                        ReadArrayHandle(item.Handle, type, item.ArrayLength);
+                        return;
+                    }
+
                     if (string.IsNullOrWhiteSpace(parameters))
                     {
                         throw new ArgumentOutOfRangeException(nameof(parameters), "Parameter 0 must be set to the size of the Array");
                     }
 
-                    ReadArray(variable, int.Parse(parameters));
+                    ReadArrayHandle(item.Handle, type, int.Parse(parameters));
                 }
                 else
                 {
-                    ReadHandle(handle, type);
+                    ReadHandle(item.Handle, type);
                 }
-            }
-        }
-
-        /// <summary>
-        /// Reads the array.
-        /// </summary>
-        /// <param name="data">The data.</param>
-        /// <param name="length">The length.</param>
-        public void ReadArray(string data, int length)
-        {
-            if (!string.IsNullOrWhiteSpace(data) && WriteHandleInfo.TryGetValue(data!.ToUpper(), out var handle))
-            {
-                var value = _typeInfo[data.ToUpper()];
-                ReadArrayHandle(handle, value, length);
             }
         }
 
@@ -176,10 +171,9 @@ namespace CP.TwinCatRx
                 return;
             }
 
-            if (!string.IsNullOrWhiteSpace(variable) && WriteHandleInfo.ContainsKey(variable!.ToUpper()))
+            if (!string.IsNullOrWhiteSpace(variable) && WriteHandleInfo.TryGetValue(variable!.ToUpper(), out var item))
             {
-                handle = WriteHandleInfo[variable.ToUpper()];
-                WriteHandle(handle, value);
+                WriteHandle(item.Handle, value, item.ArrayLength);
             }
         }
 
@@ -279,13 +273,13 @@ namespace CP.TwinCatRx
         private Exception? CreateWriteVariables(List<IWriteVariable>? writeVariables, AdsClient client)
         {
             var isTC3 = client.Address?.Port >= 851;
-            foreach (var variable in writeVariables!.Select(t => t.Variable.ToUpper()).Where(variable => !string.IsNullOrEmpty(variable)))
+            foreach (var item in writeVariables!.Select(t => (Variable: t.Variable.ToUpper(), t.ArraySize)).Where(x => !string.IsNullOrEmpty(x.Variable)))
             {
                 try
                 {
-                    WriteHandleInfo.Add(variable, client?.CreateVariableHandle(variable));
+                    WriteHandleInfo.Add(item.Variable, (client?.CreateVariableHandle(item.Variable), item.ArraySize));
 
-                    var nodeEmulator = _codeGenerator?.SearchSymbols(variable);
+                    var nodeEmulator = _codeGenerator?.SearchSymbols(item.Variable);
                     if (nodeEmulator == null)
                     {
                         continue;
@@ -304,13 +298,13 @@ namespace CP.TwinCatRx
 
                     if (type != null)
                     {
-                        _typeInfo.Add(variable, type);
+                        _typeInfo.Add(item.Variable, type);
                     }
                     else
                     {
-                        var s = variable.StartsWith(".")
-                          ? "PLC_" + variable.Remove(0, 1)
-                          : "PLC_" + variable;
+                        var s = item.Variable.StartsWith(".")
+                          ? "PLC_" + item.Variable.Remove(0, 1)
+                          : "PLC_" + item.Variable;
                         s += ".dll$" + _codeGenerator?.CreateCSharpCodeString(nodeEmulator, isTwinCat3: isTC3);
                         _code.Add(s);
                     }
@@ -499,7 +493,7 @@ namespace CP.TwinCatRx
                        {
                            object? plcValueRead = null;
 
-                           if (v.type.IsArray && v.length > 0)
+                           if ((v.type.IsArray || v.type == typeof(string)) && v.length > 0)
                            {
                                int[] args = { v.length };
                                if (v.handle != null)
@@ -517,7 +511,7 @@ namespace CP.TwinCatRx
                                var key = ReadWriteHandleInfo.FirstOrDefault(k => k.Value == v.handle).Key;
                                if (string.IsNullOrWhiteSpace(key))
                                {
-                                   key = WriteHandleInfo.First(k => k.Value == v.handle).Key;
+                                   key = WriteHandleInfo.First(k => k.Value.Handle == v.handle).Key;
                                }
 
                                if (!string.IsNullOrWhiteSpace(key))
@@ -543,7 +537,21 @@ namespace CP.TwinCatRx
                                     var kvp = ReadWriteHandleInfo.FirstOrDefault(k => k.Key == notification.Variable.ToUpper());
                                     if (type != null)
                                     {
-                                        ReadHandle(kvp.Value, type);
+                                        if (type.IsArray || type == typeof(string))
+                                        {
+                                            if (notification.ArraySize > 0)
+                                            {
+                                                ReadArrayHandle(kvp.Value, type, notification.ArraySize);
+                                            }
+                                            else
+                                            {
+                                                _errorReceived.OnNext(new Exception($"Please set Notification ArraySize to the {(type == typeof(string) ? "String" : "Array")} length."));
+                                            }
+                                        }
+                                        else
+                                        {
+                                            ReadHandle(kvp.Value, type);
+                                        }
                                     }
                                 }
                             }).DisposeWith(_cleanup);
@@ -570,7 +578,8 @@ namespace CP.TwinCatRx
         /// </summary>
         /// <param name="handle">The handle.</param>
         /// <param name="value">The value.</param>
-        private void WriteHandle(uint? handle, object value) =>
-            _writePLC.OnNext((handle, value));
+        /// <param name="length">The length.</param>
+        private void WriteHandle(uint? handle, object value, int length = -1) =>
+            _writePLC.OnNext((handle, value, length));
     }
 }

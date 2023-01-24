@@ -17,7 +17,12 @@ namespace CP.TwinCATRx.Core
         /// Initializes a new instance of the <see cref="WriteVariable" /> class.
         /// </summary>
         /// <param name="variable">The variable.</param>
-        public WriteVariable(string? variable) => Variable = variable;
+        /// <param name="arraySize">Size of the array.</param>
+        public WriteVariable(string? variable, int arraySize = -1)
+        {
+            Variable = variable;
+            ArraySize = arraySize;
+        }
 
         /// <summary>
         /// Gets the variable.
@@ -25,5 +30,14 @@ namespace CP.TwinCATRx.Core
         /// <value>The variable.</value>
         [DataMember]
         public string? Variable { get; }
+
+        /// <summary>
+        /// Gets the size of the array.
+        /// </summary>
+        /// <value>
+        /// The size of the array.
+        /// </value>
+        [DataMember]
+        public int ArraySize { get; }
     }
 }

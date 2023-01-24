@@ -46,7 +46,7 @@ namespace CP.TwinCatRx
         /// Gets the write handle information.
         /// </summary>
         /// <value>The write handle information.</value>
-        IDictionary<string, uint?> WriteHandleInfo { get; }
+        IDictionary<string, (uint? Handle, int ArrayLength)> WriteHandleInfo { get; }
 
         /// <summary>
         /// Connects the specified settings.
@@ -65,13 +65,6 @@ namespace CP.TwinCatRx
         /// <param name="variable">The data.</param>
         /// <param name="parameters">The parameters.</param>
         void Read(string variable, string parameters);
-
-        /// <summary>
-        /// Reads the array.
-        /// </summary>
-        /// <param name="data">The data.</param>
-        /// <param name="length">The length.</param>
-        void ReadArray(string data, int length);
 
         /// <summary>
         /// Writes the specified value.

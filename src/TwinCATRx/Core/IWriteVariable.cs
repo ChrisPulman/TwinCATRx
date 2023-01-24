@@ -16,5 +16,14 @@ namespace CP.TwinCATRx.Core
         /// <value>The variable.</value>
         [DataMember]
         string? Variable { get; }
+
+        /// <summary>
+        /// Gets the size of the array.
+        /// </summary>
+        /// <value>
+        /// The size of the array.
+        /// </value>
+        [DataMember]
+        int ArraySize { get; }
     }
 }

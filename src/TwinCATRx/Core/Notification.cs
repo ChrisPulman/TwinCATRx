@@ -12,14 +12,16 @@ namespace CP.TwinCATRx.Core
     public class Notification : INotification
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Notification"/> class.
+        /// Initializes a new instance of the <see cref="Notification" /> class.
         /// </summary>
         /// <param name="updateRate">The update rate.</param>
         /// <param name="variable">The variable.</param>
-        public Notification(int updateRate, string? variable)
+        /// <param name="arraySize">Size of the array.</param>
+        public Notification(int updateRate, string? variable, int arraySize = -1)
         {
             UpdateRate = updateRate;
             Variable = variable;
+            ArraySize = arraySize;
         }
 
         /// <summary>
@@ -33,5 +35,13 @@ namespace CP.TwinCATRx.Core
         /// </summary>
         /// <value>The variable.</value>
         public string? Variable { get; }
+
+        /// <summary>
+        /// Gets the size of the array.
+        /// </summary>
+        /// <value>
+        /// The size of the array.
+        /// </value>
+        public int ArraySize { get; }
     }
 }

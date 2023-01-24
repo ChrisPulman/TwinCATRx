@@ -12,12 +12,20 @@ namespace CP.TwinCATRx.Core
         /// Gets the update rate.
         /// </summary>
         /// <value>The update rate.</value>
-        int UpdateRate { get;  }
+        int UpdateRate { get; }
 
         /// <summary>
         /// Gets the variable.
         /// </summary>
         /// <value>The variable.</value>
-        string? Variable { get;  }
+        string? Variable { get; }
+
+        /// <summary>
+        /// Gets the size of the array.
+        /// </summary>
+        /// <value>
+        /// The size of the array.
+        /// </value>
+        int ArraySize { get; }
     }
 }

@@ -4,7 +4,7 @@
 	<ProjectInfo>
 		<Path>C:\Projects\Github\TwinCATRx\src\PLC\TwinCATRx.pro</Path>
 		<IsLibrary>false</IsLibrary>
-		<ChangeDate>2023-01-22T18:35:37</ChangeDate>
+		<ChangeDate>2023-01-24T02:09:39</ChangeDate>
 		<Library>
 			<Name>STANDARD.LIB</Name>
 			<Path>C:\TwinCAT\PLC\LIB\STANDARD.LIB</Path>
@@ -43,8 +43,8 @@
 		<TaskInfo>
 			<Name>Standard</Name>
 			<Priority>0</Priority>
-			<CycleTime>1</CycleTime>
-			<CycleTimeUs>1000</CycleTimeUs>
+			<CycleTime>100</CycleTime>
+			<CycleTimeUs>100000</CycleTimeUs>
 			<Calls>
 				<ProgramCall>MAIN</ProgramCall>
 			</Calls>
@@ -1047,7 +1047,7 @@
 	</Functions>
 	<Programs>
 		<Program>
-			<Name Decoration="10000000" Crc32="3778913267" LastChange="2023-01-22T14:18:36">MAIN</Name>
+			<Name Decoration="10000000" Crc32="1634807008" LastChange="2023-01-24T02:09:37">MAIN</Name>
 			<PrgInfo>
 				<CodeIndex>49</CodeIndex>
 			</PrgInfo>
@@ -1055,35 +1055,35 @@
 	</Programs>
 	<Symbols>
 		<Symbol>
-			<Name>.AString</Name>
+			<Name TaskPrio="1">.AString</Name>
 			<Type Decoration="40000051">STRING(80)</Type>
 			<IGroup>16448</IGroup>
 			<IOffset>38</IOffset>
 			<BitSize>648</BitSize>
 		</Symbol>
 		<Symbol>
-			<Name>.ABool</Name>
+			<Name TaskPrio="1">.ABool</Name>
 			<Type>BOOL</Type>
 			<IGroup>16448</IGroup>
 			<IOffset>119</IOffset>
 			<BitSize>8</BitSize>
 		</Symbol>
 		<Symbol>
-			<Name>.AByte</Name>
+			<Name TaskPrio="1">.AByte</Name>
 			<Type>BYTE</Type>
 			<IGroup>16448</IGroup>
 			<IOffset>120</IOffset>
 			<BitSize>8</BitSize>
 		</Symbol>
 		<Symbol>
-			<Name>.AInt</Name>
+			<Name TaskPrio="1">.AInt</Name>
 			<Type>INT</Type>
 			<IGroup>16448</IGroup>
 			<IOffset>121</IOffset>
 			<BitSize>16</BitSize>
 		</Symbol>
 		<Symbol>
-			<Name>.ADInt</Name>
+			<Name TaskPrio="1">.ADInt</Name>
 			<Type>DINT</Type>
 			<Comment>
 				<![CDATA[ALInt			: LINT;]]>
@@ -1093,14 +1093,14 @@
 			<BitSize>32</BitSize>
 		</Symbol>
 		<Symbol>
-			<Name>.AReal</Name>
+			<Name TaskPrio="1">.AReal</Name>
 			<Type>REAL</Type>
 			<IGroup>16448</IGroup>
 			<IOffset>127</IOffset>
 			<BitSize>32</BitSize>
 		</Symbol>
 		<Symbol>
-			<Name>.ALReal</Name>
+			<Name TaskPrio="1">.ALReal</Name>
 			<Type>LREAL</Type>
 			<Comment>
 				<![CDATA[Arrays]]>

@@ -30,12 +30,16 @@ namespace TwinCATRx.TestConsole
             settings.WriteVariables.Add(new WriteVariable(".ADInt"));
             settings.WriteVariables.Add(new WriteVariable(".AReal"));
             settings.WriteVariables.Add(new WriteVariable(".ALReal"));
+
+            // TODO: Find a way to write arrays of string
             ////settings.WriteVariables.Add(new WriteVariable(".ArrString"));
             settings.WriteVariables.Add(new WriteVariable(".ArrBool"));
             settings.WriteVariables.Add(new WriteVariable(".ArrByte"));
             settings.WriteVariables.Add(new WriteVariable(".ArrInt"));
             settings.WriteVariables.Add(new WriteVariable(".ArrDInt"));
             settings.WriteVariables.Add(new WriteVariable(".ArrReal"));
+
+            // TODO: find out why this is causing a MarshallException
             settings.WriteVariables.Add(new WriteVariable(".ArrLReal"));
             client.Connect(settings);
 

@@ -9,7 +9,9 @@ using System.Reactive.Linq;
 using System.Reflection;
 using CP.Collections;
 using CP.TwinCatRx.Core;
+using CP.TwinCATRx.Core;
 using TwinCAT.Ads;
+using TwinCAT.PlcOpen;
 
 namespace CP.TwinCatRx
 {
@@ -18,6 +20,39 @@ namespace CP.TwinCatRx
     /// </summary>
     public static class ObservableTwinCATExtensions
     {
+        /// <summary>
+        /// Adds the notification.
+        /// </summary>
+        /// <param name="settings">The settings.</param>
+        /// <param name="variableName">Name of the variable.</param>
+        /// <param name="cycleTime">The cycle time.</param>
+        /// <param name="arraySize">Size of the array.</param>
+        public static void AddNotification(this ISettings settings, string variableName, int cycleTime = 100, int arraySize = -1)
+        {
+            if (settings == null)
+            {
+                return;
+            }
+
+            settings.Notifications.Add(new TwinCATRx.Core.Notification(cycleTime, variableName, arraySize));
+        }
+
+        /// <summary>
+        /// Adds the write variable.
+        /// </summary>
+        /// <param name="settings">The settings.</param>
+        /// <param name="variableName">Name of the variable.</param>
+        /// <param name="arraySize">Size of the array.</param>
+        public static void AddWriteVariable(this ISettings settings, string variableName, int arraySize = -1)
+        {
+            if (settings == null)
+            {
+                return;
+            }
+
+            settings.WriteVariables.Add(new WriteVariable(variableName, arraySize));
+        }
+
         /// <summary>
         /// <para>Repeats the source observable sequence until it successfully terminates.</para>
         /// <para>This is same as Retry().</para>
@@ -224,6 +259,13 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, 
 
             return @this.ObserveAll.Where(_ => @this.Count > 0).Take(1).Delay(TimeSpan.FromSeconds(2)).Select(_ => @this);
         }
+
+        /// <summary>
+        /// Clones the specified HashTableRx.
+        /// </summary>
+        /// <param name="this">The this.</param>
+        /// <returns>A HashTableRx.</returns>
+        public static HashTableRx CreateClone(this HashTableRx @this) => new(true) { [true] = @this.GetStucture() };
 
         /// <summary>
         /// Values the specified variable.

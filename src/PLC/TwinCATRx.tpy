@@ -4,7 +4,7 @@
 	<ProjectInfo>
 		<Path>C:\Projects\Github\TwinCATRx\src\PLC\TwinCATRx.pro</Path>
 		<IsLibrary>false</IsLibrary>
-		<ChangeDate>2023-01-24T02:09:39</ChangeDate>
+		<ChangeDate>2023-01-26T21:44:20</ChangeDate>
 		<Library>
 			<Name>STANDARD.LIB</Name>
 			<Path>C:\TwinCAT\PLC\LIB\STANDARD.LIB</Path>
@@ -61,121 +61,6 @@
 		</DirectoryInfo>
 	</DirectoryInfos>
 	<DataTypes>
-		<DataType>
-			<Name Decoration="200142EB">ARRAY [0..10] OF STRING(80)</Name>
-			<Type Decoration="40000051">STRING(80)</Type>
-			<BitSize>7128</BitSize>
-			<ArrayInfo>
-				<LBound>0</LBound>
-				<Elements>11</Elements>
-			</ArrayInfo>
-		</DataType>
-		<DataType>
-			<Name Decoration="20010141">ARRAY [0..10] OF BOOL</Name>
-			<Type>BOOL</Type>
-			<BitSize>88</BitSize>
-			<ArrayInfo>
-				<LBound>0</LBound>
-				<Elements>11</Elements>
-			</ArrayInfo>
-		</DataType>
-		<DataType>
-			<Name Decoration="2001014F">ARRAY [0..10] OF BYTE</Name>
-			<Type>BYTE</Type>
-			<BitSize>88</BitSize>
-			<ArrayInfo>
-				<LBound>0</LBound>
-				<Elements>11</Elements>
-			</ArrayInfo>
-		</DataType>
-		<DataType>
-			<Name Decoration="200100F7">ARRAY [0..10] OF INT</Name>
-			<Type>INT</Type>
-			<BitSize>176</BitSize>
-			<ArrayInfo>
-				<LBound>0</LBound>
-				<Elements>11</Elements>
-			</ArrayInfo>
-		</DataType>
-		<DataType>
-			<Name Decoration="2001013C">ARRAY [0..10] OF DINT</Name>
-			<Type>DINT</Type>
-			<Comment>
-				<![CDATA[ArrLInt			: ARRAY [0..10] OF LINT;]]>
-			</Comment>
-			<BitSize>352</BitSize>
-			<ArrayInfo>
-				<LBound>0</LBound>
-				<Elements>11</Elements>
-			</ArrayInfo>
-		</DataType>
-		<DataType>
-			<Name Decoration="20010132">ARRAY [0..10] OF REAL</Name>
-			<Type>REAL</Type>
-			<BitSize>352</BitSize>
-			<ArrayInfo>
-				<LBound>0</LBound>
-				<Elements>11</Elements>
-			</ArrayInfo>
-		</DataType>
-		<DataType>
-			<Name Decoration="2001017F">ARRAY [0..10] OF LREAL</Name>
-			<Type>LREAL</Type>
-			<BitSize>704</BitSize>
-			<ArrayInfo>
-				<LBound>0</LBound>
-				<Elements>11</Elements>
-			</ArrayInfo>
-		</DataType>
-		<DataType>
-			<Name Decoration="10075FD4" Crc32="0285580343" LastChange="2023-01-22T14:18:36">STRUCT_Object3</Name>
-			<BitSize>8888</BitSize>
-			<SubItem>
-				<Name>ArrString</Name>
-				<Type Decoration="200142EB">ARRAY [0..10] OF STRING(80)</Type>
-				<BitSize>7128</BitSize>
-				<BitOffs>0</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>ArrBool</Name>
-				<Type Decoration="20010141">ARRAY [0..10] OF BOOL</Type>
-				<BitSize>88</BitSize>
-				<BitOffs>7128</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>ArrByte</Name>
-				<Type Decoration="2001014F">ARRAY [0..10] OF BYTE</Type>
-				<BitSize>88</BitSize>
-				<BitOffs>7216</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>ArrInt</Name>
-				<Type Decoration="200100F7">ARRAY [0..10] OF INT</Type>
-				<BitSize>176</BitSize>
-				<BitOffs>7304</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>ArrDInt</Name>
-				<Type Decoration="2001013C">ARRAY [0..10] OF DINT</Type>
-				<Comment>
-					<![CDATA[ArrLInt			: ARRAY [0..10] OF LINT;]]>
-				</Comment>
-				<BitSize>352</BitSize>
-				<BitOffs>7480</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>ArrReal</Name>
-				<Type Decoration="20010132">ARRAY [0..10] OF REAL</Type>
-				<BitSize>352</BitSize>
-				<BitOffs>7832</BitOffs>
-			</SubItem>
-			<SubItem>
-				<Name>ArrLReal</Name>
-				<Type Decoration="2001017F">ARRAY [0..10] OF LREAL</Type>
-				<BitSize>704</BitSize>
-				<BitOffs>8184</BitOffs>
-			</SubItem>
-		</DataType>
 		<DataType>
 			<Name Decoration="100754C8" Crc32="0284168913" LastChange="2023-01-22T18:35:25">STRUCT_Object2</Name>
 			<BitSize>808</BitSize>
@@ -285,6 +170,115 @@
 				<BitSize>808</BitSize>
 				<BitOffs>808</BitOffs>
 			</SubItem>
+		</DataType>
+		<DataType>
+			<Name Decoration="20010141">ARRAY [0..10] OF BOOL</Name>
+			<Type>BOOL</Type>
+			<BitSize>88</BitSize>
+			<ArrayInfo>
+				<LBound>0</LBound>
+				<Elements>11</Elements>
+			</ArrayInfo>
+		</DataType>
+		<DataType>
+			<Name Decoration="2001014F">ARRAY [0..10] OF BYTE</Name>
+			<Type>BYTE</Type>
+			<BitSize>88</BitSize>
+			<ArrayInfo>
+				<LBound>0</LBound>
+				<Elements>11</Elements>
+			</ArrayInfo>
+		</DataType>
+		<DataType>
+			<Name Decoration="200100F7">ARRAY [0..10] OF INT</Name>
+			<Type>INT</Type>
+			<BitSize>176</BitSize>
+			<ArrayInfo>
+				<LBound>0</LBound>
+				<Elements>11</Elements>
+			</ArrayInfo>
+		</DataType>
+		<DataType>
+			<Name Decoration="2001013C">ARRAY [0..10] OF DINT</Name>
+			<Type>DINT</Type>
+			<Comment>
+				<![CDATA[ArrLInt			: ARRAY [0..10] OF LINT;]]>
+			</Comment>
+			<BitSize>352</BitSize>
+			<ArrayInfo>
+				<LBound>0</LBound>
+				<Elements>11</Elements>
+			</ArrayInfo>
+		</DataType>
+		<DataType>
+			<Name Decoration="20010132">ARRAY [0..10] OF REAL</Name>
+			<Type>REAL</Type>
+			<BitSize>352</BitSize>
+			<ArrayInfo>
+				<LBound>0</LBound>
+				<Elements>11</Elements>
+			</ArrayInfo>
+		</DataType>
+		<DataType>
+			<Name Decoration="2001017F">ARRAY [0..10] OF LREAL</Name>
+			<Type>LREAL</Type>
+			<BitSize>704</BitSize>
+			<ArrayInfo>
+				<LBound>0</LBound>
+				<Elements>11</Elements>
+			</ArrayInfo>
+		</DataType>
+		<DataType>
+			<Name Decoration="1006F389" Crc32="2000627257" LastChange="2023-01-26T21:43:13">STRUCT_Object3</Name>
+			<BitSize>1760</BitSize>
+			<SubItem>
+				<Name>ArrBool</Name>
+				<Type Decoration="20010141">ARRAY [0..10] OF BOOL</Type>
+				<BitSize>88</BitSize>
+				<BitOffs>0</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>ArrByte</Name>
+				<Type Decoration="2001014F">ARRAY [0..10] OF BYTE</Type>
+				<BitSize>88</BitSize>
+				<BitOffs>88</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>ArrInt</Name>
+				<Type Decoration="200100F7">ARRAY [0..10] OF INT</Type>
+				<BitSize>176</BitSize>
+				<BitOffs>176</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>ArrDInt</Name>
+				<Type Decoration="2001013C">ARRAY [0..10] OF DINT</Type>
+				<Comment>
+					<![CDATA[ArrLInt			: ARRAY [0..10] OF LINT;]]>
+				</Comment>
+				<BitSize>352</BitSize>
+				<BitOffs>352</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>ArrReal</Name>
+				<Type Decoration="20010132">ARRAY [0..10] OF REAL</Type>
+				<BitSize>352</BitSize>
+				<BitOffs>704</BitOffs>
+			</SubItem>
+			<SubItem>
+				<Name>ArrLReal</Name>
+				<Type Decoration="2001017F">ARRAY [0..10] OF LREAL</Type>
+				<BitSize>704</BitSize>
+				<BitOffs>1056</BitOffs>
+			</SubItem>
+		</DataType>
+		<DataType>
+			<Name Decoration="200142EB">ARRAY [0..10] OF STRING(80)</Name>
+			<Type Decoration="40000051">STRING(80)</Type>
+			<BitSize>7128</BitSize>
+			<ArrayInfo>
+				<LBound>0</LBound>
+				<Elements>11</Elements>
+			</ArrayInfo>
 		</DataType>
 		<DataType>
 			<Name Decoration="10060AFD" IsDefinedInLibrary="1" Library="C:\TwinCAT\PLC\LIB\STANDARD.LIB">CTD</Name>
@@ -1180,13 +1174,13 @@
 		</Symbol>
 		<Symbol>
 			<Name>.Tag3</Name>
-			<Type Decoration="10075FD4">STRUCT_Object3</Type>
+			<Type Decoration="1006F389">STRUCT_Object3</Type>
 			<Comment>
 				<![CDATA[Hardware Mappings]]>
 			</Comment>
 			<IGroup>16448</IGroup>
-			<IOffset>3775</IOffset>
-			<BitSize>8888</BitSize>
+			<IOffset>1589</IOffset>
+			<BitSize>1760</BitSize>
 		</Symbol>
 		<Symbol>
 			<Name Static="Output">.Out1</Name>

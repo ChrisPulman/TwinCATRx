@@ -290,7 +290,8 @@ namespace CP.TwinCatRx
                     Type? type = null;
                     try
                     {
-                        type = Type.GetType(CodeGenerator.PLCToCSharpTypeConverter(notificationType));
+                        var types = CodeGenerator.PLCToCSharpTypeConverter(notificationType).Split(',');
+                        type = Type.GetType(types[0]);
                     }
                     catch
                     {

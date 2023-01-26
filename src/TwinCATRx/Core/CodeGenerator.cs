@@ -132,62 +132,86 @@ namespace CP.TwinCatRx.Core
                 default:
                     if (pLCType.Contains("OF STRING"))
                     {
-                        return typeof(string[]).ToString();
+                        var st = pLCType.Replace("ARRAY [", string.Empty);
+                        st = st.Replace("] OF STRING", string.Empty);
+                        return typeof(string[]).ToString() + "," + st;
                     }
 
                     if (pLCType.Contains("OF BOOL"))
                     {
-                        return typeof(bool[]).ToString();
+                        var bo = pLCType.Replace("ARRAY [", string.Empty);
+                        bo = bo.Replace("] OF BOOL", string.Empty);
+                        return typeof(bool[]).ToString() + "," + bo;
                     }
 
                     if (pLCType.Contains("OF BIT"))
                     {
-                        return typeof(bool[]).ToString();
+                        var bi = pLCType.Replace("ARRAY [", string.Empty);
+                        bi = bi.Replace("] OF BIT", string.Empty);
+                        return typeof(bool[]).ToString() + "," + bi;
                     }
 
                     if (pLCType.Contains("OF BIT8"))
                     {
-                        return typeof(bool[]).ToString();
+                        var bi8 = pLCType.Replace("ARRAY [", string.Empty);
+                        bi8 = bi8.Replace("] OF BIT8", string.Empty);
+                        return typeof(bool[]).ToString() + "," + bi8;
                     }
 
                     if (pLCType.Contains("OF BYTE"))
                     {
-                        return typeof(byte[]).ToString();
+                        var b = pLCType.Replace("ARRAY [", string.Empty);
+                        b = b.Replace("] OF BYTE", string.Empty);
+                        return typeof(byte[]).ToString() + "," + b;
                     }
 
                     if (pLCType.Contains("OF REAL"))
                     {
-                        return "System.Single[]";
+                        var r = pLCType.Replace("ARRAY [", string.Empty);
+                        r = r.Replace("] OF REAL", string.Empty);
+                        return "System.Single[]," + r;
                     }
 
                     if (pLCType.Contains("OF LREAL"))
                     {
-                        return "System.Double[]";
+                        var lr = pLCType.Replace("ARRAY [", string.Empty);
+                        lr = lr.Replace("] OF LREAL", string.Empty);
+                        return "System.Double[]," + lr;
                     }
 
                     if (pLCType.Contains("OF FLOAT"))
                     {
-                        return "System.Single[]";
+                        var s = pLCType.Replace("ARRAY [", string.Empty);
+                        s = s.Replace("] OF FLOAT", string.Empty);
+                        return "System.Single[]," + s;
                     }
 
                     if (pLCType.Contains("OF INT"))
                     {
-                        return "System.Int16[]";
+                        var i = pLCType.Replace("ARRAY [", string.Empty);
+                        i = i.Replace("] OF INT", string.Empty);
+                        return "System.Int16[]," + i;
                     }
 
                     if (pLCType.Contains("OF INT16"))
                     {
-                        return "System.Int16[]";
+                        var i16 = pLCType.Replace("ARRAY [", string.Empty);
+                        i16 = i16.Replace("] OF INT16", string.Empty);
+                        return "System.Int16[]," + i16;
                     }
 
                     if (pLCType.Contains("OF DINT"))
                     {
-                        return "System.Int32[]";
+                        var di = pLCType.Replace("ARRAY [", string.Empty);
+                        di = di.Replace("] OF DINT", string.Empty);
+                        return "System.Int32[]," + di;
                     }
 
                     if (pLCType.Contains("OF INT32"))
                     {
-                        return "System.Int32[]";
+                        var i32 = pLCType.Replace("ARRAY [", string.Empty);
+                        i32 = i32.Replace("] OF INT32", string.Empty);
+                        return "System.Int32[]," + i32;
                     }
 
                     if (pLCType.Contains("STRING("))
@@ -589,6 +613,13 @@ namespace CP.TwinCatRx.Core
                             var num = int.Parse(nums.Split('.')[2]);
                             sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")]")
                                 .Append("public bool[] ").Append(str).Append(" = new ").Append("bool[").Append(num).AppendLine("];");
+                        }
+                        else if (c_type.Contains("System.Byte[],"))
+                        {
+                            var nums = c_type.Split(',')[1];
+                            var num = int.Parse(nums.Split('.')[2]);
+                            sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")]")
+                                .Append("public byte[] ").Append(str).Append(" = new ").Append("byte[").Append(num).AppendLine("];");
                         }
                         else
                         {

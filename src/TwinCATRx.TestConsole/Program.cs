@@ -105,12 +105,11 @@ namespace TwinCATRx.TestConsole
                 Console.WriteLine("Press any key to write structure");
                 Console.ReadLine();
 
-                using (var htClone = data.CreateClone())
+                data.WriteValues(ht =>
                 {
-                    htClone.Value("AInt", (short)(tag + 10));
-                    htClone.Value("AString", $"Int Value {tag + 10}");
-                    client.Write(".Tag1", htClone.GetStucture());
-                }
+                    ht.Value("AInt", (short)(tag + 10));
+                    ht.Value("AString", $"Int Value {tag + 10}");
+                });
             });
 
             var tag3 = client.CreateStruct(".Tag3", true);
@@ -135,12 +134,12 @@ namespace TwinCATRx.TestConsole
                         break;
                     case ConsoleKey.W:
                         var tag = tag1.Value<short>("AInt");
-                        using (var htClone = tag1.CreateClone())
+                        tag1.WriteValues(ht =>
                         {
-                            htClone.Value("AInt", (short)(tag + 10));
-                            htClone.Value("AString", $"Int Value {tag + 10}");
-                            client.Write(".Tag1", htClone.GetStucture());
-                        }
+                            ht.Value("AInt", (short)(tag + 10));
+                            ht.Value("AString", $"Int Value {tag + 10}");
+                        });
+
                         break;
                 }
             }

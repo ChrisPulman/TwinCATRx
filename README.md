@@ -78,14 +78,13 @@ Currently it does not support the following features:
         // read from structure as one time read from the first level.
         var tag = data.Value<short>("AInt");
 
-        // Create a Clone of the existing data to use for writing
-        using (var htClone = data.CreateClone())
+        data.WriteValues(ht =>
         {
             // write values to structure
-            htClone.Value("AInt", (short)(tag + 10));
-            htClone.Value("AString", $"Int Value {tag + 10}");
-            // Write structure to PLC
-            client.Write(".Tag1", htClone.GetStucture());
-        }
+            ht.Value("AInt", (short)(tag + 10));
+            ht.Value("AString", $"Int Value {tag + 10}");
+            
+            // Values are written from the structure to the PLC upon return.
+        });
     });
 ```

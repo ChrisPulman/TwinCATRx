@@ -6,13 +6,10 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
-using System.Reflection.Metadata;
 using System.ServiceProcess;
 using CP.TwinCatRx.Core;
 using CP.TwinCATRx.Core;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using TwinCAT.Ads;
-using TwinCAT.PlcOpen;
 using TwinCAT.TypeSystem;
 
 namespace CP.TwinCatRx

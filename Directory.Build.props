@@ -15,6 +15,7 @@
     <Configurations>Debug;Release;PreRelease</Configurations>
     <PackageReleaseNotes>Compatability with Net 6, Net 7 and netstandard2.0</PackageReleaseNotes>
     <PackageTags>Beckhoff;TwinCAT;rx;reactive;extensions;observable;LINQ;net;netstandard</PackageTags>
+    <PackageReadmeFile>readme.md</PackageReadmeFile>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
     <PackageProjectUrl>https://github.com/ChrisPulman/TwinCATRx</PackageProjectUrl>
@@ -41,6 +42,7 @@
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)images\TwinCATRx.png" Pack="true" PackagePath="\" />
     <None Include="$(MSBuildThisFileDirectory)LICENSE" Pack="true" PackagePath="LICENSE" />
+    <None Include="$(MSBuildThisFileDirectory)readme.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup Condition="'$(IsTestProject)' == 'true'">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.1" />

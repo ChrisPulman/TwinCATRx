@@ -1,14 +1,13 @@
 ﻿// Copyright (c) Chris Pulman. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System.Globalization;
-using System.Reactive;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reflection;
 using CP.Collections;
 using CP.TwinCatRx.Core;
+using CP.TwinCATRx.Core;
 using TwinCAT.Ads;
 
 namespace CP.TwinCatRx
@@ -18,6 +17,39 @@ namespace CP.TwinCatRx
     /// </summary>
     public static class ObservableTwinCATExtensions
     {
+        /// <summary>
+        /// Adds the notification.
+        /// </summary>
+        /// <param name="settings">The settings.</param>
+        /// <param name="variableName">Name of the variable.</param>
+        /// <param name="cycleTime">The cycle time.</param>
+        /// <param name="arraySize">Size of the array.</param>
+        public static void AddNotification(this ISettings settings, string variableName, int cycleTime = 100, int arraySize = -1)
+        {
+            if (settings == null)
+            {
+                return;
+            }
+
+            settings.Notifications.Add(new TwinCATRx.Core.Notification(cycleTime, variableName, arraySize));
+        }
+
+        /// <summary>
+        /// Adds the write variable.
+        /// </summary>
+        /// <param name="settings">The settings.</param>
+        /// <param name="variableName">Name of the variable.</param>
+        /// <param name="arraySize">Size of the array.</param>
+        public static void AddWriteVariable(this ISettings settings, string variableName, int arraySize = -1)
+        {
+            if (settings == null)
+            {
+                return;
+            }
+
+            settings.WriteVariables.Add(new WriteVariable(variableName, arraySize));
+        }
+
         /// <summary>
         /// <para>Repeats the source observable sequence until it successfully terminates.</para>
         /// <para>This is same as Retry().</para>
@@ -113,7 +145,7 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, 
         /// </summary>
         /// <param name="dllFullName">Full name of the DLL.</param>
         /// <returns>assembly loaded.</returns>
-        public static Assembly? AssemblyLoad(string dllFullName)
+        public static Assembly? AssemblyLoad(this string dllFullName)
         {
             Assembly? assembly = null;
             if (File.Exists(dllFullName))
@@ -144,7 +176,7 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, 
         /// <param name="dllFullName">Full name of the DLL.</param>
         /// <param name="engineType">Type of the engine.</param>
         /// <returns>A type.</returns>
-        public static Type? GetType(this string dllFullName, string engineType) => AssemblyLoad(dllFullName)?.GetType(engineType);
+        public static Type? GetType(this string dllFullName, string engineType) => dllFullName.AssemblyLoad()?.GetType(engineType);
 
         /// <summary>
         /// The ADS state changed observer.
@@ -159,30 +191,27 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, 
         /// <param name="this">The this.</param>
         /// <returns>Observable State Info.</returns>
         public static IObservable<StateInfo> AdsStateObserver(this AdsClient @this) =>
-            Observable.Create<StateInfo>(obs =>
+            Observable.Create<StateInfo>(obs => new SingleAssignmentDisposable
+            {
+                Disposable = Observable.Interval(TimeSpan.FromSeconds(1)).Subscribe(_ =>
                 {
-                    return new SingleAssignmentDisposable
+                    try
                     {
-                        Disposable = Observable.Interval(TimeSpan.FromSeconds(1)).Subscribe(_ =>
+                        if (!@this.IsConnected)
                         {
-                            try
-                            {
-                                if (!@this.IsConnected)
-                                {
-                                    obs.OnNext(new StateInfo { AdsState = AdsState.Invalid });
-                                }
-                                else
-                                {
-                                    obs.OnNext(@this.ReadState());
-                                }
-                            }
-                            catch (Exception ex)
-                            {
-                                obs.OnError(ex);
-                            }
-                        })
-                    };
-                });
+                            obs.OnNext(new StateInfo { AdsState = AdsState.Invalid });
+                        }
+                        else
+                        {
+                            obs.OnNext(@this.ReadState());
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        obs.OnError(ex);
+                    }
+                })
+            });
 
         /// <summary>
         /// Observes the specified variable.
@@ -206,8 +235,32 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, 
         public static HashTableRx CreateStruct(this RxTcAdsClient @this, string variable, bool useUpperCase)
         {
             var ht = new HashTableRx(useUpperCase);
+            ht.Tag?.Add(nameof(RxTcAdsClient), @this);
+            ht.Tag?.Add("Variable", variable);
             @this?.DataReceived.Where(x => x.Variable.ToUpperInvariant().Equals(variable.ToUpperInvariant(), StringComparison.InvariantCulture) && x.Data != null).Subscribe(x => ht[true] = x.Data);
             return ht;
+        }
+
+        /// <summary>
+        /// Writes the values.
+        /// </summary>
+        /// <param name="this">The this.</param>
+        /// <param name="setValues">The set values.</param>
+        public static void WriteValues(this HashTableRx @this, Action<HashTableRx> setValues)
+        {
+            if (@this == null || setValues == null)
+            {
+                return;
+            }
+
+            if (@this.Tag?[nameof(RxTcAdsClient)] is RxTcAdsClient plc && @this.Tag?["Variable"] is string variable)
+            {
+                using (var htClone = @this.CreateClone())
+                {
+                    setValues(htClone);
+                    plc.Write(variable, htClone.GetStucture());
+                }
+            }
         }
 
         /// <summary>
@@ -224,6 +277,13 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, 
 
             return @this.ObserveAll.Where(_ => @this.Count > 0).Take(1).Delay(TimeSpan.FromSeconds(2)).Select(_ => @this);
         }
+
+        /// <summary>
+        /// Clones the specified HashTableRx.
+        /// </summary>
+        /// <param name="this">The this.</param>
+        /// <returns>A HashTableRx.</returns>
+        public static HashTableRx CreateClone(this HashTableRx @this) => new(true) { [true] = @this.GetStucture() };
 
         /// <summary>
         /// Values the specified variable.

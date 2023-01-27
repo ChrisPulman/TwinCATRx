@@ -22,24 +22,24 @@ namespace TwinCATRx.TestConsole
             // Create Client
             var client = new RxTcAdsClient();
             var settings = new Settings { AdsAddress = "5.35.59.10.1.1", Port = 801, SettingsId = "Default" };
-            settings.Notifications.Add(new Notification(100, ".Tag1"));
+            settings.AddNotification(".Tag1");
+            settings.AddNotification(".Tag3");
+            settings.AddNotification(".AString", arraySize: 80);
+            settings.AddNotification(".ABool");
+            settings.AddNotification(".AByte");
+            settings.AddNotification(".AInt");
+            settings.AddNotification(".ADInt");
+            settings.AddNotification(".AReal");
+            settings.AddNotification(".ALReal");
 
-            settings.Notifications.Add(new Notification(100, ".AString", 80));
-            settings.Notifications.Add(new Notification(100, ".ABool"));
-            settings.Notifications.Add(new Notification(100, ".AByte"));
-            settings.Notifications.Add(new Notification(100, ".AInt"));
-            settings.Notifications.Add(new Notification(100, ".ADInt"));
-            settings.Notifications.Add(new Notification(100, ".AReal"));
-            settings.Notifications.Add(new Notification(100, ".ALReal"));
-
-            // TODO: Find a way to write arrays of string
+            // TODO: Find a way to read/write arrays of string
             ////settings.WriteVariables.Add(new WriteVariable(".ArrString"));
-            settings.WriteVariables.Add(new WriteVariable(".ArrBool", 11));
-            settings.WriteVariables.Add(new WriteVariable(".ArrByte", 11));
-            settings.WriteVariables.Add(new WriteVariable(".ArrInt", 11));
-            settings.WriteVariables.Add(new WriteVariable(".ArrDInt", 11));
-            settings.WriteVariables.Add(new WriteVariable(".ArrReal", 11));
-            settings.WriteVariables.Add(new WriteVariable(".ArrLReal", 11));
+            settings.AddWriteVariable(".ArrBool", 11);
+            settings.AddWriteVariable(".ArrByte", 11);
+            settings.AddWriteVariable(".ArrInt", 11);
+            settings.AddWriteVariable(".ArrDInt", 11);
+            settings.AddWriteVariable(".ArrReal", 11);
+            settings.AddWriteVariable(".ArrLReal", 11);
             client.Connect(settings);
 
             // read and write client
@@ -104,9 +104,24 @@ namespace TwinCATRx.TestConsole
                 Console.WriteLine(tag);
                 Console.WriteLine("Press any key to write structure");
                 Console.ReadLine();
-                data.Value("AInt", (short)(tag + 10));
-                data.Value("AString", $"Int Value {tag + 10}");
-                client.Write(".Tag1", data.GetStucture());
+
+                data.WriteValues(ht =>
+                {
+                    ht.Value("AInt", (short)(tag + 10));
+                    ht.Value("AString", $"Int Value {tag + 10}");
+                });
+            });
+
+            var tag3 = client.CreateStruct(".Tag3", true);
+            tag3.StructureReady().Subscribe(data =>
+            {
+                Console.WriteLine("Structure ready");
+                data.Observe<bool[]>("ArrBool").Subscribe(value => Console.WriteLine(value));
+                data.Observe<byte[]>("ArrByte").Subscribe(value => Console.WriteLine(value));
+                data.Observe<short[]>("ArrInt").Subscribe(value => Console.WriteLine(value));
+                data.Observe<int[]>("ArrDInt").Subscribe(value => Console.WriteLine(value));
+                data.Observe<float[]>("ArrReal").Subscribe(value => Console.WriteLine(value));
+                data.Observe<double[]>("ArrLReal").Subscribe(value => Console.WriteLine(value));
             });
             var exit = false;
             while (!exit)
@@ -119,15 +134,19 @@ namespace TwinCATRx.TestConsole
                         break;
                     case ConsoleKey.W:
                         var tag = tag1.Value<short>("AInt");
-                        tag1.Value("AInt", (short)(tag + 10));
-                        tag1.Value("AString", $"Int Value {tag + 10}");
-                        client.Write(".Tag1", tag1.GetStucture());
+                        tag1.WriteValues(ht =>
+                        {
+                            ht.Value("AInt", (short)(tag + 10));
+                            ht.Value("AString", $"Int Value {tag + 10}");
+                        });
+
                         break;
                 }
             }
 
             client.Dispose();
             tag1.Dispose();
+            tag3.Dispose();
         }
     }
 }

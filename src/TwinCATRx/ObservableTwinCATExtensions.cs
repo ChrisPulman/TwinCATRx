@@ -79,7 +79,9 @@ namespace CP.TwinCatRx
         /// <param name="onError">The on error.</param>
         /// <param name="delay">The delay.</param>
         /// <returns>A Value.</returns>
-        public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, in TimeSpan delay)
+#pragma warning disable RCS1231 // Make parameter ref read-only.
+        public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, TimeSpan delay)
+#pragma warning restore RCS1231 // Make parameter ref read-only.
 where TException : Exception => source.OnErrorRetry(onError, int.MaxValue, delay);
 
         /// <summary>
@@ -105,7 +107,9 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, TimeSpa
         /// <param name="retryCount">The retry count.</param>
         /// <param name="delay">The delay.</param>
         /// <returns>A Value.</returns>
-        public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, int retryCount, in TimeSpan delay)
+#pragma warning disable RCS1231 // Make parameter ref read-only.
+        public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, int retryCount, TimeSpan delay)
+#pragma warning restore RCS1231 // Make parameter ref read-only.
 where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, Scheduler.Default);
 
         /// <summary>

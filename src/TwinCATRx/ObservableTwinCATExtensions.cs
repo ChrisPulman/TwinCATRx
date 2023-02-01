@@ -220,7 +220,7 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, 
         /// <param name="this">The this.</param>
         /// <param name="variable">The variable.</param>
         /// <returns>An Observable of T.</returns>
-        public static IObservable<T> Observe<T>(this RxTcAdsClient @this, string variable) =>
+        public static IObservable<T> Observe<T>(this IRxTcAdsClient @this, string variable) =>
             @this?.DataReceived.Where(x => x.Variable.ToUpperInvariant().Equals(variable.ToUpperInvariant(), StringComparison.InvariantCulture) && x.Data != null).Select(x => (T)x.Data!)!;
 
         /// <summary>
@@ -232,7 +232,7 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, 
         /// <returns>
         /// A HashTableRx with a link to the PLC.
         /// </returns>
-        public static HashTableRx CreateStruct(this RxTcAdsClient @this, string variable, bool useUpperCase)
+        public static HashTableRx CreateStruct(this IRxTcAdsClient @this, string variable, bool useUpperCase)
         {
             var ht = new HashTableRx(useUpperCase);
             ht.Tag?.Add(nameof(RxTcAdsClient), @this);

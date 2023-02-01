@@ -15,20 +15,20 @@ using TwinCAT.TypeSystem;
 namespace CP.TwinCatRx
 {
     /// <summary>
-    /// Observable TwinCAT.
+    /// Observable TwinCAT ADS Client.
     /// </summary>
     public class RxTcAdsClient : IRxTcAdsClient
     {
         private readonly ISubject<AdsState> _clientState = new Subject<AdsState>();
         private readonly IList<string> _code = new List<string>();
         private readonly ISubject<string[]> _codeSubject = new Subject<string[]>();
-        private readonly ISubject<(string Variable, object? Data)> _dataReceived = new Subject<(string Variable, object? Data)>();
+        private readonly ISubject<(string Variable, object? Data, string? Id)> _dataReceived = new Subject<(string Variable, object? Data, string? Id)>();
         private readonly ISubject<Exception> _errorReceived = new Subject<Exception>();
         private readonly ISubject<string?> _onWriteSubject = new Subject<string?>();
-        private readonly ISubject<(uint? handle, Type type, int length)> _readPLC = new Subject<(uint? handle, Type type, int length)>();
+        private readonly ISubject<(uint? handle, Type type, int length, string? id)> _readPLC = new Subject<(uint? handle, Type type, int length, string? id)>();
         private readonly ISubject<ServiceStatus> _serviceStatus = new Subject<ServiceStatus>();
         private readonly IDictionary<string, Type> _typeInfo = new Dictionary<string, Type>();
-        private readonly ISubject<(uint? handle, object value, int length)> _writePLC = new Subject<(uint? handle, object value, int length)>();
+        private readonly ISubject<(uint? handle, object value, int length, string? id)> _writePLC = new Subject<(uint? handle, object value, int length, string? id)>();
         private CompositeDisposable? _cleanup;
         private ICodeGenerator? _codeGenerator;
         private IDisposable? _plcCleanup;
@@ -49,7 +49,7 @@ namespace CP.TwinCatRx
         /// Gets the data received.
         /// </summary>
         /// <value>The data received.</value>
-        public IObservable<(string Variable, object? Data)> DataReceived => _dataReceived.Retry().Publish().RefCount();
+        public IObservable<(string Variable, object? Data, string? Id)> DataReceived => _dataReceived.Retry().Publish().RefCount();
 
         /// <summary>
         /// Gets error received.
@@ -89,7 +89,7 @@ namespace CP.TwinCatRx
         {
             if (_cleanup?.IsDisposed == true)
             {
-                throw new Exception("ObservableTwinCAT has been Disposed");
+                throw new Exception("RxTcAdsClient has been Disposed");
             }
 
             try
@@ -124,9 +124,10 @@ namespace CP.TwinCatRx
         /// Reads the specified variable.
         /// </summary>
         /// <param name="variable">The data.</param>
-        /// <param name="parameters">The parameters.</param>
+        /// <param name="arrayLength">Length of the array.</param>
+        /// <param name="id">The identifier.</param>
         /// <exception cref="System.ArgumentOutOfRangeException">Parameters - Parameter 0 must be set to the size of the Array.</exception>
-        public void Read(string variable, string? parameters = null)
+        public void Read(string variable, int? arrayLength = null, string? id = null)
         {
             if (!string.IsNullOrWhiteSpace(variable) && WriteHandleInfo.TryGetValue(variable!.ToUpper(), out var item))
             {
@@ -135,20 +136,20 @@ namespace CP.TwinCatRx
                 {
                     if (item.ArrayLength > 0)
                     {
-                        ReadArrayHandle(item.Handle, type, item.ArrayLength);
+                        ReadArrayHandle(item.Handle, type, item.ArrayLength, id);
                         return;
                     }
 
-                    if (string.IsNullOrWhiteSpace(parameters))
+                    if (!arrayLength.HasValue)
                     {
-                        throw new ArgumentOutOfRangeException(nameof(parameters), "Parameter 0 must be set to the size of the Array");
+                        throw new ArgumentOutOfRangeException(nameof(arrayLength), "arrayLength must be set to the size of the Array");
                     }
 
-                    ReadArrayHandle(item.Handle, type, int.Parse(parameters));
+                    ReadArrayHandle(item.Handle, type, arrayLength.Value, id);
                 }
                 else
                 {
-                    ReadHandle(item.Handle, type);
+                    ReadHandle(item.Handle, type, id);
                 }
             }
         }
@@ -473,7 +474,7 @@ namespace CP.TwinCatRx
                                     if (data != null)
                                     {
                                         client.WriteAny(v.handle.Value, data);
-                                        _onWriteSubject.OnNext("Success");
+                                        _onWriteSubject.OnNext(string.IsNullOrWhiteSpace(v.id) ? "Success" : $"Success,{v.id}");
                                     }
                                 }
                             }
@@ -514,7 +515,7 @@ namespace CP.TwinCatRx
 
                                if (!string.IsNullOrWhiteSpace(key))
                                {
-                                   _dataReceived.OnNext((Variable: key, Data: plcValueRead));
+                                   _dataReceived.OnNext((Variable: key, Data: plcValueRead, Id: v.id));
                                }
                            }
                        }
@@ -539,7 +540,7 @@ namespace CP.TwinCatRx
                                         {
                                             if (notification.ArraySize > 0)
                                             {
-                                                ReadArrayHandle(kvp.Value, type, notification.ArraySize);
+                                                ReadArrayHandle(kvp.Value, type, notification.ArraySize, null);
                                             }
                                             else
                                             {
@@ -548,7 +549,7 @@ namespace CP.TwinCatRx
                                         }
                                         else
                                         {
-                                            ReadHandle(kvp.Value, type);
+                                            ReadHandle(kvp.Value, type, null);
                                         }
                                     }
                                 }
@@ -560,24 +561,13 @@ namespace CP.TwinCatRx
                 })
                 .OnErrorRetry((Exception ex) => _errorReceived.OnNext(ex), TimeSpan.FromSeconds(5)).Publish().RefCount();
 
-        private void ReadArrayHandle(uint? handle, Type type, int length) =>
-            _readPLC.OnNext((handle, type, length));
+        private void ReadArrayHandle(uint? handle, Type type, int length, string? id) =>
+            _readPLC.OnNext((handle, type, length, id));
 
-        /// <summary>
-        /// Reads the specified handle.
-        /// </summary>
-        /// <param name="handle">The handle.</param>
-        /// <param name="type">The type.</param>
-        private void ReadHandle(uint? handle, Type type) =>
-            _readPLC.OnNext((handle, type, -1));
+        private void ReadHandle(uint? handle, Type type, string? id) =>
+            _readPLC.OnNext((handle, type, -1, id));
 
-        /// <summary>
-        /// Writes the specified value to the handle.
-        /// </summary>
-        /// <param name="handle">The handle.</param>
-        /// <param name="value">The value.</param>
-        /// <param name="length">The length.</param>
-        private void WriteHandle(uint? handle, object value, int length = -1) =>
-            _writePLC.OnNext((handle, value, length));
+        private void WriteHandle(uint? handle, object value, int length = -1, string? id = null) =>
+            _writePLC.OnNext((handle, value, length, id));
     }
 }

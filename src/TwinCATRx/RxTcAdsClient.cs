@@ -89,7 +89,8 @@ namespace CP.TwinCatRx
         {
             if (_cleanup?.IsDisposed == true)
             {
-                throw new Exception("RxTcAdsClient has been Disposed");
+                _errorReceived.OnNext(new Exception("RxTcAdsClient has been Disposed"));
+                return;
             }
 
             try
@@ -102,7 +103,7 @@ namespace CP.TwinCatRx
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
+                _errorReceived.OnNext(ex);
             }
         }
 
@@ -159,19 +160,20 @@ namespace CP.TwinCatRx
         /// </summary>
         /// <param name="variable">The variable.</param>
         /// <param name="value">The value.</param>
-        public void Write(string variable, object value)
+        /// <param name="id">The identifier.</param>
+        public void Write(string variable, object value, string? id = null)
         {
             uint? handle;
             if (!string.IsNullOrWhiteSpace(variable) && ReadWriteHandleInfo.ContainsKey(variable!.ToUpper()))
             {
                 handle = ReadWriteHandleInfo[variable.ToUpper()];
-                WriteHandle(handle, value);
+                WriteHandle(handle, value, id: id);
                 return;
             }
 
             if (!string.IsNullOrWhiteSpace(variable) && WriteHandleInfo.TryGetValue(variable!.ToUpper(), out var item))
             {
-                WriteHandle(item.Handle, value, item.ArrayLength);
+                WriteHandle(item.Handle, value, item.ArrayLength, id: id);
             }
         }
 

@@ -22,7 +22,7 @@ namespace CP.TwinCatRx
         /// Gets the data received.
         /// </summary>
         /// <value>The data received.</value>
-        IObservable<(string Variable, object? Data)> DataReceived { get; }
+        IObservable<(string Variable, object? Data, string? Id)> DataReceived { get; }
 
         /// <summary>
         /// Gets the error received.
@@ -63,8 +63,9 @@ namespace CP.TwinCatRx
         /// Reads the specified data.
         /// </summary>
         /// <param name="variable">The data.</param>
-        /// <param name="parameters">The parameters.</param>
-        void Read(string variable, string parameters);
+        /// <param name="arrayLength">Length of the array.</param>
+        /// <param name="id">The identifier.</param>
+        void Read(string variable, int? arrayLength = null, string? id = null);
 
         /// <summary>
         /// Writes the specified value.

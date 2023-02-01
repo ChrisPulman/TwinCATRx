@@ -79,7 +79,9 @@ namespace CP.TwinCatRx
         /// <param name="onError">The on error.</param>
         /// <param name="delay">The delay.</param>
         /// <returns>A Value.</returns>
+#pragma warning disable RCS1231 // Make parameter ref read-only.
         public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, TimeSpan delay)
+#pragma warning restore RCS1231 // Make parameter ref read-only.
 where TException : Exception => source.OnErrorRetry(onError, int.MaxValue, delay);
 
         /// <summary>
@@ -105,7 +107,9 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, TimeSpa
         /// <param name="retryCount">The retry count.</param>
         /// <param name="delay">The delay.</param>
         /// <returns>A Value.</returns>
+#pragma warning disable RCS1231 // Make parameter ref read-only.
         public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, int retryCount, TimeSpan delay)
+#pragma warning restore RCS1231 // Make parameter ref read-only.
 where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, Scheduler.Default);
 
         /// <summary>
@@ -220,8 +224,21 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, 
         /// <param name="this">The this.</param>
         /// <param name="variable">The variable.</param>
         /// <returns>An Observable of T.</returns>
-        public static IObservable<T> Observe<T>(this RxTcAdsClient @this, string variable) =>
+        public static IObservable<T> Observe<T>(this IRxTcAdsClient @this, string variable) =>
             @this?.DataReceived.Where(x => x.Variable.ToUpperInvariant().Equals(variable.ToUpperInvariant(), StringComparison.InvariantCulture) && x.Data != null).Select(x => (T)x.Data!)!;
+
+        /// <summary>
+        /// Observes the specified variable.
+        /// </summary>
+        /// <typeparam name="T">The Type of the data.</typeparam>
+        /// <param name="this">The this.</param>
+        /// <param name="variable">The variable.</param>
+        /// <param name="id">The identifier.</param>
+        /// <returns>
+        /// An Observable of T.
+        /// </returns>
+        public static IObservable<T> Observe<T>(this IRxTcAdsClient @this, string variable, string id) =>
+            @this?.DataReceived.Where(x => string.Equals(x.Id, id) && x.Variable.ToUpperInvariant().Equals(variable.ToUpperInvariant(), StringComparison.InvariantCulture) && x.Data != null).Select(x => (T)x.Data!)!;
 
         /// <summary>
         /// Creates the structure.
@@ -232,7 +249,7 @@ where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, 
         /// <returns>
         /// A HashTableRx with a link to the PLC.
         /// </returns>
-        public static HashTableRx CreateStruct(this RxTcAdsClient @this, string variable, bool useUpperCase)
+        public static HashTableRx CreateStruct(this IRxTcAdsClient @this, string variable, bool useUpperCase)
         {
             var ht = new HashTableRx(useUpperCase);
             ht.Tag?.Add(nameof(RxTcAdsClient), @this);

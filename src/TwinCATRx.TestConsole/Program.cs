@@ -2,9 +2,8 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System.Reactive.Linq;
-using CP.Collections;
 using CP.TwinCatRx;
-using CP.TwinCATRx.Core;
+using CP.TwinCatRx.Core;
 
 namespace TwinCATRx.TestConsole
 {

@@ -3,7 +3,7 @@
 
 using System.Xml.Serialization;
 
-namespace CP.TwinCATRx.Core
+namespace CP.TwinCatRx.Core
 {
     /// <summary>
     /// Base settings for Engine Settings file.
@@ -50,8 +50,8 @@ namespace CP.TwinCATRx.Core
             {
                 SettingsId = "Defaults"
             };
-            s.Notifications.Add(new Notification(100, ".UIStructure"));
-            s.WriteVariables.Add(new WriteVariable(".FailSafeCounter"));
+            s.AddNotification(".UIStructure");
+            s.AddWriteVariable(".FailSafeCounter");
             return s;
         }
     }

@@ -1,23 +1,20 @@
 ﻿// Copyright (c) Chris Pulman. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-namespace CP.TwinCATRx.Core
+using System.Runtime.Serialization;
+
+namespace CP.TwinCatRx.Core
 {
     /// <summary>
-    /// Interface for Notification.
+    /// Interface for Write Variable.
     /// </summary>
-    public interface INotification
+    public interface IWriteVariable
     {
-        /// <summary>
-        /// Gets the update rate.
-        /// </summary>
-        /// <value>The update rate.</value>
-        int UpdateRate { get; }
-
         /// <summary>
         /// Gets the variable.
         /// </summary>
         /// <value>The variable.</value>
+        [DataMember]
         string? Variable { get; }
 
         /// <summary>
@@ -26,6 +23,7 @@ namespace CP.TwinCATRx.Core
         /// <value>
         /// The size of the array.
         /// </value>
+        [DataMember]
         int ArraySize { get; }
     }
 }

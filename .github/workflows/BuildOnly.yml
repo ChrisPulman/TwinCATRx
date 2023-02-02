@@ -43,20 +43,11 @@ jobs:
       with:
         vs-prerelease: true
 
-    #- name: NBGV
-    #  id: nbgv
-    #  uses: dotnet/nbgv@master
-    #  with:
-    #    setAllVars: true
-    
-    - name: NBGV install
-      run: |
-        nbgv install
-        nbgv prepare-release
-        nbgv cloud
-      
-    - name: NBGV Get Version
-      run: nbgv get-version
+    - name: NBGV
+      id: nbgv
+      uses: dotnet/nbgv@master
+      with:
+        setAllVars: true
 
     - name: NuGet Restore
       run: dotnet restore TwinCATRx.sln

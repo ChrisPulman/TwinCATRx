@@ -18,26 +18,11 @@ namespace CP.TwinCatRx.Core
     /// Code Generator.
     /// </summary>
     /// <seealso cref="ICodeGenerator"/>
-    internal class CodeGenerator : ICodeGenerator
+    public class CodeGenerator : ICodeGenerator
     {
-        /// <summary>
-        /// The type list.
-        /// </summary>
         private readonly Hashtable _typeList = new();
-
-        /// <summary>
-        /// The ads client.
-        /// </summary>
         private AdsClient? _adsClient;
-
-        /// <summary>
-        /// The disposed value.
-        /// </summary>
         private bool _disposedValue;
-
-        /// <summary>
-        /// The symbol loader.
-        /// </summary>
         private ISymbolLoader? _symbolLoader;
 
         /// <summary>
@@ -66,8 +51,7 @@ namespace CP.TwinCatRx.Core
         /// <param name="pLCType">Type of the PLC.</param>
         /// <returns>A Value.</returns>
         /// <exception cref="Exception">
-        /// This Type (" + PLCType + ")is not supported in this version, Please contact A I C
-        /// Solutions for details of next version release.
+        /// This Type (" + PLCType + ")is not supported in this version, Please contact us for details of next version.
         /// </exception>
         public static string PLCToCSharpTypeConverter(string? pLCType)
         {
@@ -221,7 +205,7 @@ namespace CP.TwinCatRx.Core
                         return $"System.String,{s}";
                     }
 
-                    throw new UnsuportedTypeException("This Type (" + pLCType + ")is not supported in this version, Please contact us for details of next version release");
+                    throw new UnsuportedTypeException("This Type (" + pLCType + ")is not supported in this version, Please contact us for details of next version");
             }
         }
 

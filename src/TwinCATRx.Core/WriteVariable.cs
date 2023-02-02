@@ -3,14 +3,14 @@
 
 using System.Runtime.Serialization;
 
-namespace CP.TwinCATRx.Core
+namespace CP.TwinCatRx.Core
 {
     /// <summary>
     /// WriteVariable for ISettings.
     /// </summary>
     [DataContract]
     [Serializable]
-    public class WriteVariable : IWriteVariable
+    internal class WriteVariable : IWriteVariable
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="WriteVariable" /> class.

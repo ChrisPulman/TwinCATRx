@@ -9,15 +9,19 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="6.*" />
+    <Compile Include="..\TwinCATRx.Core\DisposableMixins.cs" Link="DisposableMixins.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="HashTableRx" Version="1.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="7.0.0" />
-    <PackageReference Include="System.CodeDom" Version="7.0.0" />
     <PackageReference Include="System.ComponentModel.Composition" Version="7.0.0" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="7.0.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="7.0.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.4.0" />
-    <PackageReference Include="Mono.Cecil" Version="0.11.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TwinCATRx.Core\TwinCATRx.Core.csproj" />
   </ItemGroup>
 
 </Project>

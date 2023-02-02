@@ -8,7 +8,6 @@ using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.ServiceProcess;
 using CP.TwinCatRx.Core;
-using CP.TwinCATRx.Core;
 using TwinCAT.Ads;
 using TwinCAT.TypeSystem;
 
@@ -203,7 +202,7 @@ namespace CP.TwinCatRx
         /// <param name="notifications">The notifications.</param>
         /// <param name="client">The client.</param>
         /// <returns>A Value.</returns>
-        private Exception? CreateNotificationVariables(List<TwinCATRx.Core.INotification>? notifications, AdsClient client)
+        private Exception? CreateNotificationVariables(List<Core.INotification>? notifications, AdsClient client)
         {
             var isTC3 = client?.Address?.Port >= 851;
             for (var i = 0; i < notifications?.Count; i++)

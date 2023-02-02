@@ -52,8 +52,7 @@ jobs:
     - name: Set Version
       shell: bash
       run: nbgv cloud
-        
-    - run: echo 'version=${{ .\nbgv get-version -f json | ConvertFrom-Json }}'
+      
     - run: echo 'SemVer2=${{ steps.nbgv.outputs.SemVer2 }}'
 
     - name: NuGet Restore

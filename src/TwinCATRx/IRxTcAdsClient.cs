@@ -43,6 +43,14 @@ namespace CP.TwinCatRx
         IDictionary<string, uint?> ReadWriteHandleInfo { get; }
 
         /// <summary>
+        /// Gets the settings.
+        /// </summary>
+        /// <value>
+        /// The settings.
+        /// </value>
+        ISettings? Settings { get; }
+
+        /// <summary>
         /// Gets the write handle information.
         /// </summary>
         /// <value>The write handle information.</value>

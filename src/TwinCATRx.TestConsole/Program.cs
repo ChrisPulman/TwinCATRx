@@ -86,7 +86,7 @@ namespace TwinCATRx.TestConsole
             Console.ReadLine();
 
             // Create structure to store data
-            var tag1 = client.CreateStruct(".Tag1", true);
+            var tag1 = client.CreateStruct(".Tag1");
             tag1.StructureReady().Subscribe(data =>
             {
                 Console.WriteLine("Structure ready");
@@ -111,7 +111,7 @@ namespace TwinCATRx.TestConsole
                 });
             });
 
-            var tag3 = client.CreateStruct(".Tag3", true);
+            var tag3 = client.CreateStruct(".Tag3");
             tag3.StructureReady().Subscribe(data =>
             {
                 Console.WriteLine("Structure ready");

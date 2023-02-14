@@ -40,13 +40,17 @@ namespace CP.TwinCatRx
         /// </summary>
         /// <param name="this">The this.</param>
         /// <param name="variable">The variable.</param>
-        /// <param name="useUpperCase">if set to <c>true</c> [use upper case].</param>
         /// <returns>
         /// A HashTableRx with a link to the PLC.
         /// </returns>
-        public static HashTableRx CreateStruct(this IRxTcAdsClient @this, string variable, bool useUpperCase)
+        public static HashTableRx? CreateStruct(this IRxTcAdsClient @this, string variable)
         {
-            var ht = new HashTableRx(useUpperCase);
+            if (@this == null)
+            {
+                return default;
+            }
+
+            var ht = new HashTableRx(@this.Settings?.Port < 851);
             ht.Tag?.Add(nameof(RxTcAdsClient), @this);
             ht.Tag?.Add("Variable", variable);
             @this?.DataReceived.Where(x => x.Variable.ToUpperInvariant().Equals(variable.ToUpperInvariant(), StringComparison.InvariantCulture) && x.Data != null).Subscribe(x => ht[true] = x.Data);
@@ -95,7 +99,15 @@ namespace CP.TwinCatRx
         /// </summary>
         /// <param name="this">The this.</param>
         /// <returns>A HashTableRx.</returns>
-        public static HashTableRx CreateClone(this HashTableRx @this) => new(true) { [true] = @this.GetStucture() };
+        public static HashTableRx CreateClone(this HashTableRx @this)
+        {
+            if (@this == null)
+            {
+                return default!;
+            }
+
+            return new(@this!.UseUpperCase) { [true] = @this.GetStucture() };
+        }
 
         /// <summary>
         /// Values the specified variable.

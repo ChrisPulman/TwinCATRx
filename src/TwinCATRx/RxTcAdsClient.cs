@@ -80,6 +80,14 @@ namespace CP.TwinCatRx
         public IDictionary<string, (uint? Handle, int ArrayLength)> WriteHandleInfo { get; } = new Dictionary<string, (uint? Handle, int ArrayLength)>();
 
         /// <summary>
+        /// Gets the settings.
+        /// </summary>
+        /// <value>
+        /// The settings.
+        /// </value>
+        public ISettings? Settings { get; private set; }
+
+        /// <summary>
         /// Connects the specified settings.
         /// </summary>
         /// <param name="settings">The settings.</param>
@@ -96,7 +104,8 @@ namespace CP.TwinCatRx
             {
                 if (!Connected)
                 {
-                    _plcCleanup = InitPLC(settings).Subscribe();
+                    Settings = settings;
+                    _plcCleanup = InitPLC().Subscribe();
                     Connected = true;
                 }
             }
@@ -318,7 +327,7 @@ namespace CP.TwinCatRx
             return null;
         }
 
-        private IObservable<Unit> InitPLC(ISettings settings) =>
+        private IObservable<Unit> InitPLC() =>
             Observable.Create<Unit>(o =>
                 {
                     _cleanup = new();
@@ -338,16 +347,16 @@ namespace CP.TwinCatRx
 
                     try
                     {
-                        if (string.IsNullOrWhiteSpace(settings.AdsAddress))
+                        if (string.IsNullOrWhiteSpace(Settings!.AdsAddress))
                         {
-                            client.Connect(settings.Port);
+                            client.Connect(Settings!.Port);
                         }
                         else
                         {
-                            client.Connect(settings.AdsAddress, settings.Port);
+                            client.Connect(Settings!.AdsAddress, Settings!.Port);
                         }
 
-                        _codeGenerator.LoadSymbols(settings.AdsAddress, settings.Port);
+                        _codeGenerator.LoadSymbols(Settings!.AdsAddress, Settings!.Port);
                     }
                     catch (Exception ex)
                     {
@@ -428,13 +437,13 @@ namespace CP.TwinCatRx
                         {
                             try
                             {
-                                var nv = CreateNotificationVariables(settings.Notifications, client);
+                                var nv = CreateNotificationVariables(Settings!.Notifications, client);
                                 if (nv != null)
                                 {
                                     throw nv;
                                 }
 
-                                nv = CreateWriteVariables(settings.WriteVariables, client);
+                                nv = CreateWriteVariables(Settings!.WriteVariables, client);
                                 if (nv != null)
                                 {
                                     throw nv;
@@ -526,9 +535,9 @@ namespace CP.TwinCatRx
                        }
                    }).DisposeWith(_cleanup);
 
-                    if (settings != null)
+                    if (Settings! != null)
                     {
-                        foreach (var notification in settings.Notifications)
+                        foreach (var notification in Settings!.Notifications)
                         {
                             Observable.Interval(TimeSpan.FromMilliseconds(notification.UpdateRate)).Retry().Subscribe(_ =>
                             {

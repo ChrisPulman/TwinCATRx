@@ -7,17 +7,12 @@
         "^refs/tags/v\\d+\\.\\d+" // we also release tags starting with vN.N
     ],
     "nugetPackageVersion": {
-        "semVer": 2,
-        "precision": "build"
+        "semVer": 2
     },
     "cloudBuild": {
         "setVersionVariables": true,
         "buildNumber": {
             "enabled": false
         }
-    },
-    "release": {
-        "versionIncrement": "build",
-        "firstUnstableTag": "alpha"
     }
 }

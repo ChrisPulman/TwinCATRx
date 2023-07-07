@@ -9,9 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ProjectConfig", "ProjectCon
 	ProjectSection(SolutionItems) = preProject
 		..\.editorconfig = ..\.editorconfig
 		..\.gitignore = ..\.gitignore
-		..\.github\workflows\BuildOnly.yml = ..\.github\workflows\BuildOnly.yml
 		..\Directory.Build.props = ..\Directory.Build.props
-		..\.github\workflows\dotnet.yml = ..\.github\workflows\dotnet.yml
 		..\README.md = ..\README.md
 		..\stylecop.json = ..\stylecop.json
 		..\Version.json = ..\Version.json
@@ -19,33 +17,30 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ProjectConfig", "ProjectCon
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TwinCATRx.TestConsole", "TwinCATRx.TestConsole\TwinCATRx.TestConsole.csproj", "{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwinCATRx.Core", "TwinCATRx.Core\TwinCATRx.Core.csproj", "{7833002D-9032-4816-B8A1-E861BFB0F5FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TwinCATRx.Core", "TwinCATRx.Core\TwinCATRx.Core.csproj", "{7833002D-9032-4816-B8A1-E861BFB0F5FE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "..\build\_build.csproj", "{B399408B-6B2C-445D-9335-3F80D70F27BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
-		PreRelease|Any CPU = PreRelease|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{4620B673-4D62-4117-9B1B-314AD216CEAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4620B673-4D62-4117-9B1B-314AD216CEAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4620B673-4D62-4117-9B1B-314AD216CEAA}.PreRelease|Any CPU.ActiveCfg = PreRelease|Any CPU
-		{4620B673-4D62-4117-9B1B-314AD216CEAA}.PreRelease|Any CPU.Build.0 = PreRelease|Any CPU
 		{4620B673-4D62-4117-9B1B-314AD216CEAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4620B673-4D62-4117-9B1B-314AD216CEAA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}.PreRelease|Any CPU.ActiveCfg = PreRelease|Any CPU
-		{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}.PreRelease|Any CPU.Build.0 = PreRelease|Any CPU
 		{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7833002D-9032-4816-B8A1-E861BFB0F5FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7833002D-9032-4816-B8A1-E861BFB0F5FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7833002D-9032-4816-B8A1-E861BFB0F5FE}.PreRelease|Any CPU.ActiveCfg = PreRelease|Any CPU
-		{7833002D-9032-4816-B8A1-E861BFB0F5FE}.PreRelease|Any CPU.Build.0 = PreRelease|Any CPU
 		{7833002D-9032-4816-B8A1-E861BFB0F5FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7833002D-9032-4816-B8A1-E861BFB0F5FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B399408B-6B2C-445D-9335-3F80D70F27BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B399408B-6B2C-445D-9335-3F80D70F27BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

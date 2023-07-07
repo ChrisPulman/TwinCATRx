@@ -1,4 +1,7 @@
 # TwinCATRx
+
+![License](https://img.shields.io/github/license/ChrisPulman/TwinCATRx.svg) [![Build](https://github.com/ChrisPulman/TwinCATRx/actions/workflows/BuildOnly.yml/badge.svg)](https://github.com/ChrisPulman/TwinCATRx/actions/workflows/BuildOnly.yml) ![Nuget](https://img.shields.io/nuget/dt/CP.TwinCATRx?color=pink&style=plastic) [![NuGet](https://img.shields.io/nuget/v/CP.TwinCATRx.svg?style=plastic)](https://www.nuget.org/packages/CP.TwinCATRx)
+
 A Reactive implementation of TwinCAT ADS
 
 This is a reactive implementation of TwinCAT ADS. It is based on the TwinCAT ADS library from Beckhoff. 

@@ -37,15 +37,5 @@ namespace CP.TwinCatRx.Core
             : base(message, innerException)
         {
         }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UnsuportedTypeException"/> class.
-        /// </summary>
-        /// <param name="info">The SerializationInfo that holds the serialized object data about the exception being thrown.</param>
-        /// <param name="context">The StreamingContext that contains contextual information about the source or destination.</param>
-        protected UnsuportedTypeException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        {
-        }
     }
 }

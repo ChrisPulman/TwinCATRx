@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net6.0-windows10.0.17763.0;net7.0-windows10.0.17763.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net6.0;net7.0;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>CP.TwinCATRx.Core</PackageId>
@@ -9,9 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="6.1.86" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.7.0" />
-    <PackageReference Include="System.CodeDom" Version="7.0.0" />
+    <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="6.1.154" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0" />
+    <PackageReference Include="System.CodeDom" Version="8.0.0" />
     <PackageReference Include="Mono.Cecil" Version="0.11.5" />
   </ItemGroup>
 

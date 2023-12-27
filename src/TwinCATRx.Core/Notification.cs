@@ -6,33 +6,26 @@ namespace CP.TwinCatRx.Core
     /// <summary>
     /// Notification for ISettings.
     /// </summary>
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="Notification" /> class.
+    /// </remarks>
+    /// <param name="updateRate">The update rate.</param>
+    /// <param name="variable">The variable.</param>
+    /// <param name="arraySize">Size of the array.</param>
     [Serializable]
-    internal class Notification : INotification
+    internal class Notification(int updateRate, string? variable, int arraySize = -1) : INotification
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Notification" /> class.
-        /// </summary>
-        /// <param name="updateRate">The update rate.</param>
-        /// <param name="variable">The variable.</param>
-        /// <param name="arraySize">Size of the array.</param>
-        public Notification(int updateRate, string? variable, int arraySize = -1)
-        {
-            UpdateRate = updateRate;
-            Variable = variable;
-            ArraySize = arraySize;
-        }
-
         /// <summary>
         /// Gets the Notification update rate.
         /// </summary>
         /// <value>The update rate.</value>
-        public int UpdateRate { get; }
+        public int UpdateRate { get; } = updateRate;
 
         /// <summary>
         /// Gets the Notification variable name.
         /// </summary>
         /// <value>The variable.</value>
-        public string? Variable { get; }
+        public string? Variable { get; } = variable;
 
         /// <summary>
         /// Gets the size of the array.
@@ -40,6 +33,6 @@ namespace CP.TwinCatRx.Core
         /// <value>
         /// The size of the array.
         /// </value>
-        public int ArraySize { get; }
+        public int ArraySize { get; } = arraySize;
     }
 }

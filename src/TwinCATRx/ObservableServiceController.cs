@@ -13,8 +13,8 @@ namespace CP.TwinCatRx
     /// </summary>
     public class ObservableServiceController : IObservableServiceController
     {
-        private readonly CompositeDisposable _cleanup = new();
-        private readonly ISubject<ServiceControllerStatus> _statusChanged = new Subject<ServiceControllerStatus>();
+        private readonly CompositeDisposable _cleanup = [];
+        private readonly Subject<ServiceControllerStatus> _statusChanged = new();
         private ServiceController? _serviceController;
 
         /// <summary>
@@ -169,6 +169,7 @@ namespace CP.TwinCatRx
             {
                 _serviceController?.Dispose();
                 _cleanup.Dispose();
+                _statusChanged.Dispose();
             }
         }
 

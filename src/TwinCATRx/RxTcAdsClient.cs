@@ -18,18 +18,18 @@ namespace CP.TwinCatRx
     /// </summary>
     public class RxTcAdsClient : IRxTcAdsClient
     {
-        private readonly ISubject<AdsState> _clientState = new Subject<AdsState>();
-        private readonly IList<string> _code = new List<string>();
-        private readonly ISubject<string[]> _codeSubject = new Subject<string[]>();
-        private readonly ISubject<(string Variable, object? Data, string? Id)> _dataReceived = new Subject<(string Variable, object? Data, string? Id)>();
-        private readonly ISubject<Exception> _errorReceived = new Subject<Exception>();
-        private readonly ISubject<string?> _onWriteSubject = new Subject<string?>();
-        private readonly ISubject<(uint? handle, Type type, int length, string? id)> _readPLC = new Subject<(uint? handle, Type type, int length, string? id)>();
-        private readonly ISubject<ServiceStatus> _serviceStatus = new Subject<ServiceStatus>();
-        private readonly IDictionary<string, Type> _typeInfo = new Dictionary<string, Type>();
-        private readonly ISubject<(uint? handle, object value, int length, string? id)> _writePLC = new Subject<(uint? handle, object value, int length, string? id)>();
+        private readonly Subject<AdsState> _clientState = new();
+        private readonly List<string> _code = [];
+        private readonly Subject<string[]> _codeSubject = new();
+        private readonly Subject<(string Variable, object? Data, string? Id)> _dataReceived = new();
+        private readonly Subject<Exception> _errorReceived = new();
+        private readonly Subject<string?> _onWriteSubject = new();
+        private readonly Subject<(uint? handle, Type type, int length, string? id)> _readPLC = new();
+        private readonly Subject<ServiceStatus> _serviceStatus = new();
+        private readonly Dictionary<string, Type> _typeInfo = [];
+        private readonly Subject<(uint? handle, object value, int length, string? id)> _writePLC = new();
         private CompositeDisposable? _cleanup;
-        private ICodeGenerator? _codeGenerator;
+        private CodeGenerator? _codeGenerator;
         private IDisposable? _plcCleanup;
 
         /// <summary>
@@ -202,6 +202,14 @@ namespace CP.TwinCatRx
                 ReadWriteHandleInfo.Clear();
                 _typeInfo.Clear();
                 WriteHandleInfo.Clear();
+                _clientState.Dispose();
+                _codeSubject.Dispose();
+                _errorReceived.Dispose();
+                _onWriteSubject.Dispose();
+                _serviceStatus.Dispose();
+                _readPLC.Dispose();
+                _writePLC.Dispose();
+                _dataReceived.Dispose();
             }
         }
 
@@ -281,7 +289,7 @@ namespace CP.TwinCatRx
         private Exception? CreateWriteVariables(List<IWriteVariable>? writeVariables, AdsClient client)
         {
             var isTC3 = client.Address?.Port >= 851;
-            foreach (var item in writeVariables!.Select(t => (Variable: t.Variable.ToUpper(), t.ArraySize)).Where(x => !string.IsNullOrEmpty(x.Variable)))
+            foreach (var item in writeVariables!.Select(t => (Variable: t.Variable!.ToUpper(), t.ArraySize)).Where(x => !string.IsNullOrEmpty(x.Variable)))
             {
                 try
                 {
@@ -330,7 +338,7 @@ namespace CP.TwinCatRx
         private IObservable<Unit> InitPLC() =>
             Observable.Create<Unit>(o =>
                 {
-                    _cleanup = new();
+                    _cleanup = [];
 
                     var client = new AdsClient();
 
@@ -449,7 +457,7 @@ namespace CP.TwinCatRx
                                     throw nv;
                                 }
 
-                                Task.Run(() => _codeSubject.OnNext(_code.ToArray()));
+                                Task.Run(() => _codeSubject.OnNext([.. _code]));
                                 _codeGenerator.Dispose();
                                 intialised = true;
                             }
@@ -504,7 +512,7 @@ namespace CP.TwinCatRx
 
                            if ((v.type.IsArray || v.type == typeof(string)) && v.length > 0)
                            {
-                               int[] args = { v.length };
+                               int[] args = [v.length];
                                if (v.handle != null)
                                {
                                    plcValueRead = client.ReadAny(v.handle.Value, v.type, args);
@@ -543,7 +551,7 @@ namespace CP.TwinCatRx
                             {
                                 if (notification.Variable != null && client.IsConnected && _typeInfo.TryGetValue(notification.Variable.ToUpper(), out var type))
                                 {
-                                    var kvp = ReadWriteHandleInfo.FirstOrDefault(k => k.Key == notification.Variable.ToUpper());
+                                    var kvp = ReadWriteHandleInfo.FirstOrDefault(k => k.Key.Equals(notification.Variable, StringComparison.CurrentCultureIgnoreCase));
                                     if (type != null)
                                     {
                                         if (type.IsArray || type == typeof(string))

@@ -11,19 +11,19 @@ using static Nuke.Common.Tools.DotNet.DotNetTasks;
 using Nuke.Common.Tools.PowerShell;
 using CP.BuildTools;
 
-[GitHubActions(
-    "BuildOnly",
-    GitHubActionsImage.WindowsLatest,
-    OnPushBranchesIgnore = new[] { "main" },
-    FetchDepth = 0,
-    InvokedTargets = new[] { nameof(Compile) })]
-[GitHubActions(
-    "BuildDeploy",
-    GitHubActionsImage.WindowsLatest,
-    OnPushBranches = new[] { "main" },
-    FetchDepth = 0,
-    ImportSecrets = new[] { nameof(NuGetApiKey) },
-    InvokedTargets = new[] { nameof(Compile), nameof(Deploy) })]
+////[GitHubActions(
+////    "BuildOnly",
+////    GitHubActionsImage.WindowsLatest,
+////    OnPushBranchesIgnore = new[] { "main" },
+////    FetchDepth = 0,
+////    InvokedTargets = new[] { nameof(Compile) })]
+////[GitHubActions(
+////    "BuildDeploy",
+////    GitHubActionsImage.WindowsLatest,
+////    OnPushBranches = new[] { "main" },
+////    FetchDepth = 0,
+////    ImportSecrets = new[] { nameof(NuGetApiKey) },
+////    InvokedTargets = new[] { nameof(Compile), nameof(Deploy) })]
 partial class Build : NukeBuild
 {
     //// Support plugins are available for:
@@ -34,13 +34,10 @@ partial class Build : NukeBuild
 
     public static int Main() => Execute<Build>(x => x.Compile);
 
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     [GitRepository] readonly GitRepository Repository;
     [Solution(GenerateProjects = true)] readonly Solution Solution;
     [NerdbankGitVersioning] readonly NerdbankGitVersioning NerdbankVersioning;
     [Parameter][Secret] readonly string NuGetApiKey;
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
@@ -59,8 +56,8 @@ partial class Build : NukeBuild
             }
 
             PackagesDirectory.CreateOrCleanDirectory();
-            await this.UpdateVisualStudio();
-            await this.InstallDotNetSdk("3.1.x", "5.x.x", "6.x.x", "7.x.x");
+            ////await this.UpdateVisualStudio();
+            await this.InstallDotNetSdk("6.x.x", "7.x.x", "8.x.x");
         });
 
     Target Restore => _ => _

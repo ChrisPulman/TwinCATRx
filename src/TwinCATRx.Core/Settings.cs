@@ -26,7 +26,7 @@ namespace CP.TwinCatRx.Core
         /// <summary>
         /// Gets or sets Notifications of this Engine.
         /// </summary>
-        public List<INotification> Notifications { get; set; } = new();
+        public List<INotification> Notifications { get; set; } = [];
 
         /// <summary>
         /// Gets or sets System Identifier.
@@ -36,7 +36,7 @@ namespace CP.TwinCatRx.Core
         /// <summary>
         /// Gets or sets Write variables to this Engine.
         /// </summary>
-        public List<IWriteVariable> WriteVariables { get; set; } = new();
+        public List<IWriteVariable> WriteVariables { get; set; } = [];
 
         /// <summary>
         /// Default Settings used - called when no file exists.

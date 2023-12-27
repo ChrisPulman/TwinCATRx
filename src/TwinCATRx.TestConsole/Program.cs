@@ -87,7 +87,7 @@ namespace TwinCATRx.TestConsole
 
             // Create structure to store data
             var tag1 = client.CreateStruct(".Tag1");
-            tag1.StructureReady().Subscribe(data =>
+            tag1?.StructureReady().Subscribe(data =>
             {
                 Console.WriteLine("Structure ready");
 
@@ -112,7 +112,7 @@ namespace TwinCATRx.TestConsole
             });
 
             var tag3 = client.CreateStruct(".Tag3");
-            tag3.StructureReady().Subscribe(data =>
+            tag3?.StructureReady().Subscribe(data =>
             {
                 Console.WriteLine("Structure ready");
                 data.Observe<bool[]>("ArrBool").Subscribe(value => Console.WriteLine(value));
@@ -132,10 +132,10 @@ namespace TwinCATRx.TestConsole
                         exit = true;
                         break;
                     case ConsoleKey.W:
-                        var tag = tag1.Value<short>("AInt");
-                        tag1.WriteValues(ht =>
+                        var tag = tag1?.Value<short>("AInt");
+                        tag1?.WriteValues(ht =>
                         {
-                            ht.Value("AInt", (short)(tag + 10));
+                            ht.Value("AInt", (short)(tag! + 10));
                             ht.Value("AString", $"Int Value {tag + 10}");
                         });
 
@@ -144,8 +144,8 @@ namespace TwinCATRx.TestConsole
             }
 
             client.Dispose();
-            tag1.Dispose();
-            tag3.Dispose();
+            tag1?.Dispose();
+            tag3?.Dispose();
         }
     }
 }

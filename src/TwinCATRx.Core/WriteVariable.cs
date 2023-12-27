@@ -8,27 +8,21 @@ namespace CP.TwinCatRx.Core
     /// <summary>
     /// WriteVariable for ISettings.
     /// </summary>
+    /// <remarks>
+    /// Initializes a new instance of the <see cref="WriteVariable" /> class.
+    /// </remarks>
+    /// <param name="variable">The variable.</param>
+    /// <param name="arraySize">Size of the array.</param>
     [DataContract]
     [Serializable]
-    internal class WriteVariable : IWriteVariable
+    internal class WriteVariable(string? variable, int arraySize = -1) : IWriteVariable
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="WriteVariable" /> class.
-        /// </summary>
-        /// <param name="variable">The variable.</param>
-        /// <param name="arraySize">Size of the array.</param>
-        public WriteVariable(string? variable, int arraySize = -1)
-        {
-            Variable = variable;
-            ArraySize = arraySize;
-        }
-
         /// <summary>
         /// Gets the variable.
         /// </summary>
         /// <value>The variable.</value>
         [DataMember]
-        public string? Variable { get; }
+        public string? Variable { get; } = variable;
 
         /// <summary>
         /// Gets the size of the array.
@@ -37,6 +31,6 @@ namespace CP.TwinCatRx.Core
         /// The size of the array.
         /// </value>
         [DataMember]
-        public int ArraySize { get; }
+        public int ArraySize { get; } = arraySize;
     }
 }

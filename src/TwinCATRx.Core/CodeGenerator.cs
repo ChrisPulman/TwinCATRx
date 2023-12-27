@@ -20,7 +20,7 @@ namespace CP.TwinCatRx.Core
     /// <seealso cref="ICodeGenerator"/>
     public class CodeGenerator : ICodeGenerator
     {
-        private readonly Hashtable _typeList = new();
+        private readonly Hashtable _typeList = [];
         private AdsClient? _adsClient;
         private bool _disposedValue;
         private ISymbolLoader? _symbolLoader;
@@ -34,7 +34,7 @@ namespace CP.TwinCatRx.Core
         /// Gets the symbol list.
         /// </summary>
         /// <value>The symbol list.</value>
-        public HashSet<INodeEmulator> SymbolList { get; } = new HashSet<INodeEmulator>();
+        public HashSet<INodeEmulator> SymbolList { get; } = [];
 
         /// <summary>
         /// PLCs to c sharp type converter. BIT BOOL System.Boolean bool Boolean For info about
@@ -118,35 +118,35 @@ namespace CP.TwinCatRx.Core
                     {
                         var st = pLCType.Replace("ARRAY [", string.Empty);
                         st = st.Replace("] OF STRING", string.Empty);
-                        return typeof(string[]).ToString() + "," + st;
+                        return typeof(string[]) + "," + st;
                     }
 
                     if (pLCType.Contains("OF BOOL"))
                     {
                         var bo = pLCType.Replace("ARRAY [", string.Empty);
                         bo = bo.Replace("] OF BOOL", string.Empty);
-                        return typeof(bool[]).ToString() + "," + bo;
+                        return typeof(bool[]) + "," + bo;
                     }
 
                     if (pLCType.Contains("OF BIT"))
                     {
                         var bi = pLCType.Replace("ARRAY [", string.Empty);
                         bi = bi.Replace("] OF BIT", string.Empty);
-                        return typeof(bool[]).ToString() + "," + bi;
+                        return typeof(bool[]) + "," + bi;
                     }
 
                     if (pLCType.Contains("OF BIT8"))
                     {
                         var bi8 = pLCType.Replace("ARRAY [", string.Empty);
                         bi8 = bi8.Replace("] OF BIT8", string.Empty);
-                        return typeof(bool[]).ToString() + "," + bi8;
+                        return typeof(bool[]) + "," + bi8;
                     }
 
                     if (pLCType.Contains("OF BYTE"))
                     {
                         var b = pLCType.Replace("ARRAY [", string.Empty);
                         b = b.Replace("] OF BYTE", string.Empty);
-                        return typeof(byte[]).ToString() + "," + b;
+                        return typeof(byte[]) + "," + b;
                     }
 
                     if (pLCType.Contains("OF REAL"))
@@ -470,6 +470,7 @@ namespace CP.TwinCatRx.Core
         /// <returns>
         /// NodeEmulator.
         /// </returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1865:Use char overload", Justification = "Not valid for all TFM's")]
         public INodeEmulator SearchSymbols(string? symbolName)
         {
             if (symbolName?.StartsWith(".", StringComparison.InvariantCulture) == true)
@@ -619,6 +620,26 @@ namespace CP.TwinCatRx.Core
         }
 
         /// <summary>
+        /// Creates the new node.
+        /// </summary>
+        /// <param name="symbol">The symbol.</param>
+        /// <returns>A Value.</returns>
+        private static INodeEmulator CreateNewNode(ISymbol symbol)
+        {
+            INodeEmulator node = new NodeEmulator
+            {
+                Text = symbol.InstanceName,
+                Tag = symbol
+            };
+            foreach (var subsymbol in symbol.SubSymbols)
+            {
+                node.Nodes?.Add(CodeGenerator.CreateNewNode(subsymbol));
+            }
+
+            return node;
+        }
+
+        /// <summary>
         /// Builds the symbol list.
         /// </summary>
         private void BuildSymbolList()
@@ -630,7 +651,7 @@ namespace CP.TwinCatRx.Core
                 {
                     foreach (var symbol in _symbolLoader.Symbols)
                     {
-                        SymbolList.Add(CreateNewNode(symbol));
+                        SymbolList.Add(CodeGenerator.CreateNewNode(symbol));
                     }
                 }
             }
@@ -683,26 +704,6 @@ namespace CP.TwinCatRx.Core
             }
 
             sb.AppendLine("}");
-        }
-
-        /// <summary>
-        /// Creates the new node.
-        /// </summary>
-        /// <param name="symbol">The symbol.</param>
-        /// <returns>A Value.</returns>
-        private INodeEmulator CreateNewNode(ISymbol symbol)
-        {
-            INodeEmulator node = new NodeEmulator
-            {
-                Text = symbol.InstanceName,
-                Tag = symbol
-            };
-            foreach (var subsymbol in symbol.SubSymbols)
-            {
-                node.Nodes?.Add(CreateNewNode(subsymbol));
-            }
-
-            return node;
         }
 
         /// <summary>

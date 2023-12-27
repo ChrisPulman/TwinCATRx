@@ -37,20 +37,6 @@ namespace CP.TwinCatRx.Core
             : base(message, innerException) => _variable = message;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="InvalidVariableException"/> class.
-        /// </summary>
-        /// <param name="info">
-        /// The <see cref="System.Runtime.Serialization.SerializationInfo"/> that holds the
-        /// serialized object data about the exception being thrown.
-        /// </param>
-        /// <param name="context">
-        /// The <see cref="System.Runtime.Serialization.StreamingContext"/> that contains
-        /// contextual information about the source or destination.
-        /// </param>
-        protected InvalidVariableException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context)
-            : base(info, context) => _variable = string.Empty;
-
-        /// <summary>
         /// Gets a message that describes the current exception.
         /// </summary>
         public override string Message => $"The variable - {_variable} - does not exist in the PLC";

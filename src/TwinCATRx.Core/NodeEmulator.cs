@@ -14,7 +14,7 @@ namespace CP.TwinCatRx.Core
         /// <summary>
         /// Gets contains Child Nodes of this node.
         /// </summary>
-        public HashSet<INodeEmulator>? Nodes { get; private set; } = new HashSet<INodeEmulator>();
+        public HashSet<INodeEmulator>? Nodes { get; private set; } = [];
 
         /// <summary>
         /// Gets or sets container for object Data.

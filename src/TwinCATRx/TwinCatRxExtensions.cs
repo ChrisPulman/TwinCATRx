@@ -3,7 +3,6 @@
 
 using System.Reactive.Linq;
 using CP.Collections;
-using CP.TwinCatRx.Core;
 
 namespace CP.TwinCatRx
 {
@@ -107,79 +106,6 @@ namespace CP.TwinCatRx
             }
 
             return new(@this!.UseUpperCase) { [true] = @this.GetStucture() };
-        }
-
-        /// <summary>
-        /// Values the specified variable.
-        /// </summary>
-        /// <typeparam name="T">The type.</typeparam>
-        /// <param name="this">The this.</param>
-        /// <param name="variable">The variable.</param>
-        /// <returns>The value of the Tag.</returns>
-        public static T? Value<T>(this HashTableRx @this, string? variable)
-        {
-            if (@this == null || @this.Count == 0)
-            {
-                return default;
-            }
-
-            if (@this.UseUpperCase)
-            {
-                variable = variable?.ToUpperInvariant();
-            }
-
-            return (T?)@this[variable!];
-        }
-
-        /// <summary>
-        /// Values the specified variable.
-        /// </summary>
-        /// <typeparam name="T">The Type.</typeparam>
-        /// <param name="this">The this.</param>
-        /// <param name="variable">The variable.</param>
-        /// <param name="value">The value.</param>
-        /// <returns>True if value was set.</returns>
-        public static bool Value<T>(this HashTableRx @this, string? variable, T? value)
-        {
-            if (@this == null || @this.Count == 0)
-            {
-                return false;
-            }
-
-            if (@this?.UseUpperCase == true)
-            {
-                variable = variable?.ToUpperInvariant();
-            }
-
-            if (@this!.Value<T>(variable) == null)
-            {
-                throw new InvalidVariableException(variable);
-            }
-
-            if (@this!.Value<T>(variable)?.GetType() != value?.GetType())
-            {
-                throw new InvalidCastException($"Failed To Set Value, unable to cast from {typeof(T)}");
-            }
-
-            @this![variable!] = value;
-            return true;
-        }
-
-        /// <summary>
-        /// Gets the stucture.
-        /// </summary>
-        /// <param name="this">The this.</param>
-        /// <returns>
-        /// An object of the current values.
-        /// </returns>
-        public static object GetStucture(this HashTableRx @this)
-        {
-            if (@this == null)
-            {
-                return default!;
-            }
-
-            return @this[true]!;
         }
     }
 }

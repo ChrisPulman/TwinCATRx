@@ -3,27 +3,26 @@
 
 using System.Runtime.Serialization;
 
-namespace CP.TwinCatRx.Core
+namespace CP.TwinCatRx.Core;
+
+/// <summary>
+/// Interface for Write Variable.
+/// </summary>
+public interface IWriteVariable
 {
     /// <summary>
-    /// Interface for Write Variable.
+    /// Gets the variable.
     /// </summary>
-    public interface IWriteVariable
-    {
-        /// <summary>
-        /// Gets the variable.
-        /// </summary>
-        /// <value>The variable.</value>
-        [DataMember]
-        string? Variable { get; }
+    /// <value>The variable.</value>
+    [DataMember]
+    string? Variable { get; }
 
-        /// <summary>
-        /// Gets the size of the array.
-        /// </summary>
-        /// <value>
-        /// The size of the array.
-        /// </value>
-        [DataMember]
-        int ArraySize { get; }
-    }
+    /// <summary>
+    /// Gets the size of the array.
+    /// </summary>
+    /// <value>
+    /// The size of the array.
+    /// </value>
+    [DataMember]
+    int ArraySize { get; }
 }

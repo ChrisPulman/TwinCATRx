@@ -61,7 +61,7 @@ jobs:
           path: output
 
       - name: Changelog
-        uses: glennawatson/ChangeLog@v1
+        uses: glennawatson/ChangeLog@v1.0
         id: changelog
 
       - name: Create Release

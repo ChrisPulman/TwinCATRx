@@ -28,6 +28,7 @@ public class RxTcAdsClient : IRxTcAdsClient
     private readonly Subject<ServiceStatus> _serviceStatus = new();
     private readonly Dictionary<string, Type> _typeInfo = [];
     private readonly Subject<(uint? handle, object value, int length, string? id)> _writePLC = new();
+    private readonly ReplaySubject<Unit> _initCompleteSubject = new(1);
     private CompositeDisposable? _cleanup;
     private CodeGenerator? _codeGenerator;
     private IDisposable? _plcCleanup;
@@ -43,6 +44,14 @@ public class RxTcAdsClient : IRxTcAdsClient
     /// </summary>
     /// <value><c>true</c> if connected; otherwise, <c>false</c>.</value>
     public bool Connected { get; internal set; }
+
+    /// <summary>
+    /// Gets the initialize complete. PLC is ready to read and write.
+    /// </summary>
+    /// <value>
+    /// The initialize complete.
+    /// </value>
+    public IObservable<Unit> InitializeComplete => _initCompleteSubject.Retry().Publish().RefCount();
 
     /// <summary>
     /// Gets the data received.
@@ -210,6 +219,7 @@ public class RxTcAdsClient : IRxTcAdsClient
             _readPLC.Dispose();
             _writePLC.Dispose();
             _dataReceived.Dispose();
+            _initCompleteSubject.Dispose();
         }
     }
 
@@ -463,6 +473,7 @@ public class RxTcAdsClient : IRxTcAdsClient
                             Task.Run(() => _codeSubject.OnNext([.. _code]));
                             _codeGenerator.Dispose();
                             intialised = true;
+                            _initCompleteSubject.OnNext(Unit.Default);
                         }
                         catch (Exception ex)
                         {

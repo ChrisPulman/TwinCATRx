@@ -58,16 +58,21 @@ Currently it does not support the following features:
     client.Observe<float[]>(".ArrReal").Subscribe(data => Console.WriteLine(data));
     client.Observe<double[]>(".ArrLReal").Subscribe(data => Console.WriteLine(data));
 
-    // Read tags of a simple type
-    client.Read(".ArrBool");
-    client.Read(".ArrByte");
-    client.Read(".ArrInt");
-    client.Read(".ArrDInt");
-    client.Read(".ArrReal");
-    client.Read(".ArrLReal");
+    // Ensure the client is initialized before reading or writing
+    client.InitializeComplete().Subscribe(() =>
+    {
+        // Read tags of a simple type
+        client.Read(".AString");
+        client.Read(".ABool");
+        client.Read(".AByte");
+        client.Read(".AInt");
+        client.Read(".ADInt");
+        client.Read(".AReal");
+        client.Read(".ALReal");
 
-    // Write a value
-    client.Write(".ABool", true);
+        // Write a value
+        client.Write(".ABool", true);
+    });
 
     // Create structure to store data
     var tag1 = client.CreateStruct(".Tag1", true);

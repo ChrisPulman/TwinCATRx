@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Chris Pulman. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Reactive;
 using System.Reactive.Disposables;
 using CP.TwinCatRx.Core;
 
@@ -17,6 +18,14 @@ public interface IRxTcAdsClient : ICancelable
     /// </summary>
     /// <value>The code.</value>
     IObservable<string[]> Code { get; }
+
+    /// <summary>
+    /// Gets the initialize complete. PLC is ready to read and write.
+    /// </summary>
+    /// <value>
+    /// The initialize complete.
+    /// </value>
+    IObservable<Unit> InitializeComplete { get; }
 
     /// <summary>
     /// Gets the data received.

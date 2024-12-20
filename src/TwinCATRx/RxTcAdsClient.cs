@@ -16,7 +16,7 @@ namespace CP.TwinCatRx;
 /// <summary>
 /// Observable TwinCAT ADS Client.
 /// </summary>
-public class RxTcAdsClient : IRxTcAdsClient
+public partial class RxTcAdsClient : IRxTcAdsClient
 {
     private readonly Subject<AdsState> _clientState = new();
     private readonly List<string> _code = [];
@@ -354,10 +354,9 @@ public class RxTcAdsClient : IRxTcAdsClient
                 _cleanup = [];
 
                 var client = new AdsClient();
-
+                client.DisposeWith(_cleanup);
                 _codeGenerator = new CodeGenerator();
                 _codeGenerator.DisposeWith(_cleanup);
-                _cleanup.Add(client);
                 var intialised = false;
 
                 // Reset values to default
@@ -387,7 +386,7 @@ public class RxTcAdsClient : IRxTcAdsClient
 
                 var serviceList = new Dictionary<string, ServiceControllerStatus>();
                 ObservableServiceController.GetServices().Retry()
-                .Where(s => s.DisplayName == "TwinCAT System Service" || s.DisplayName == "TcEventLogger" || s.DisplayName == "TwinCAT3 System Service")
+                .Where(s => s.DisplayName == "TwinCAT System Service" || s.DisplayName == "TwinCAT3 System Service")
                 .Retry()
                 .Subscribe(s =>
                 {
@@ -424,10 +423,9 @@ public class RxTcAdsClient : IRxTcAdsClient
                 .Retry()
                 .Subscribe(_ =>
                 {
-                    if (serviceList.Count >= 2
-                && ((serviceList.TryGetValue("TwinCAT System Service", out var tc2) && tc2 == ServiceControllerStatus.Running)
-                || (serviceList.TryGetValue("TwinCAT3 System Service", out var tc3) && tc3 == ServiceControllerStatus.Running))
-                && serviceList.TryGetValue("TcEventLogger", out var tcel) && tcel == ServiceControllerStatus.Running)
+                    if (serviceList.Count >= 1
+                        && ((serviceList.TryGetValue("TwinCAT System Service", out var tc2) && tc2 == ServiceControllerStatus.Running)
+                        || (serviceList.TryGetValue("TwinCAT3 System Service", out var tc3) && tc3 == ServiceControllerStatus.Running)))
                     {
                         _serviceStatus.OnNext(ServiceStatus.Running);
                     }

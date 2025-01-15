@@ -61,11 +61,12 @@ public static class TwinCatRxExtensions
     /// </summary>
     /// <param name="this">The this.</param>
     /// <param name="setValues">The set values.</param>
-    public static void WriteValues(this HashTableRx @this, Action<HashTableRx> setValues)
+    /// <returns>True if successful.</returns>
+    public static bool WriteValues(this HashTableRx @this, Action<HashTableRx> setValues)
     {
         if (@this == null || setValues == null)
         {
-            return;
+            return false;
         }
 
         if (@this.Tag?[nameof(RxTcAdsClient)] is RxTcAdsClient plc && @this.Tag?["Variable"] is string variable)
@@ -73,21 +74,34 @@ public static class TwinCatRxExtensions
             using (var htClone = @this.CreateClone())
             {
                 setValues(htClone);
-                plc.Write(variable, htClone.GetStucture());
+                var structure = htClone.GetStucture();
+                if (structure == null)
+                {
+                    return false;
+                }
+
+                plc.Write(variable, structure);
             }
+
+            return true;
         }
+
+        return false;
     }
 
     /// <summary>
     /// Structures the ready.
     /// </summary>
     /// <param name="this">The this.</param>
-    /// <returns>An Observable when values have been set.</returns>
+    /// <returns>
+    /// An Observable when values have been set.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">The HashTableRx cannot be null.</exception>
     public static IObservable<HashTableRx> StructureReady(this HashTableRx @this)
     {
         if (@this == null)
         {
-            return default!;
+            throw new ArgumentNullException(nameof(@this));
         }
 
         return @this.ObserveAll.Where(_ => @this.Count > 0).Take(1).Delay(TimeSpan.FromSeconds(2)).Select(_ => @this);
@@ -97,12 +111,15 @@ public static class TwinCatRxExtensions
     /// Clones the specified HashTableRx.
     /// </summary>
     /// <param name="this">The this.</param>
-    /// <returns>A HashTableRx.</returns>
+    /// <returns>
+    /// A HashTableRx.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">The HashTableRx cannot be null.</exception>
     public static HashTableRx CreateClone(this HashTableRx @this)
     {
         if (@this == null)
         {
-            return default!;
+            throw new ArgumentNullException(nameof(@this));
         }
 
         return new(@this!.UseUpperCase) { [true] = @this.GetStucture() };

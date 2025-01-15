@@ -187,7 +187,7 @@ public static class TwinCatRxExtensions
     public static IObservable<AdsStateChangedEventArgs> AdsStateChangedObserver(this AdsClient @this) => Observable.FromEventPattern<EventHandler<AdsStateChangedEventArgs>, AdsStateChangedEventArgs>(h => @this.AdsStateChanged += h, h => @this.AdsStateChanged -= h).Select(x => x.EventArgs);
 
     /// <summary>
-    /// Adses the state observer.
+    /// ADS state observer.
     /// </summary>
     /// <param name="this">The this.</param>
     /// <returns>Observable State Info.</returns>

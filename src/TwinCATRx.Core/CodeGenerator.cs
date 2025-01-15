@@ -218,7 +218,8 @@ public class CodeGenerator : ICodeGenerator
     /// <returns>
     /// Result as a Boolean.
     /// </returns>
-    public bool CreateCSharpCode(INodeEmulator selectedTN, bool isTwinCat3 = false) => CreateCSharpCode(selectedTN, string.Empty, isTwinCat3, "TwinCATRx");
+    public bool CreateCSharpCode(INodeEmulator selectedTN, bool isTwinCat3 = false) =>
+        CreateCSharpCode(selectedTN, string.Empty, isTwinCat3, "TwinCATRx");
 
     /// <summary>
     /// Creates a C# code file based on the structure of the Node presented the output is saved
@@ -295,7 +296,8 @@ public class CodeGenerator : ICodeGenerator
     /// <returns>
     /// Result as a Boolean.
     /// </returns>
-    public bool CreateDll(INodeEmulator selectedTN, bool isTwinCat3 = false) => CreateDll(selectedTN, string.Empty, isTwinCat3, "TwinCATRx");
+    public bool CreateDll(INodeEmulator selectedTN, bool isTwinCat3 = false) =>
+        CreateDll(selectedTN, string.Empty, isTwinCat3, "TwinCATRx");
 
     /// <summary>
     /// Creates a dll based on the structure of the Node presented the output is saved as the
@@ -624,16 +626,16 @@ public class CodeGenerator : ICodeGenerator
     /// </summary>
     /// <param name="symbol">The symbol.</param>
     /// <returns>A Value.</returns>
-    private static INodeEmulator CreateNewNode(ISymbol symbol)
+    private static NodeEmulator CreateNewNode(ISymbol symbol)
     {
-        INodeEmulator node = new NodeEmulator
+        var node = new NodeEmulator
         {
             Text = symbol.InstanceName,
             Tag = symbol
         };
-        foreach (var subsymbol in symbol.SubSymbols)
+        foreach (var subSymbol in symbol.SubSymbols)
         {
-            node.Nodes?.Add(CodeGenerator.CreateNewNode(subsymbol));
+            node.Nodes?.Add(CreateNewNode(subSymbol));
         }
 
         return node;
@@ -651,7 +653,7 @@ public class CodeGenerator : ICodeGenerator
             {
                 foreach (var symbol in _symbolLoader.Symbols)
                 {
-                    SymbolList.Add(CodeGenerator.CreateNewNode(symbol));
+                    SymbolList.Add(CreateNewNode(symbol));
                 }
             }
         }

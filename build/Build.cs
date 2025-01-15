@@ -57,7 +57,7 @@ partial class Build : NukeBuild
 
             PackagesDirectory.CreateOrCleanDirectory();
             ////await this.UpdateVisualStudio();
-            await this.InstallDotNetSdk("6.x.x", "8.x.x", "9.x.x");
+            await this.InstallDotNetSdk("8.x.x", "9.x.x");
         });
 
     Target Restore => _ => _
@@ -87,7 +87,7 @@ partial class Build : NukeBuild
 
             DotNetPack(settings => settings
                 .SetConfiguration(Configuration)
-                .SetVersion(NerdbankVersioning.NuGetPackageVersion)
+                .SetVersion(NerdbankVersioning.SimpleVersion)
                 .SetOutputDirectory(PackagesDirectory)
                 .CombineWith(packableProjects, (packSettings, project) =>
                     packSettings.SetProject(project)));

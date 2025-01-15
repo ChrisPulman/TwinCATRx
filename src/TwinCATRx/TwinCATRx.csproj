@@ -1,11 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net6.0-windows10.0.17763.0;net8.0-windows10.0.17763.0;net9.0-windows10.0.17763.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net8.0-windows10.0.17763.0;net9.0-windows10.0.17763.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>CP.TwinCATRx</PackageId>
     <Title>TwinCATRx</Title>
+    <RootNamespace>CP.TwinCatRx</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HashTableRx" Version="1.2.0" />
+    <PackageReference Include="HashTableRx" Version="1.3.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.1" />
     <PackageReference Include="System.ComponentModel.Composition" Version="9.0.1" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.1" />

@@ -14,11 +14,11 @@ namespace CP.TwinCatRx.Core;
 /// <seealso cref="ILanguageService" />
 internal class CSharpLanguage : ILanguageService
 {
-    private static readonly IReadOnlyCollection<MetadataReference> _references = new[]
-    {
+    private static readonly IReadOnlyCollection<MetadataReference> _references =
+    [
       MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location),
       MetadataReference.CreateFromFile(typeof(ValueTuple<>).GetTypeInfo().Assembly.Location)
-    };
+    ];
 
     private static readonly LanguageVersion MaxLanguageVersion = Enum
         .GetValues(typeof(LanguageVersion))

@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="6.2.244" />
+    <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="6.2.296" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.13.0" />
     <PackageReference Include="System.CodeDom" Version="9.0.2" />
     <PackageReference Include="Mono.Cecil" Version="0.11.6" />

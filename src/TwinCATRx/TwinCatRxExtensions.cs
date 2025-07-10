@@ -59,7 +59,7 @@ public static class TwinCatRxExtensions
     /// <summary>
     /// Writes the values.
     /// </summary>
-    /// <param name="this">The this.</param>
+    /// <param name="this">The HashTableRx to write values into.</param>
     /// <param name="setValues">The set values.</param>
     /// <returns>True if successful.</returns>
     public static bool WriteValues(this HashTableRx @this, Action<HashTableRx> setValues)
@@ -71,6 +71,11 @@ public static class TwinCatRxExtensions
 
         if (@this.Tag?[nameof(RxTcAdsClient)] is RxTcAdsClient plc && @this.Tag?["Variable"] is string variable)
         {
+            if (!plc.Connected)
+            {
+                return false;
+            }
+
             using (var htClone = @this.CreateClone())
             {
                 setValues(htClone);
@@ -84,6 +89,57 @@ public static class TwinCatRxExtensions
             }
 
             return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Writes the values asynchronous.
+    /// </summary>
+    /// <param name="this">The this.</param>
+    /// <param name="setValues">The set values.</param>
+    /// <param name="time">The time to delay between writes.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public static async Task<bool> WriteValuesAsync(this HashTableRx @this, Action<HashTableRx> setValues, TimeSpan time)
+    {
+        if (@this == null || setValues == null)
+        {
+            return false;
+        }
+
+        if (@this.Tag?[nameof(RxTcAdsClient)] is RxTcAdsClient plc && @this.Tag?["Variable"] is string variable)
+        {
+            if (!plc.Connected)
+            {
+                return false;
+            }
+
+            // If the PLC is not paused, pause it for the specified time.
+            if (!plc.IsPaused)
+            {
+                plc.Pause(time);
+            }
+            else
+            {
+                while (plc.IsPaused)
+                {
+                    // Wait until the PLC is not paused.
+                    await Task.Delay(10);
+                }
+            }
+
+            using (var htClone = @this.CreateClone())
+            {
+                setValues(htClone);
+                var structure = htClone.GetStucture();
+                if (structure == null)
+                {
+                    return false;
+                }
+
+                plc.Write(variable, structure);
+            }
         }
 
         return false;

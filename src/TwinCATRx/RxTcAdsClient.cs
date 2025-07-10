@@ -32,6 +32,7 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     private CompositeDisposable? _cleanup;
     private CodeGenerator? _codeGenerator;
     private IDisposable? _plcCleanup;
+    private bool _pause;
 
     /// <summary>
     /// Gets codes this instance.
@@ -95,6 +96,14 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// The settings.
     /// </value>
     public ISettings? Settings { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether this instance is paused.
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if this instance is paused; otherwise, <c>false</c>.
+    /// </value>
+    public bool IsPaused => _pause;
 
     /// <summary>
     /// Connects the specified settings.
@@ -191,6 +200,31 @@ public partial class RxTcAdsClient : IRxTcAdsClient
         if (!string.IsNullOrWhiteSpace(variable) && WriteHandleInfo.TryGetValue(variable!.ToUpper(), out var item))
         {
             WriteHandle(item.Handle, value, item.ArrayLength, id: id);
+        }
+    }
+
+    /// <summary>
+    /// Pauses the specified time.
+    /// </summary>
+    /// <param name="time">The time.</param>
+    public void Pause(TimeSpan time)
+    {
+        if (_cleanup?.IsDisposed == true)
+        {
+            _errorReceived.OnNext(new Exception("RxTcAdsClient has been Disposed"));
+            return;
+        }
+
+        if (time.TotalMilliseconds > 0)
+        {
+            var cleanup = new CompositeDisposable();
+            cleanup!.DisposeWith(_cleanup!);
+            _pause = true;
+            Observable.Timer(time).Subscribe(_ =>
+            {
+                _pause = false;
+                cleanup?.Dispose();
+            }).DisposeWith(cleanup!);
         }
     }
 
@@ -385,7 +419,7 @@ public partial class RxTcAdsClient : IRxTcAdsClient
                 }
 
                 var serviceList = new Dictionary<string, ServiceControllerStatus>();
-                ObservableServiceController.GetServices().Retry()
+                ObservableServiceController.GetServices()
                 .Where(s => s.DisplayName == "TwinCAT System Service" || s.DisplayName == "TwinCAT3 System Service")
                 .Retry()
                 .Subscribe(s =>
@@ -404,19 +438,19 @@ public partial class RxTcAdsClient : IRxTcAdsClient
                     }
 
                     s.StatusObserver.Retry().Subscribe(status =>
-                {
-#pragma warning disable RCS1198 // Avoid unnecessary boxing of value type.
-                    Console.WriteLine($"ServiceName: {s.DisplayName} is {status}");
-#pragma warning restore RCS1198 // Avoid unnecessary boxing of value type.
-                    serviceList[s.DisplayName] = status;
-                    if (status != ServiceControllerStatus.Running)
                     {
-                        s.Start();
-                        var ex = new Exception("Service Fault");
-                        _errorReceived.OnNext(ex);
-                        o.OnError(ex);
-                    }
-                }).DisposeWith(_cleanup);
+#pragma warning disable RCS1198 // Avoid unnecessary boxing of value type.
+                        Console.WriteLine($"ServiceName: {s.DisplayName} is {status}");
+#pragma warning restore RCS1198 // Avoid unnecessary boxing of value type.
+                        serviceList[s.DisplayName] = status;
+                        if (status != ServiceControllerStatus.Running)
+                        {
+                            s.Start();
+                            var ex = new Exception("Service Fault");
+                            _errorReceived.OnNext(ex);
+                            o.OnError(ex);
+                        }
+                    }).DisposeWith(_cleanup);
                 }).DisposeWith(_cleanup);
 
                 Observable.Interval(TimeSpan.FromSeconds(1))

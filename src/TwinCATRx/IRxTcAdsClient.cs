@@ -66,6 +66,20 @@ public interface IRxTcAdsClient : ICancelable
     IDictionary<string, (uint? Handle, int ArrayLength)> WriteHandleInfo { get; }
 
     /// <summary>
+    /// Gets a value indicating whether this instance is paused within WriteValuesAsync.
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if this instance is paused; otherwise, <c>false</c>.
+    /// </value>
+    bool IsPaused { get; }
+
+    /// <summary>
+    /// Pauses the specified time.
+    /// </summary>
+    /// <param name="time">The time.</param>
+    void Pause(TimeSpan time);
+
+    /// <summary>
     /// Connects the specified settings.
     /// </summary>
     /// <param name="settings">The settings.</param>

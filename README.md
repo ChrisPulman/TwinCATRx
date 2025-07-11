@@ -95,7 +95,7 @@ Currently it does not support the following features:
             // Values are written from the structure to the PLC upon return.
         });
 
-        _ = _await data.WriteValuesAsync(ht =>
+        await data.WriteValuesAsync(ht =>
         {
             // write values to structure
             ht.Value("AInt", (short)(tag + 10));

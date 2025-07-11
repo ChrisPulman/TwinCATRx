@@ -86,9 +86,8 @@ public static class TwinCatRxExtensions
                 }
 
                 plc.Write(variable, structure);
+                return true;
             }
-
-            return true;
         }
 
         return false;
@@ -139,6 +138,7 @@ public static class TwinCatRxExtensions
                 }
 
                 plc.Write(variable, structure);
+                return true;
             }
         }
 

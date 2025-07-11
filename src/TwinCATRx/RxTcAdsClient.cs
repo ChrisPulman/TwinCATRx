@@ -209,7 +209,7 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// <param name="time">The time.</param>
     public void Pause(TimeSpan time)
     {
-        if (_cleanup?.IsDisposed == true)
+        if (_cleanup == null || _cleanup.IsDisposed)
         {
             _errorReceived.OnNext(new Exception("RxTcAdsClient has been Disposed"));
             return;

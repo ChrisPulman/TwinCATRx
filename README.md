@@ -76,7 +76,7 @@ Currently it does not support the following features:
 
     // Create structure to store data
     var tag1 = client.CreateStruct(".Tag1", true);
-    tag1.StructureReady().Subscribe(data =>
+    tag1.StructureReady().Subscribe(async data =>
     {
         // read from structure as stream
         data.Observe<bool>("ABool").Subscribe(value => Console.WriteLine(value));
@@ -95,7 +95,7 @@ Currently it does not support the following features:
             // Values are written from the structure to the PLC upon return.
         });
 
-        data.WriteValuesAsync(ht =>
+        _ = _await data.WriteValuesAsync(ht =>
         {
             // write values to structure
             ht.Value("AInt", (short)(tag + 10));

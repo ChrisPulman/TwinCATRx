@@ -59,7 +59,7 @@ public static class TwinCatRxExtensions
     /// <summary>
     /// Writes the values.
     /// </summary>
-    /// <param name="this">The this.</param>
+    /// <param name="this">The HashTableRx to write values into.</param>
     /// <param name="setValues">The set values.</param>
     /// <returns>True if successful.</returns>
     public static bool WriteValues(this HashTableRx @this, Action<HashTableRx> setValues)
@@ -71,19 +71,81 @@ public static class TwinCatRxExtensions
 
         if (@this.Tag?[nameof(RxTcAdsClient)] is RxTcAdsClient plc && @this.Tag?["Variable"] is string variable)
         {
+            if (!plc.Connected)
+            {
+                return false;
+            }
+
             using (var htClone = @this.CreateClone())
             {
                 setValues(htClone);
-                var structure = htClone.GetStucture();
+                var structure = htClone.GetStructure();
                 if (structure == null)
                 {
                     return false;
                 }
 
                 plc.Write(variable, structure);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Writes the values asynchronous.
+    /// </summary>
+    /// <param name="this">The this.</param>
+    /// <param name="setValues">The set values.</param>
+    /// <param name="time">The time to delay between writes.</param>
+    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    public static async Task<bool> WriteValuesAsync(this HashTableRx @this, Action<HashTableRx> setValues, TimeSpan time)
+    {
+        if (@this == null || setValues == null)
+        {
+            return false;
+        }
+
+        if (@this.Tag?[nameof(RxTcAdsClient)] is RxTcAdsClient plc && @this.Tag?["Variable"] is string variable)
+        {
+            if (!plc.Connected)
+            {
+                return false;
             }
 
-            return true;
+            if (plc.IsPaused)
+            {
+                // If the PLC is paused, wait until it is resumed.
+                var tcs = new TaskCompletionSource<bool>();
+                var d = plc.IsPausedObservable.Subscribe(isPaused =>
+                {
+                    if (!isPaused)
+                    {
+                        tcs.TrySetResult(true);
+                    }
+                });
+                _ = await tcs.Task;
+                d.Dispose();
+            }
+            else
+            {
+                // If the PLC is not paused, pause it for the specified time.
+                plc.Pause(time);
+            }
+
+            using (var htClone = @this.CreateClone())
+            {
+                setValues(htClone);
+                var structure = htClone.GetStructure();
+                if (structure == null)
+                {
+                    return false;
+                }
+
+                plc.Write(variable, structure);
+                return true;
+            }
         }
 
         return false;
@@ -122,6 +184,6 @@ public static class TwinCatRxExtensions
             throw new ArgumentNullException(nameof(@this));
         }
 
-        return new(@this!.UseUpperCase) { [true] = @this.GetStucture() };
+        return new(@this!.UseUpperCase) { [true] = @this.GetStructure() };
     }
 }

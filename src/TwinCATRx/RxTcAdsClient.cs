@@ -29,6 +29,7 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     private readonly Dictionary<string, Type> _typeInfo = [];
     private readonly Subject<(uint? handle, object value, int length, string? id)> _writePLC = new();
     private readonly ReplaySubject<Unit> _initCompleteSubject = new(1);
+    private readonly ReplaySubject<bool> _isPausedSubject = new(1);
     private CompositeDisposable? _cleanup;
     private CodeGenerator? _codeGenerator;
     private IDisposable? _plcCleanup;
@@ -95,6 +96,22 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// The settings.
     /// </value>
     public ISettings? Settings { get; private set; }
+
+    /// <summary>
+    /// Gets a value indicating whether this instance is paused.
+    /// </summary>
+    /// <value>
+    ///   <c>true</c> if this instance is paused; otherwise, <c>false</c>.
+    /// </value>
+    public bool IsPaused { get; private set; }
+
+    /// <summary>
+    /// Gets the is paused observable.
+    /// </summary>
+    /// <value>
+    /// The is paused observable.
+    /// </value>
+    public IObservable<bool> IsPausedObservable => _isPausedSubject.Retry().Publish().RefCount();
 
     /// <summary>
     /// Connects the specified settings.
@@ -195,6 +212,33 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     }
 
     /// <summary>
+    /// Pauses the specified time.
+    /// </summary>
+    /// <param name="time">The time.</param>
+    public void Pause(TimeSpan time)
+    {
+        if (_cleanup == null || _cleanup.IsDisposed)
+        {
+            _errorReceived.OnNext(new Exception("RxTcAdsClient has been Disposed"));
+            return;
+        }
+
+        if (time.TotalMilliseconds > 0)
+        {
+            var cleanup = new CompositeDisposable();
+            cleanup!.DisposeWith(_cleanup!);
+            IsPaused = true;
+            _isPausedSubject.OnNext(IsPaused);
+            Observable.Timer(time).Subscribe(_ =>
+            {
+                IsPaused = false;
+                _isPausedSubject.OnNext(IsPaused);
+                cleanup?.Dispose();
+            }).DisposeWith(cleanup!);
+        }
+    }
+
+    /// <summary>
     /// Releases unmanaged and - optionally - managed resources.
     /// </summary>
     /// <param name="disposing">
@@ -220,6 +264,7 @@ public partial class RxTcAdsClient : IRxTcAdsClient
             _writePLC.Dispose();
             _dataReceived.Dispose();
             _initCompleteSubject.Dispose();
+            _isPausedSubject.Dispose();
         }
     }
 
@@ -385,7 +430,7 @@ public partial class RxTcAdsClient : IRxTcAdsClient
                 }
 
                 var serviceList = new Dictionary<string, ServiceControllerStatus>();
-                ObservableServiceController.GetServices().Retry()
+                ObservableServiceController.GetServices()
                 .Where(s => s.DisplayName == "TwinCAT System Service" || s.DisplayName == "TwinCAT3 System Service")
                 .Retry()
                 .Subscribe(s =>
@@ -404,19 +449,19 @@ public partial class RxTcAdsClient : IRxTcAdsClient
                     }
 
                     s.StatusObserver.Retry().Subscribe(status =>
-                {
-#pragma warning disable RCS1198 // Avoid unnecessary boxing of value type.
-                    Console.WriteLine($"ServiceName: {s.DisplayName} is {status}");
-#pragma warning restore RCS1198 // Avoid unnecessary boxing of value type.
-                    serviceList[s.DisplayName] = status;
-                    if (status != ServiceControllerStatus.Running)
                     {
-                        s.Start();
-                        var ex = new Exception("Service Fault");
-                        _errorReceived.OnNext(ex);
-                        o.OnError(ex);
-                    }
-                }).DisposeWith(_cleanup);
+#pragma warning disable RCS1198 // Avoid unnecessary boxing of value type.
+                        Console.WriteLine($"ServiceName: {s.DisplayName} is {status}");
+#pragma warning restore RCS1198 // Avoid unnecessary boxing of value type.
+                        serviceList[s.DisplayName] = status;
+                        if (status != ServiceControllerStatus.Running)
+                        {
+                            s.Start();
+                            var ex = new Exception("Service Fault");
+                            _errorReceived.OnNext(ex);
+                            o.OnError(ex);
+                        }
+                    }).DisposeWith(_cleanup);
                 }).DisposeWith(_cleanup);
 
                 Observable.Interval(TimeSpan.FromSeconds(1))

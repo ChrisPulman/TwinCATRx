@@ -59,7 +59,7 @@ Currently it does not support the following features:
     client.Observe<double[]>(".ArrLReal").Subscribe(data => Console.WriteLine(data));
 
     // Ensure the client is initialized before reading or writing
-    client.InitializeComplete().Subscribe(() =>
+    client.InitializeComplete.Subscribe(() =>
     {
         // Read tags of a simple type
         client.Read(".AString");
@@ -76,7 +76,7 @@ Currently it does not support the following features:
 
     // Create structure to store data
     var tag1 = client.CreateStruct(".Tag1", true);
-    tag1.StructureReady().Subscribe(data =>
+    tag1.StructureReady().Subscribe(async data =>
     {
         // read from structure as stream
         data.Observe<bool>("ABool").Subscribe(value => Console.WriteLine(value));
@@ -94,5 +94,15 @@ Currently it does not support the following features:
             
             // Values are written from the structure to the PLC upon return.
         });
+
+        _ = _await data.WriteValuesAsync(ht =>
+        {
+            // write values to structure
+            ht.Value("AInt", (short)(tag + 10));
+            ht.Value("AString", $"Int Value {tag + 10}");
+            
+            // Values are written from the structure to the PLC upon return, 
+            // future usage of WriteValuesAsync will be delayed by the timespan specified with each call.
+        }, TimeSpan.FromMilliseconds(300))
     });
 ```

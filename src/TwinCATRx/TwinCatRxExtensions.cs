@@ -79,7 +79,7 @@ public static class TwinCatRxExtensions
             using (var htClone = @this.CreateClone())
             {
                 setValues(htClone);
-                var structure = htClone.GetStucture();
+                var structure = htClone.GetStructure();
                 if (structure == null)
                 {
                     return false;
@@ -137,7 +137,7 @@ public static class TwinCatRxExtensions
             using (var htClone = @this.CreateClone())
             {
                 setValues(htClone);
-                var structure = htClone.GetStucture();
+                var structure = htClone.GetStructure();
                 if (structure == null)
                 {
                     return false;
@@ -184,6 +184,6 @@ public static class TwinCatRxExtensions
             throw new ArgumentNullException(nameof(@this));
         }
 
-        return new(@this!.UseUpperCase) { [true] = @this.GetStucture() };
+        return new(@this!.UseUpperCase) { [true] = @this.GetStructure() };
     }
 }

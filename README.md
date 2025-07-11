@@ -102,7 +102,7 @@ Currently it does not support the following features:
             ht.Value("AString", $"Int Value {tag + 10}");
             
             // Values are written from the structure to the PLC upon return, 
-            // future usage of WriteValuesAsync will be delayed by the timespan delared with each call.
+            // future usage of WriteValuesAsync will be delayed by the timespan specified with each call.
         }, TimeSpan.FromMilliseconds(300))
     });
 ```

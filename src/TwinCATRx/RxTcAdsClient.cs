@@ -29,10 +29,10 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     private readonly Dictionary<string, Type> _typeInfo = [];
     private readonly Subject<(uint? handle, object value, int length, string? id)> _writePLC = new();
     private readonly ReplaySubject<Unit> _initCompleteSubject = new(1);
+    private readonly ReplaySubject<bool> _isPausedSubject = new(1);
     private CompositeDisposable? _cleanup;
     private CodeGenerator? _codeGenerator;
     private IDisposable? _plcCleanup;
-    private bool _pause;
 
     /// <summary>
     /// Gets codes this instance.
@@ -103,7 +103,15 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// <value>
     ///   <c>true</c> if this instance is paused; otherwise, <c>false</c>.
     /// </value>
-    public bool IsPaused => _pause;
+    public bool IsPaused { get; private set; }
+
+    /// <summary>
+    /// Gets the is paused observable.
+    /// </summary>
+    /// <value>
+    /// The is paused observable.
+    /// </value>
+    public IObservable<bool> IsPausedObservable => _isPausedSubject.Retry().Publish().RefCount();
 
     /// <summary>
     /// Connects the specified settings.
@@ -219,10 +227,12 @@ public partial class RxTcAdsClient : IRxTcAdsClient
         {
             var cleanup = new CompositeDisposable();
             cleanup!.DisposeWith(_cleanup!);
-            _pause = true;
+            IsPaused = true;
+            _isPausedSubject.OnNext(IsPaused);
             Observable.Timer(time).Subscribe(_ =>
             {
-                _pause = false;
+                IsPaused = false;
+                _isPausedSubject.OnNext(IsPaused);
                 cleanup?.Dispose();
             }).DisposeWith(cleanup!);
         }
@@ -254,6 +264,7 @@ public partial class RxTcAdsClient : IRxTcAdsClient
             _writePLC.Dispose();
             _dataReceived.Dispose();
             _initCompleteSubject.Dispose();
+            _isPausedSubject.Dispose();
         }
     }
 

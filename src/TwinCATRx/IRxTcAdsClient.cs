@@ -74,6 +74,14 @@ public interface IRxTcAdsClient : ICancelable
     bool IsPaused { get; }
 
     /// <summary>
+    /// Gets the is paused observable.
+    /// </summary>
+    /// <value>
+    /// The is paused observable.
+    /// </value>
+    public IObservable<bool> IsPausedObservable { get; }
+
+    /// <summary>
     /// Pauses the specified time.
     /// </summary>
     /// <param name="time">The time.</param>

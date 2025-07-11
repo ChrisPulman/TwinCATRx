@@ -114,18 +114,24 @@ public static class TwinCatRxExtensions
                 return false;
             }
 
-            // If the PLC is not paused, pause it for the specified time.
-            if (!plc.IsPaused)
+            if (plc.IsPaused)
             {
-                plc.Pause(time);
+                // If the PLC is paused, wait until it is resumed.
+                var tcs = new TaskCompletionSource<bool>();
+                var d = plc.IsPausedObservable.Subscribe(isPaused =>
+                {
+                    if (!isPaused)
+                    {
+                        tcs.TrySetResult(true);
+                    }
+                });
+                _ = await tcs.Task;
+                d.Dispose();
             }
             else
             {
-                while (plc.IsPaused)
-                {
-                    // Wait until the PLC is not paused.
-                    await Task.Delay(10);
-                }
+                // If the PLC is not paused, pause it for the specified time.
+                plc.Pause(time);
             }
 
             using (var htClone = @this.CreateClone())

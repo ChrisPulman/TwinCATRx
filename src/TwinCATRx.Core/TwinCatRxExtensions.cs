@@ -28,7 +28,7 @@ public static class TwinCatRxExtensions
             return;
         }
 
-        settings.Notifications.Add(new Core.Notification(cycleTime, variableName, arraySize));
+        settings.Notifications.Add(new Notification(cycleTime, variableName, arraySize));
     }
 
     /// <summary>

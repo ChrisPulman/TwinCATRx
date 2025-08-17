@@ -6,7 +6,9 @@ using System.Reactive;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+#if WINDOWS
 using System.ServiceProcess;
+#endif
 using CP.TwinCatRx.Core;
 using TwinCAT.Ads;
 using TwinCAT.TypeSystem;
@@ -217,7 +219,7 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// <param name="time">The time.</param>
     public void Pause(TimeSpan time)
     {
-        if (_cleanup == null || _cleanup.IsDisposed)
+        if (_cleanup?.IsDisposed != false)
         {
             _errorReceived.OnNext(new Exception("RxTcAdsClient has been Disposed"));
             return;
@@ -429,6 +431,7 @@ public partial class RxTcAdsClient : IRxTcAdsClient
                     o.OnError(ex);
                 }
 
+#if WINDOWS
                 var serviceList = new Dictionary<string, ServiceControllerStatus>();
                 ObservableServiceController.GetServices()
                 .Where(s => s.DisplayName == "TwinCAT System Service" || s.DisplayName == "TwinCAT3 System Service")
@@ -464,6 +467,7 @@ public partial class RxTcAdsClient : IRxTcAdsClient
                     }).DisposeWith(_cleanup);
                 }).DisposeWith(_cleanup);
 
+                // Periodically update service status
                 Observable.Interval(TimeSpan.FromSeconds(1))
                 .Retry()
                 .Subscribe(_ =>
@@ -478,7 +482,17 @@ public partial class RxTcAdsClient : IRxTcAdsClient
                     {
                         _serviceStatus.OnNext(ServiceStatus.Faulted);
                     }
+                }).DisposeWith(_cleanup);
+#else
+                // On non-Windows, assume service is available and running
+                _serviceStatus.OnNext(ServiceStatus.Running);
+#endif
 
+                // Periodically update ADS client state
+                Observable.Interval(TimeSpan.FromSeconds(1))
+                .Retry()
+                .Subscribe(_ =>
+                {
                     try
                     {
                         _clientState.OnNext(client?.IsConnected == true ? client.ReadState().AdsState : AdsState.Invalid);

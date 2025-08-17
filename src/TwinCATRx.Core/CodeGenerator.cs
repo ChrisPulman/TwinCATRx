@@ -297,8 +297,10 @@ public class CodeGenerator : ICodeGenerator
     /// <returns>
     /// Result as a Boolean.
     /// </returns>
+#if NET8_0_OR_GREATER
     [RequiresDynamicCode("Emits and loads assemblies dynamically via Roslyn/Mono.Cecil.")]
     [RequiresUnreferencedCode("Dynamic compilation may access trimmed members.")]
+#endif
     public bool CreateDll(INodeEmulator selectedTN, bool isTwinCat3 = false) =>
         CreateDll(selectedTN, string.Empty, isTwinCat3, "TwinCATRx");
 
@@ -313,8 +315,10 @@ public class CodeGenerator : ICodeGenerator
     /// <returns>
     /// Result as a Boolean.
     /// </returns>
+#if NET8_0_OR_GREATER
     [RequiresDynamicCode("Emits and loads assemblies dynamically via Roslyn/Mono.Cecil.")]
     [RequiresUnreferencedCode("Dynamic compilation may access trimmed members.")]
+#endif
     public bool CreateDll(INodeEmulator? selectedTN, string fileName, bool isTwinCat3 = false, string classNamespace = "TwinCATRx")
     {
         if (!string.IsNullOrWhiteSpace(fileName))
@@ -348,8 +352,10 @@ public class CodeGenerator : ICodeGenerator
     /// <param name="cSharpSourceCode">The c sharp source code.</param>
     /// <param name="fileName">Name of the file.</param>
     /// <returns>A Value.</returns>
+#if NET8_0_OR_GREATER
     [RequiresDynamicCode("Emits and loads assemblies dynamically via Roslyn/Mono.Cecil.")]
     [RequiresUnreferencedCode("Dynamic compilation may access trimmed members.")]
+#endif
     public bool CreateDll(string cSharpSourceCode, string fileName)
     {
         if (!string.IsNullOrWhiteSpace(fileName))

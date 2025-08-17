@@ -145,8 +145,10 @@ public static class TwinCatRxExtensions
     /// </summary>
     /// <param name="dllFullName">Full name of the DLL.</param>
     /// <returns>assembly loaded.</returns>
+#if NET8_0_OR_GREATER
     [RequiresDynamicCode("Loads an assembly at runtime via Assembly.Load which requires dynamic code.")]
     [RequiresUnreferencedCode("Uses reflection-based assembly loading which may be trimmed.")]
+#endif
     public static Assembly? AssemblyLoad(this string dllFullName)
     {
         Assembly? assembly = null;
@@ -178,8 +180,10 @@ public static class TwinCatRxExtensions
     /// <param name="dllFullName">Full name of the DLL.</param>
     /// <param name="engineType">Type of the engine.</param>
     /// <returns>A type.</returns>
+#if NET8_0_OR_GREATER
     [RequiresDynamicCode("Accesses type by name using reflection which may require dynamic code.")]
     [RequiresUnreferencedCode("Uses reflection to access type by name which may be trimmed in AOT.")]
+#endif
     public static Type? GetType(this string dllFullName, string engineType) => dllFullName.AssemblyLoad()?.GetType(engineType);
 
     /// <summary>

@@ -92,8 +92,10 @@ public interface IRxTcAdsClient : ICancelable
     /// Connects the specified settings.
     /// </summary>
     /// <param name="settings">The settings.</param>
+#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
     [RequiresDynamicCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
+#endif
     void Connect(ISettings settings);
 
     /// <summary>

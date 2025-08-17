@@ -21,19 +21,16 @@ internal class CSharpLanguage : ILanguageService
       MetadataReference.CreateFromFile(typeof(ValueTuple<>).GetTypeInfo().Assembly.Location)
     ];
 
-    private static readonly LanguageVersion MaxLanguageVersion = Enum
-        .GetValues(typeof(LanguageVersion))
-        .Cast<LanguageVersion>()
-        .Max();
-
     /// <summary>
     /// Creates the assembly.
     /// </summary>
     /// <param name="code">The code.</param>
     /// <param name="assemblyFileName">Name of the assembly file.</param>
     /// <returns>A bool.</returns>
+#if NET8_0_OR_GREATER
     [RequiresDynamicCode("Emits and inspects assemblies dynamically.")]
     [RequiresUnreferencedCode("Dynamic compilation may access trimmed members.")]
+#endif
     public static bool CreateAssembly(string code, string assemblyFileName)
     {
         var sourceLanguage = new CSharpLanguage();
@@ -68,7 +65,7 @@ internal class CSharpLanguage : ILanguageService
     /// <inheritdoc />
     public SyntaxTree ParseText(string code, SourceCodeKind kind)
     {
-        var options = new CSharpParseOptions(languageVersion: MaxLanguageVersion, kind: kind);
+        var options = new CSharpParseOptions(languageVersion: LanguageVersion.Latest, kind: kind);
 
         // Return a syntax tree of our source code
         return CSharpSyntaxTree.ParseText(code, options);

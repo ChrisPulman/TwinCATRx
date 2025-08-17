@@ -121,8 +121,10 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// </summary>
     /// <param name="settings">The settings.</param>
     /// <exception cref="Exception">An Exception.</exception>
+#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
     [RequiresDynamicCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
+#endif
     public void Connect(ISettings settings)
     {
         if (_cleanup?.IsDisposed == true)
@@ -279,9 +281,10 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// <param name="notifications">The notifications.</param>
     /// <param name="client">The client.</param>
     /// <returns>A Value.</returns>
-    [SuppressMessage("AOT", "IL2067", Justification = "CodeGenerator emits types dynamically and is already annotated; this method orchestrates the process.")]
+#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
     [RequiresDynamicCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
+#endif
     private Exception? CreateNotificationVariables(List<Core.INotification>? notifications, AdsClient client)
     {
         var isTC3 = client?.Address?.Port >= 851;
@@ -350,8 +353,10 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// <param name="writeVariables">The write variables.</param>
     /// <param name="client">The client.</param>
     /// <returns>A Value.</returns>
-    [SuppressMessage("AOT", "IL2067", Justification = "CodeGenerator emits types dynamically and is already annotated; this method orchestrates the process.")]
+#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("May rely on dynamic type generation depending on PLC type definitions.")]
+    [RequiresDynamicCode("May rely on dynamic type generation depending on PLC type definitions.")]
+#endif
     private Exception? CreateWriteVariables(List<IWriteVariable>? writeVariables, AdsClient client)
     {
         var isTC3 = client.Address?.Port >= 851;
@@ -401,8 +406,10 @@ public partial class RxTcAdsClient : IRxTcAdsClient
         return null;
     }
 
+#if NET8_0_OR_GREATER
     [RequiresUnreferencedCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
     [RequiresDynamicCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
+#endif
     private IObservable<Unit> InitPLC() =>
         Observable.Create<Unit>(o =>
             {

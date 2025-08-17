@@ -166,9 +166,6 @@ public static class TwinCatRxExtensions
 
                 assembly = Assembly.Load(ms.ToArray());
             }
-
-            // Force clean up
-            GC.Collect();
         }
 
         return assembly;

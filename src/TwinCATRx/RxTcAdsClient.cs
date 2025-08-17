@@ -22,17 +22,19 @@ namespace CP.TwinCatRx;
 public partial class RxTcAdsClient : IRxTcAdsClient
 {
     private readonly Subject<AdsState> _clientState = new();
-    private readonly List<string> _code = [];
     private readonly Subject<string[]> _codeSubject = new();
     private readonly Subject<(string Variable, object? Data, string? Id)> _dataReceived = new();
     private readonly Subject<Exception> _errorReceived = new();
     private readonly Subject<string?> _onWriteSubject = new();
     private readonly Subject<(uint? handle, Type type, int length, string? id)> _readPLC = new();
     private readonly Subject<ServiceStatus> _serviceStatus = new();
-    private readonly Dictionary<string, Type> _typeInfo = [];
     private readonly Subject<(uint? handle, object value, int length, string? id)> _writePLC = new();
     private readonly ReplaySubject<Unit> _initCompleteSubject = new(1);
     private readonly ReplaySubject<bool> _isPausedSubject = new(1);
+    private readonly List<string> _code = [];
+    private readonly Dictionary<string, Type> _typeInfo = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<uint, string> _rwHandleToVar = [];
+    private readonly Dictionary<uint, string> _wHandleToVar = [];
     private CompositeDisposable? _cleanup;
     private CodeGenerator? _codeGenerator;
     private IDisposable? _plcCleanup;
@@ -84,13 +86,13 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// Gets the read write handle information.
     /// </summary>
     /// <value>The read write handle information.</value>
-    public IDictionary<string, uint?> ReadWriteHandleInfo { get; } = new Dictionary<string, uint?>();
+    public IDictionary<string, uint?> ReadWriteHandleInfo { get; } = new Dictionary<string, uint?>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets the write handle information.
     /// </summary>
     /// <value>The write handle information.</value>
-    public IDictionary<string, (uint? Handle, int ArrayLength)> WriteHandleInfo { get; } = new Dictionary<string, (uint? Handle, int ArrayLength)>();
+    public IDictionary<string, (uint? Handle, int ArrayLength)> WriteHandleInfo { get; } = new Dictionary<string, (uint? Handle, int ArrayLength)>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Gets the settings.
@@ -171,9 +173,9 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// <exception cref="System.ArgumentOutOfRangeException">Parameters - Parameter 0 must be set to the size of the Array.</exception>
     public void Read(string variable, int? arrayLength = null, string? id = null)
     {
-        if (!string.IsNullOrWhiteSpace(variable) && WriteHandleInfo.TryGetValue(variable!.ToUpper(), out var item))
+        if (!string.IsNullOrWhiteSpace(variable) && WriteHandleInfo.TryGetValue(variable, out var item))
         {
-            var type = _typeInfo[variable.ToUpper()];
+            var type = _typeInfo[variable];
             if (type.IsArray || type == typeof(string))
             {
                 if (item.ArrayLength > 0)
@@ -204,15 +206,13 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// <param name="id">The identifier.</param>
     public void Write(string variable, object value, string? id = null)
     {
-        uint? handle;
-        if (!string.IsNullOrWhiteSpace(variable) && ReadWriteHandleInfo.ContainsKey(variable!.ToUpper()))
+        if (!string.IsNullOrWhiteSpace(variable) && ReadWriteHandleInfo.TryGetValue(variable, out var readWritehandle))
         {
-            handle = ReadWriteHandleInfo[variable.ToUpper()];
-            WriteHandle(handle, value, id: id);
+            WriteHandle(readWritehandle, value, id: id);
             return;
         }
 
-        if (!string.IsNullOrWhiteSpace(variable) && WriteHandleInfo.TryGetValue(variable!.ToUpper(), out var item))
+        if (!string.IsNullOrWhiteSpace(variable) && WriteHandleInfo.TryGetValue(variable, out var item))
         {
             WriteHandle(item.Handle, value, item.ArrayLength, id: id);
         }
@@ -330,11 +330,12 @@ public partial class RxTcAdsClient : IRxTcAdsClient
 
                 if (type != null && notificationVariable != null && !string.IsNullOrWhiteSpace(notificationVariable))
                 {
-                    var handle = client?.CreateVariableHandle(notificationVariable.ToUpper());
+                    var handle = client?.CreateVariableHandle(notificationVariable);
                     if (handle.HasValue)
                     {
-                        ReadWriteHandleInfo.Add(notificationVariable.ToUpper(), handle.Value);
-                        _typeInfo.Add(notificationVariable.ToUpper(), type);
+                        ReadWriteHandleInfo[notificationVariable] = handle.Value;
+                        _rwHandleToVar[handle.Value] = notificationVariable;
+                        _typeInfo[notificationVariable] = type;
                     }
                 }
             }
@@ -360,11 +361,16 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     private Exception? CreateWriteVariables(List<IWriteVariable>? writeVariables, AdsClient client)
     {
         var isTC3 = client.Address?.Port >= 851;
-        foreach (var (variable, arraySize) in writeVariables!.Select(t => (Variable: t.Variable!.ToUpper(), t.ArraySize)).Where(x => !string.IsNullOrEmpty(x.Variable)))
+        foreach (var (variable, arraySize) in writeVariables!.Select(t => (Variable: t.Variable!, t.ArraySize)).Where(x => !string.IsNullOrEmpty(x.Variable)))
         {
             try
             {
-                WriteHandleInfo.Add(variable, (client?.CreateVariableHandle(variable), arraySize));
+                var handle = client?.CreateVariableHandle(variable);
+                WriteHandleInfo[variable] = (handle, arraySize);
+                if (handle.HasValue)
+                {
+                    _wHandleToVar[handle.Value] = variable;
+                }
 
                 var nodeEmulator = _codeGenerator?.SearchSymbols(variable);
                 if (nodeEmulator == null)
@@ -386,7 +392,7 @@ public partial class RxTcAdsClient : IRxTcAdsClient
 
                 if (type != null)
                 {
-                    _typeInfo.Add(variable, type);
+                    _typeInfo[variable] = type;
                 }
                 else
                 {
@@ -426,6 +432,8 @@ public partial class RxTcAdsClient : IRxTcAdsClient
                 ReadWriteHandleInfo.Clear();
                 _typeInfo.Clear();
                 WriteHandleInfo.Clear();
+                _rwHandleToVar.Clear();
+                _wHandleToVar.Clear();
 
                 try
                 {
@@ -609,12 +617,11 @@ public partial class RxTcAdsClient : IRxTcAdsClient
                            plcValueRead = client.ReadAny(v.handle.Value, v.type);
                        }
 
-                       if (plcValueRead != null)
+                       if (plcValueRead != null && v.handle.HasValue)
                        {
-                           var key = ReadWriteHandleInfo.FirstOrDefault(k => k.Value == v.handle).Key;
-                           if (string.IsNullOrWhiteSpace(key))
+                           if (!_rwHandleToVar.TryGetValue(v.handle.Value, out var key))
                            {
-                               key = WriteHandleInfo.First(k => k.Value.Handle == v.handle).Key;
+                               _wHandleToVar.TryGetValue(v.handle.Value, out key);
                            }
 
                            if (!string.IsNullOrWhiteSpace(key))
@@ -635,16 +642,15 @@ public partial class RxTcAdsClient : IRxTcAdsClient
                     {
                         Observable.Interval(TimeSpan.FromMilliseconds(notification.UpdateRate)).Retry().Subscribe(_ =>
                         {
-                            if (notification.Variable != null && client.IsConnected && _typeInfo.TryGetValue(notification.Variable.ToUpper(), out var type))
+                            if (notification.Variable != null && client.IsConnected && _typeInfo.TryGetValue(notification.Variable, out var type) && ReadWriteHandleInfo.TryGetValue(notification.Variable, out var handle))
                             {
-                                var kvp = ReadWriteHandleInfo.FirstOrDefault(k => k.Key.Equals(notification.Variable, StringComparison.CurrentCultureIgnoreCase));
                                 if (type != null)
                                 {
                                     if (type.IsArray || type == typeof(string))
                                     {
                                         if (notification.ArraySize > 0)
                                         {
-                                            ReadArrayHandle(kvp.Value, type, notification.ArraySize, null);
+                                            ReadArrayHandle(handle, type, notification.ArraySize, null);
                                         }
                                         else
                                         {
@@ -653,7 +659,7 @@ public partial class RxTcAdsClient : IRxTcAdsClient
                                     }
                                     else
                                     {
-                                        ReadHandle(kvp.Value, type, null);
+                                        ReadHandle(handle, type, null);
                                     }
                                 }
                             }

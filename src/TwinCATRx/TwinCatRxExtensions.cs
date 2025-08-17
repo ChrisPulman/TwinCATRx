@@ -23,7 +23,9 @@ public static class TwinCatRxExtensions
     [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "Generic cast is driven by the user's T; trimming will not remove observed payload types in typical usage.")]
 #endif
     public static IObservable<T> Observe<T>(this IRxTcAdsClient @this, string variable) =>
-        @this?.DataReceived.Where(x => x.Variable.ToUpperInvariant().Equals(variable.ToUpperInvariant(), StringComparison.InvariantCulture) && x.Data != null).Select(x => (T)x.Data!)!;
+        @this?.DataReceived
+            .Where(x => string.Equals(x.Variable, variable, StringComparison.OrdinalIgnoreCase) && x.Data != null)
+            .Select(x => (T)x.Data!)!;
 
     /// <summary>
     /// Observes the specified variable.
@@ -39,7 +41,9 @@ public static class TwinCatRxExtensions
     [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "Generic cast is driven by the user's T; trimming will not remove observed payload types in typical usage.")]
 #endif
     public static IObservable<T> Observe<T>(this IRxTcAdsClient @this, string variable, string id) =>
-        @this?.DataReceived.Where(x => string.Equals(x.Id, id) && x.Variable.ToUpperInvariant().Equals(variable.ToUpperInvariant(), StringComparison.InvariantCulture) && x.Data != null).Select(x => (T)x.Data!)!;
+        @this?.DataReceived
+            .Where(x => string.Equals(x.Id, id) && string.Equals(x.Variable, variable, StringComparison.OrdinalIgnoreCase) && x.Data != null)
+            .Select(x => (T)x.Data!)!;
 
     /// <summary>
     /// Creates the structure.

@@ -6,7 +6,7 @@ namespace CP.TwinCatRx.Core;
 /// <summary>
 /// Exception thrown when a simple type is not supported.
 /// </summary>
-/// <seealso cref="System.Exception" />
+/// <seealso cref="Exception" />
 [Serializable]
 public class SimpleTypeException : Exception
 {

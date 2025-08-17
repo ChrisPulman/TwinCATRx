@@ -1,12 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net8.0-windows10.0.17763.0;net9.0-windows10.0.17763.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net8.0;net9.0;net8.0-windows10.0.17763.0;net9.0-windows10.0.17763.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>CP.TwinCATRx</PackageId>
     <Title>TwinCATRx</Title>
     <RootNamespace>CP.TwinCatRx</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'net9.0' or '$(TargetFramework)' == 'net8.0-windows10.0.17763.0' or '$(TargetFramework)' == 'net9.0-windows10.0.17763.0'">
+    <!-- Allow consumers to trim unused APIs from this library -->
+    <IsTrimmable>true</IsTrimmable>
+    <!-- Enable AOT compatibility analysis on modern TFMs -->
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+  </PropertyGroup>
+
+  <!-- Exclude Windows-only implementation from non-Windows TFMs to reduce dependencies -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'net9.0'">
+    <Compile Remove="ObservableServiceController.cs" />
+    <Compile Remove="IObservableServiceController.cs" />
+  </ItemGroup>
+
+  <!-- Define WINDOWS symbol for Windows-targeted TFMs -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows10.0.17763.0' or '$(TargetFramework)' == 'net9.0-windows10.0.17763.0'">
+    <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

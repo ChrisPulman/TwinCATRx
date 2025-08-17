@@ -21,6 +21,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TwinCATRx.Core", "TwinCATRx
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "..\build\_build.csproj", "{B399408B-6B2C-445D-9335-3F80D70F27BA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwinCATRx.Tests", "TwinCATRx.Tests\TwinCATRx.Tests.csproj", "{7310CE65-0944-1DF7-3865-90A3D60D3C31}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,10 @@ Global
 		{7833002D-9032-4816-B8A1-E861BFB0F5FE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{B399408B-6B2C-445D-9335-3F80D70F27BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{B399408B-6B2C-445D-9335-3F80D70F27BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7310CE65-0944-1DF7-3865-90A3D60D3C31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7310CE65-0944-1DF7-3865-90A3D60D3C31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7310CE65-0944-1DF7-3865-90A3D60D3C31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7310CE65-0944-1DF7-3865-90A3D60D3C31}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

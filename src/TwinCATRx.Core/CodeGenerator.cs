@@ -4,6 +4,7 @@
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.CSharp;
@@ -296,6 +297,10 @@ public class CodeGenerator : ICodeGenerator
     /// <returns>
     /// Result as a Boolean.
     /// </returns>
+#if NET8_0_OR_GREATER
+    [RequiresDynamicCode("Emits and loads assemblies dynamically via Roslyn/Mono.Cecil.")]
+    [RequiresUnreferencedCode("Dynamic compilation may access trimmed members.")]
+#endif
     public bool CreateDll(INodeEmulator selectedTN, bool isTwinCat3 = false) =>
         CreateDll(selectedTN, string.Empty, isTwinCat3, "TwinCATRx");
 
@@ -310,6 +315,10 @@ public class CodeGenerator : ICodeGenerator
     /// <returns>
     /// Result as a Boolean.
     /// </returns>
+#if NET8_0_OR_GREATER
+    [RequiresDynamicCode("Emits and loads assemblies dynamically via Roslyn/Mono.Cecil.")]
+    [RequiresUnreferencedCode("Dynamic compilation may access trimmed members.")]
+#endif
     public bool CreateDll(INodeEmulator? selectedTN, string fileName, bool isTwinCat3 = false, string classNamespace = "TwinCATRx")
     {
         if (!string.IsNullOrWhiteSpace(fileName))
@@ -338,11 +347,15 @@ public class CodeGenerator : ICodeGenerator
     }
 
     /// <summary>
-    /// Creates the DLL.
+    /// Creates the DLL from raw source.
     /// </summary>
     /// <param name="cSharpSourceCode">The c sharp source code.</param>
     /// <param name="fileName">Name of the file.</param>
     /// <returns>A Value.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresDynamicCode("Emits and loads assemblies dynamically via Roslyn/Mono.Cecil.")]
+    [RequiresUnreferencedCode("Dynamic compilation may access trimmed members.")]
+#endif
     public bool CreateDll(string cSharpSourceCode, string fileName)
     {
         if (!string.IsNullOrWhiteSpace(fileName))
@@ -483,12 +496,12 @@ public class CodeGenerator : ICodeGenerator
         var symbols = symbolName?.Split('.');
 
         // get first symbol
-        var ret = SymbolList.First(x => x.Text.ToUpperInvariant().Equals(symbols?[0]?.ToUpperInvariant(), StringComparison.Ordinal));
+        var ret = SymbolList.First(x => string.Equals(x.Text, symbols?[0], StringComparison.OrdinalIgnoreCase));
         if (symbols?.Length > 1)
         {
             for (var i = 1; i < symbols.Length; i++)
             {
-                ret = ret!.Nodes?.First(x => x.Text.ToUpperInvariant().Equals(symbols[i]?.ToUpperInvariant(), StringComparison.Ordinal));
+                ret = ret!.Nodes?.First(x => string.Equals(x.Text, symbols[i], StringComparison.OrdinalIgnoreCase));
             }
         }
 
@@ -554,58 +567,74 @@ public class CodeGenerator : ICodeGenerator
                         sb.AppendLine("[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 81)]")
                             .Append("public ").Append(c_type).Append(' ').Append(str).AppendLine(";");
                     }
-                    else if (c_type.Contains("System.String[],"))
+                    else if (c_type.Contains(
+                        "System.String[",
+                        StringComparison.Ordinal))
                     {
                         var num = int.Parse(c_type.Split(',')[1]);
-                        sb.Append("[MarshalAs(UnmanagedType.ByValTStr, SizeConst = ").Append(num + 1).AppendLine(")]")
+                        sb.Append("[MarshalAs(UnmanagedType.ByValTStr, SizeConst = ").Append(num + 1).AppendLine(")] ")
                             .Append("public System.String[] ").Append(str).Append(" = new ").Append("System.String[").Append(num).AppendLine("];");
                     }
-                    else if (c_type.Contains("System.String,"))
+                    else if (c_type.Contains(
+                        "System.String,",
+                        StringComparison.Ordinal))
                     {
                         var num = int.Parse(c_type.Split(',')[1]);
-                        sb.Append("[MarshalAs(UnmanagedType.ByValTStr, SizeConst = ").Append(num + 1).AppendLine(")]")
+                        sb.Append("[MarshalAs(UnmanagedType.ByValTStr, SizeConst = ").Append(num + 1).AppendLine(")] ")
                             .Append("public string ").Append(str).AppendLine(";");
                     }
-                    else if (c_type.Contains("System.Double[],"))
+                    else if (c_type.Contains(
+                        "System.Double[",
+                        StringComparison.Ordinal))
                     {
                         var nums = c_type.Split(',')[1];
                         var num = int.Parse(nums.Split('.')[2]);
-                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")]")
+                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")] ")
                             .Append("public System.Double[] ").Append(str).Append(" = new ").Append("System.Double[").Append(num).AppendLine("];");
                     }
-                    else if (c_type.Contains("System.Single[],"))
+                    else if (c_type.Contains(
+                        "System.Single[",
+                        StringComparison.Ordinal))
                     {
                         var nums = c_type.Split(',')[1];
                         var num = int.Parse(nums.Split('.')[2]);
-                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")]")
+                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")] ")
                             .Append("public System.Single[] ").Append(str).Append(" = new ").Append("System.Single[").Append(num).AppendLine("];");
                     }
-                    else if (c_type.Contains("System.Int16[],"))
+                    else if (c_type.Contains(
+                        "System.Int16[",
+                        StringComparison.Ordinal))
                     {
                         var nums = c_type.Split(',')[1];
                         var num = int.Parse(nums.Split('.')[2]);
-                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")]")
+                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")] ")
                             .Append("public System.Int16[] ").Append(str).Append(" = new ").Append("System.Int16[").Append(num).AppendLine("];");
                     }
-                    else if (c_type.Contains("System.Int32[],"))
+                    else if (c_type.Contains(
+                        "System.Int32[",
+                        StringComparison.Ordinal))
                     {
                         var nums = c_type.Split(',')[1];
                         var num = int.Parse(nums.Split('.')[2]);
-                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")]")
+                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")] ")
                             .Append("public System.Int32[] ").Append(str).Append(" = new ").Append("System.Int32[").Append(num).AppendLine("];");
                     }
-                    else if (c_type.Contains("System.Boolean[],"))
+                    else if (c_type.Contains(
+                        "System.Boolean[",
+                        StringComparison.Ordinal))
                     {
                         var nums = c_type.Split(',')[1];
                         var num = int.Parse(nums.Split('.')[2]);
-                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")]")
+                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")] ")
                             .Append("public bool[] ").Append(str).Append(" = new ").Append("bool[").Append(num).AppendLine("];");
                     }
-                    else if (c_type.Contains("System.Byte[],"))
+                    else if (c_type.Contains(
+                        "System.Byte[",
+                        StringComparison.Ordinal))
                     {
                         var nums = c_type.Split(',')[1];
                         var num = int.Parse(nums.Split('.')[2]);
-                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")]")
+                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")] ")
                             .Append("public byte[] ").Append(str).Append(" = new ").Append("byte[").Append(num).AppendLine("];");
                     }
                     else

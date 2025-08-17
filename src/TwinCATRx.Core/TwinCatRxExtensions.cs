@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Chris Pulman. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Concurrency;
 using System.Reactive.Disposables;
 using System.Reactive.Linq;
@@ -28,7 +29,7 @@ public static class TwinCatRxExtensions
             return;
         }
 
-        settings.Notifications.Add(new Core.Notification(cycleTime, variableName, arraySize));
+        settings.Notifications.Add(new Notification(cycleTime, variableName, arraySize));
     }
 
     /// <summary>
@@ -78,7 +79,6 @@ public static class TwinCatRxExtensions
     /// <returns>A Value.</returns>
 #pragma warning disable RCS1231 // Make parameter ref read-only.
     public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, TimeSpan delay)
-#pragma warning restore RCS1231 // Make parameter ref read-only.
         where TException : Exception => source.OnErrorRetry(onError, int.MaxValue, delay);
 
     /// <summary>
@@ -104,7 +104,6 @@ public static class TwinCatRxExtensions
     /// <param name="retryCount">The retry count.</param>
     /// <param name="delay">The delay.</param>
     /// <returns>A Value.</returns>
-#pragma warning disable RCS1231 // Make parameter ref read-only.
     public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, int retryCount, TimeSpan delay)
 #pragma warning restore RCS1231 // Make parameter ref read-only.
         where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, Scheduler.Default);
@@ -146,6 +145,10 @@ public static class TwinCatRxExtensions
     /// </summary>
     /// <param name="dllFullName">Full name of the DLL.</param>
     /// <returns>assembly loaded.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresDynamicCode("Loads an assembly at runtime via Assembly.Load which requires dynamic code.")]
+    [RequiresUnreferencedCode("Uses reflection-based assembly loading which may be trimmed.")]
+#endif
     public static Assembly? AssemblyLoad(this string dllFullName)
     {
         Assembly? assembly = null;
@@ -163,20 +166,21 @@ public static class TwinCatRxExtensions
 
                 assembly = Assembly.Load(ms.ToArray());
             }
-
-            // Force clean up
-            GC.Collect();
         }
 
         return assembly;
     }
 
     /// <summary>
-    /// Gets the type.
+    /// Gets the type from the assembly file.
     /// </summary>
     /// <param name="dllFullName">Full name of the DLL.</param>
     /// <param name="engineType">Type of the engine.</param>
     /// <returns>A type.</returns>
+#if NET8_0_OR_GREATER
+    [RequiresDynamicCode("Accesses type by name using reflection which may require dynamic code.")]
+    [RequiresUnreferencedCode("Uses reflection to access type by name which may be trimmed in AOT.")]
+#endif
     public static Type? GetType(this string dllFullName, string engineType) => dllFullName.AssemblyLoad()?.GetType(engineType);
 
     /// <summary>

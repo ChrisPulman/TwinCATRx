@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Chris Pulman. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -31,6 +32,8 @@ internal class CSharpLanguage : ILanguageService
     /// <param name="code">The code.</param>
     /// <param name="assemblyFileName">Name of the assembly file.</param>
     /// <returns>A bool.</returns>
+    [RequiresDynamicCode("Emits and inspects assemblies dynamically.")]
+    [RequiresUnreferencedCode("Dynamic compilation may access trimmed members.")]
     public static bool CreateAssembly(string code, string assemblyFileName)
     {
         var sourceLanguage = new CSharpLanguage();
@@ -62,12 +65,7 @@ internal class CSharpLanguage : ILanguageService
         }
     }
 
-    /// <summary>
-    /// Parses the text.
-    /// </summary>
-    /// <param name="code">The source code.</param>
-    /// <param name="kind">The kind.</param>
-    /// <returns>The Syntax Tree.</returns>
+    /// <inheritdoc />
     public SyntaxTree ParseText(string code, SourceCodeKind kind)
     {
         var options = new CSharpParseOptions(languageVersion: MaxLanguageVersion, kind: kind);
@@ -76,12 +74,7 @@ internal class CSharpLanguage : ILanguageService
         return CSharpSyntaxTree.ParseText(code, options);
     }
 
-    /// <summary>
-    /// Creates the library compilation.
-    /// </summary>
-    /// <param name="assemblyName">Name of the assembly.</param>
-    /// <param name="enableOptimisations">if set to <c>true</c> [enable optimisations].</param>
-    /// <returns>The Compilation.</returns>
+    /// <inheritdoc />
     public Compilation CreateLibraryCompilation(string assemblyName, bool enableOptimisations)
     {
         var options = new CSharpCompilationOptions(

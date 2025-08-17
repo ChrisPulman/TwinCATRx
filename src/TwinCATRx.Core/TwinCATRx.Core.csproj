@@ -7,8 +7,13 @@
     <PackageId>CP.TwinCATRx.Core</PackageId>
     <Title>TwinCATRx.Core</Title>
     <RootNamespace>CP.TwinCatRx.Core</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'net9.0'">
     <!-- Allow consumers to trim unused APIs from this library -->
     <IsTrimmable>true</IsTrimmable>
+    <!-- Enable AOT compatibility analysis on modern TFMs -->
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
   </PropertyGroup>
 
   <ItemGroup>

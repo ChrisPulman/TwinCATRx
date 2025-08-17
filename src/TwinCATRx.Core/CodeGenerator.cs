@@ -4,6 +4,7 @@
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.CSharp;
@@ -296,6 +297,8 @@ public class CodeGenerator : ICodeGenerator
     /// <returns>
     /// Result as a Boolean.
     /// </returns>
+    [RequiresDynamicCode("Emits and loads assemblies dynamically via Roslyn/Mono.Cecil.")]
+    [RequiresUnreferencedCode("Dynamic compilation may access trimmed members.")]
     public bool CreateDll(INodeEmulator selectedTN, bool isTwinCat3 = false) =>
         CreateDll(selectedTN, string.Empty, isTwinCat3, "TwinCATRx");
 
@@ -310,6 +313,8 @@ public class CodeGenerator : ICodeGenerator
     /// <returns>
     /// Result as a Boolean.
     /// </returns>
+    [RequiresDynamicCode("Emits and loads assemblies dynamically via Roslyn/Mono.Cecil.")]
+    [RequiresUnreferencedCode("Dynamic compilation may access trimmed members.")]
     public bool CreateDll(INodeEmulator? selectedTN, string fileName, bool isTwinCat3 = false, string classNamespace = "TwinCATRx")
     {
         if (!string.IsNullOrWhiteSpace(fileName))
@@ -338,11 +343,13 @@ public class CodeGenerator : ICodeGenerator
     }
 
     /// <summary>
-    /// Creates the DLL.
+    /// Creates the DLL from raw source.
     /// </summary>
     /// <param name="cSharpSourceCode">The c sharp source code.</param>
     /// <param name="fileName">Name of the file.</param>
     /// <returns>A Value.</returns>
+    [RequiresDynamicCode("Emits and loads assemblies dynamically via Roslyn/Mono.Cecil.")]
+    [RequiresUnreferencedCode("Dynamic compilation may access trimmed members.")]
     public bool CreateDll(string cSharpSourceCode, string fileName)
     {
         if (!string.IsNullOrWhiteSpace(fileName))

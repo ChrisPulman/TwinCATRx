@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Chris Pulman. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -120,6 +121,8 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// </summary>
     /// <param name="settings">The settings.</param>
     /// <exception cref="Exception">An Exception.</exception>
+    [RequiresUnreferencedCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
+    [RequiresDynamicCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
     public void Connect(ISettings settings)
     {
         if (_cleanup?.IsDisposed == true)
@@ -276,7 +279,9 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// <param name="notifications">The notifications.</param>
     /// <param name="client">The client.</param>
     /// <returns>A Value.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1866:Use char overload", Justification = "Not valid for all TFM's")]
+    [SuppressMessage("AOT", "IL2067", Justification = "CodeGenerator emits types dynamically and is already annotated; this method orchestrates the process.")]
+    [RequiresUnreferencedCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
+    [RequiresDynamicCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
     private Exception? CreateNotificationVariables(List<Core.INotification>? notifications, AdsClient client)
     {
         var isTC3 = client?.Address?.Port >= 851;
@@ -345,7 +350,8 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// <param name="writeVariables">The write variables.</param>
     /// <param name="client">The client.</param>
     /// <returns>A Value.</returns>
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1866:Use char overload", Justification = "Not valid for all TFM's")]
+    [SuppressMessage("AOT", "IL2067", Justification = "CodeGenerator emits types dynamically and is already annotated; this method orchestrates the process.")]
+    [RequiresUnreferencedCode("May rely on dynamic type generation depending on PLC type definitions.")]
     private Exception? CreateWriteVariables(List<IWriteVariable>? writeVariables, AdsClient client)
     {
         var isTC3 = client.Address?.Port >= 851;
@@ -395,6 +401,8 @@ public partial class RxTcAdsClient : IRxTcAdsClient
         return null;
     }
 
+    [RequiresUnreferencedCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
+    [RequiresDynamicCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
     private IObservable<Unit> InitPLC() =>
         Observable.Create<Unit>(o =>
             {

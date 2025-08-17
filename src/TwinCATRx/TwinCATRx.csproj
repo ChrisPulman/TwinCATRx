@@ -7,12 +7,17 @@
     <PackageId>CP.TwinCATRx</PackageId>
     <Title>TwinCATRx</Title>
     <RootNamespace>CP.TwinCatRx</RootNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'net9.0' or '$(TargetFramework)' == 'net8.0-windows10.0.17763.0' or '$(TargetFramework)' == 'net9.0-windows10.0.17763.0'">
     <!-- Allow consumers to trim unused APIs from this library -->
     <IsTrimmable>true</IsTrimmable>
+    <!-- Enable AOT compatibility analysis on modern TFMs -->
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
   </PropertyGroup>
 
-  <!-- Exclude Windows-only implementation from netstandard2.0 to reduce dependencies -->
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+  <!-- Exclude Windows-only implementation from non-Windows TFMs to reduce dependencies -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'net9.0'">
     <Compile Remove="ObservableServiceController.cs" />
     <Compile Remove="IObservableServiceController.cs" />
   </ItemGroup>

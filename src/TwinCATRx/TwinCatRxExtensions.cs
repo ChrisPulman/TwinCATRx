@@ -1,6 +1,7 @@
 ﻿// Copyright (c) Chris Pulman. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Linq;
 using CP.Collections;
 
@@ -18,6 +19,7 @@ public static class TwinCatRxExtensions
     /// <param name="this">The this.</param>
     /// <param name="variable">The variable.</param>
     /// <returns>An Observable of T.</returns>
+    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "Generic cast is driven by the user's T; trimming will not remove observed payload types in typical usage.")]
     public static IObservable<T> Observe<T>(this IRxTcAdsClient @this, string variable) =>
         @this?.DataReceived.Where(x => x.Variable.ToUpperInvariant().Equals(variable.ToUpperInvariant(), StringComparison.InvariantCulture) && x.Data != null).Select(x => (T)x.Data!)!;
 
@@ -31,6 +33,7 @@ public static class TwinCatRxExtensions
     /// <returns>
     /// An Observable of T.
     /// </returns>
+    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "Generic cast is driven by the user's T; trimming will not remove observed payload types in typical usage.")]
     public static IObservable<T> Observe<T>(this IRxTcAdsClient @this, string variable, string id) =>
         @this?.DataReceived.Where(x => string.Equals(x.Id, id) && x.Variable.ToUpperInvariant().Equals(variable.ToUpperInvariant(), StringComparison.InvariantCulture) && x.Data != null).Select(x => (T)x.Data!)!;
 
@@ -42,6 +45,7 @@ public static class TwinCatRxExtensions
     /// <returns>
     /// A HashTableRx with a link to the PLC.
     /// </returns>
+    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "HashTableRx usage is explicit; no reflection-based access required.")]
     public static HashTableRx? CreateStruct(this IRxTcAdsClient @this, string variable)
     {
         if (@this == null)
@@ -52,7 +56,9 @@ public static class TwinCatRxExtensions
         var ht = new HashTableRx(@this.Settings?.Port < 851);
         ht.Tag?.Add(nameof(RxTcAdsClient), @this);
         ht.Tag?.Add("Variable", variable);
-        @this?.DataReceived.Where(x => x.Variable.ToUpperInvariant().Equals(variable.ToUpperInvariant(), StringComparison.InvariantCulture) && x.Data != null).Subscribe(x => ht[true] = x.Data);
+        @this?.DataReceived
+            .Where(x => x.Variable.ToUpperInvariant().Equals(variable.ToUpperInvariant(), StringComparison.InvariantCulture) && x.Data != null)
+            .Subscribe(x => ht[true] = x.Data);
         return ht;
     }
 
@@ -62,6 +68,7 @@ public static class TwinCatRxExtensions
     /// <param name="this">The HashTableRx to write values into.</param>
     /// <param name="setValues">The set values.</param>
     /// <returns>True if successful.</returns>
+    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "No reflection or dynamic code; strongly-typed write path.")]
     public static bool WriteValues(this HashTableRx @this, Action<HashTableRx> setValues)
     {
         if (@this == null || setValues == null)
@@ -100,6 +107,7 @@ public static class TwinCatRxExtensions
     /// <param name="setValues">The set values.</param>
     /// <param name="time">The time to delay between writes.</param>
     /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "No reflection or dynamic code; async path delegates to strongly-typed write.")]
     public static async Task<bool> WriteValuesAsync(this HashTableRx @this, Action<HashTableRx> setValues, TimeSpan time)
     {
         if (@this == null || setValues == null)
@@ -159,6 +167,7 @@ public static class TwinCatRxExtensions
     /// An Observable when values have been set.
     /// </returns>
     /// <exception cref="ArgumentNullException">The HashTableRx cannot be null.</exception>
+    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "Pure Rx composition; no reflection or dynamic code.")]
     public static IObservable<HashTableRx> StructureReady(this HashTableRx @this)
     {
         if (@this == null)
@@ -177,6 +186,7 @@ public static class TwinCatRxExtensions
     /// A HashTableRx.
     /// </returns>
     /// <exception cref="ArgumentNullException">The HashTableRx cannot be null.</exception>
+    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "No reflection; clone creates a shallow copy with current structure.")]
     public static HashTableRx CreateClone(this HashTableRx @this)
     {
         if (@this == null)

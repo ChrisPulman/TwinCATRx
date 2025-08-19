@@ -12,7 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ProjectConfig", "ProjectCon
 		..\Directory.Build.props = ..\Directory.Build.props
 		..\README.md = ..\README.md
 		..\stylecop.json = ..\stylecop.json
-		..\Version.json = ..\Version.json
+		..\version.json = ..\version.json
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TwinCATRx.TestConsole", "TwinCATRx.TestConsole\TwinCATRx.TestConsole.csproj", "{DBEB2677-0E8F-47A2-AC22-C9F1D25A70D3}"

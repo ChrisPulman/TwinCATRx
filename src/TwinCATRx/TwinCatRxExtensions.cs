@@ -203,7 +203,7 @@ public static class TwinCatRxExtensions
     /// </returns>
     /// <exception cref="ArgumentNullException">The HashTableRx cannot be null.</exception>
 #if NET8_0_OR_GREATER
-    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "No reflection; clone creates a shallow copy with current structure.")]
+    [RequiresUnreferencedCode("May use reflection if structure contains fields/properties.")]
 #endif
     public static HashTableRx CreateClone(this HashTableRx @this)
     {

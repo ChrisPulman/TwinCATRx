@@ -8,7 +8,7 @@
     <Title>TwinCATRx</Title>
     <RootNamespace>CP.TwinCatRx</RootNamespace>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0' or '$(TargetFramework)' == 'net9.0' or '$(TargetFramework)' == 'net8.0-windows10.0.17763.0' or '$(TargetFramework)' == 'net9.0-windows10.0.17763.0'">
+  <PropertyGroup Condition="'$(TargetFramework)' != 'netstandard2.0'">
     <!-- Allow consumers to trim unused APIs from this library -->
     <IsTrimmable>true</IsTrimmable>
     <!-- Enable AOT compatibility analysis on modern TFMs -->
@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HashTableRx" Version="2.0.1" />
+    <PackageReference Include="HashTableRx" Version="2.1.6" />
   </ItemGroup>
 
   <ItemGroup>

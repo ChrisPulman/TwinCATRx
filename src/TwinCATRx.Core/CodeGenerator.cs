@@ -21,6 +21,7 @@ namespace CP.TwinCatRx.Core;
 /// <seealso cref="ICodeGenerator"/>
 public class CodeGenerator : ICodeGenerator
 {
+    private static readonly string[] separator = [".."];
     private readonly Hashtable _typeList = [];
     private AdsClient? _adsClient;
     private bool _disposedValue;
@@ -333,7 +334,8 @@ public class CodeGenerator : ICodeGenerator
                 {
                     try
                     {
-                        return CSharpLanguage.CreateAssembly(sb.ToString(), fileName);
+                        var code = sb.ToString();
+                        return CSharpLanguage.CreateAssembly(code, fileName);
                     }
                     catch (Exception ex)
                     {
@@ -534,7 +536,7 @@ public class CodeGenerator : ICodeGenerator
     /// </summary>
     /// <param name="sb">The sb.</param>
     /// <param name="selectedTN">The selected tn.</param>
-    private static void WriteCSharpClassMembers(ref StringBuilder sb, INodeEmulator selectedTN)
+    private static void WriteCSharpClassMembers(ref StringBuilder sb, INodeEmulator selectedTN, bool isTwinCat3)
     {
         HashSet<INodeEmulator>.Enumerator enumerator = default;
         try
@@ -556,6 +558,15 @@ public class CodeGenerator : ICodeGenerator
                 }
                 else
                 {
+                    var stringArrayWrapper = new StringBuilder();
+                    var arrayOfStruct = CreateArrayOFStructure(symbol, stringArrayWrapper, isTwinCat3);
+                    if (!string.IsNullOrWhiteSpace(arrayOfStruct))
+                    {
+                        sb.Append(stringArrayWrapper)
+                            .Append(arrayOfStruct);
+                        continue;
+                    }
+
                     var c_type = PLCToCSharpTypeConverter(symbol.TypeName);
                     if (c_type == "System.Boolean")
                     {
@@ -582,60 +593,6 @@ public class CodeGenerator : ICodeGenerator
                         var num = int.Parse(c_type.Split(',')[1]);
                         sb.Append("[MarshalAs(UnmanagedType.ByValTStr, SizeConst = ").Append(num + 1).AppendLine(")] ")
                             .Append("public string ").Append(str).AppendLine(";");
-                    }
-                    else if (c_type.Contains(
-                        "System.Double[",
-                        StringComparison.Ordinal))
-                    {
-                        var nums = c_type.Split(',')[1];
-                        var num = int.Parse(nums.Split('.')[2]);
-                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")] ")
-                            .Append("public System.Double[] ").Append(str).Append(" = new ").Append("System.Double[").Append(num).AppendLine("];");
-                    }
-                    else if (c_type.Contains(
-                        "System.Single[",
-                        StringComparison.Ordinal))
-                    {
-                        var nums = c_type.Split(',')[1];
-                        var num = int.Parse(nums.Split('.')[2]);
-                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")] ")
-                            .Append("public System.Single[] ").Append(str).Append(" = new ").Append("System.Single[").Append(num).AppendLine("];");
-                    }
-                    else if (c_type.Contains(
-                        "System.Int16[",
-                        StringComparison.Ordinal))
-                    {
-                        var nums = c_type.Split(',')[1];
-                        var num = int.Parse(nums.Split('.')[2]);
-                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")] ")
-                            .Append("public System.Int16[] ").Append(str).Append(" = new ").Append("System.Int16[").Append(num).AppendLine("];");
-                    }
-                    else if (c_type.Contains(
-                        "System.Int32[",
-                        StringComparison.Ordinal))
-                    {
-                        var nums = c_type.Split(',')[1];
-                        var num = int.Parse(nums.Split('.')[2]);
-                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")] ")
-                            .Append("public System.Int32[] ").Append(str).Append(" = new ").Append("System.Int32[").Append(num).AppendLine("];");
-                    }
-                    else if (c_type.Contains(
-                        "System.Boolean[",
-                        StringComparison.Ordinal))
-                    {
-                        var nums = c_type.Split(',')[1];
-                        var num = int.Parse(nums.Split('.')[2]);
-                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")] ")
-                            .Append("public bool[] ").Append(str).Append(" = new ").Append("bool[").Append(num).AppendLine("];");
-                    }
-                    else if (c_type.Contains(
-                        "System.Byte[",
-                        StringComparison.Ordinal))
-                    {
-                        var nums = c_type.Split(',')[1];
-                        var num = int.Parse(nums.Split('.')[2]);
-                        sb.Append("[MarshalAs(UnmanagedType.ByValArray, SizeConst = ").Append(num + 1).AppendLine(")] ")
-                            .Append("public byte[] ").Append(str).Append(" = new ").Append("byte[").Append(num).AppendLine("];");
                     }
                     else
                     {
@@ -668,6 +625,162 @@ public class CodeGenerator : ICodeGenerator
         }
 
         return node;
+    }
+
+    private static string CreateArrayOFStructure(ISymbol symbol, StringBuilder wrapperBuilder, bool isTwinCat3)
+    {
+        // Expect patterns like: "ARRAY [x..y] OF ST_X" or "ARRAY [0..2, 1..4] OF DINT"
+        var typeName = symbol.TypeName.Trim();
+
+        var arrayIdx = typeName.IndexOf("ARRAY [", StringComparison.OrdinalIgnoreCase);
+        var ofIdx = typeName.IndexOf("] OF ", StringComparison.OrdinalIgnoreCase);
+        if (arrayIdx < 0 || ofIdx < 0)
+        {
+            return string.Empty;
+        }
+
+        // Extract dimensions and element type
+        var dimsPart = typeName.Substring(arrayIdx + "ARRAY [".Length, ofIdx - (arrayIdx + "ARRAY [".Length)).Trim();
+        var elementType = typeName.Substring(ofIdx + "] OF ".Length).Trim();
+
+        // Compute total element count (supports multi-dimensional arrays)
+        var totalLength = 1;
+        foreach (var dim in dimsPart.Split(','))
+        {
+            var bounds = dim.Trim().Split(separator, StringSplitOptions.None);
+            if (bounds.Length != 2
+                || !int.TryParse(bounds[0].Trim(), out var lower)
+                || !int.TryParse(bounds[1].Trim(), out var upper)
+                || upper < lower)
+            {
+                return string.Empty;
+            }
+
+            totalLength *= upper - lower + 1;
+        }
+
+        var instanceName = symbol.InstanceName?.Trim();
+        if (string.IsNullOrWhiteSpace(instanceName) || string.IsNullOrWhiteSpace(elementType) || totalLength <= 0)
+        {
+            return string.Empty;
+        }
+
+        var sb = new StringBuilder();
+
+        // Map PLC type → C# type + MarshalAs
+        string csType;
+        string marshalAttr;
+
+        var elementTypeUpper = elementType.ToUpperInvariant();
+
+        switch (elementTypeUpper)
+        {
+            case "BIT":
+            case "BIT8":
+            case "BOOL":
+                csType = "bool";
+                marshalAttr = $"[MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.U1, SizeConst = {totalLength})]";
+                break;
+            case "BITARR8":
+            case "USINT":
+            case "UINT8":
+            case "BYTE":
+                csType = "byte";
+                marshalAttr = $"[MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.U1, SizeConst = {totalLength})]";
+                break;
+            case "WORD":
+            case "BITARR16":
+            case "UINT16":
+            case "UINT":
+                csType = "ushort";
+                marshalAttr = $"[MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.I2, SizeConst = {totalLength})]";
+                break;
+            case "INT16":
+            case "INT":
+                csType = "short";
+                marshalAttr = $"[MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.I2, SizeConst = {totalLength})]";
+                break;
+            case "BITARR32":
+            case "DWORD":
+            case "UINT32":
+            case "UDINT":
+                csType = "uint";
+                marshalAttr = $"[MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.I4, SizeConst = {totalLength})]";
+                break;
+            case "INT32":
+            case "DINT":
+                csType = "int";
+                marshalAttr = $"[MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.I4, SizeConst = {totalLength})]";
+                break;
+            case "FLOAT":
+            case "REAL":
+                csType = "float";
+                marshalAttr = $"[MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.R4, SizeConst = {totalLength})]";
+                break;
+            case "DOUBLE":
+            case "LREAL":
+                csType = "double";
+                marshalAttr = $"[MarshalAs(UnmanagedType.ByValArray, ArraySubType = UnmanagedType.R8, SizeConst = {totalLength})]";
+                break;
+            default:
+                // STRING(n) detection
+                var m = System.Text.RegularExpressions.Regex.Match(elementType, @"STRING\s*\(\s*(\d+)\s*\)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                if (m.Success && int.TryParse(m.Groups[1].Value, out var strlen))
+                {
+                    // Create wrapper struct name
+                    var wrapperName = $"STRING_{strlen}_WRAPPER";
+
+                    // Emit wrapper struct only once
+                    if (!wrapperBuilder.ToString().Contains($"struct {wrapperName}"))
+                    {
+                        wrapperBuilder.AppendLine($"[StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi, Pack = {(isTwinCat3 ? 0 : 1)})]")
+                                      .AppendLine($"public struct {wrapperName}")
+                                      .AppendLine("{")
+                                      .AppendLine($"    [MarshalAs(UnmanagedType.ByValTStr, SizeConst = {strlen + 1})]")
+                                      .AppendLine("    public string Value;")
+                                      .AppendLine("}")
+                                      .AppendLine()
+                                      .AppendLine("public static string[] ToStringArray(" + wrapperName + "[] wrappers)")
+                                      .AppendLine("{")
+                                      .AppendLine("    if (wrappers == null) return Array.Empty<string>();")
+                                      .AppendLine("    var result = new string[wrappers.Length];")
+                                      .AppendLine("    for (int i = 0; i < wrappers.Length; i++)")
+                                      .AppendLine("        result[i] = wrappers[i].Value;")
+                                      .AppendLine("    return result;")
+                                      .AppendLine("}")
+                                      .AppendLine();
+                    }
+
+                    csType = wrapperName;
+                    marshalAttr = $"[MarshalAs(UnmanagedType.ByValArray, SizeConst = {totalLength})]";
+                }
+                else
+                {
+                    // Not a primitive type, assume it's a user-defined struct/class
+                    csType = elementType;
+                    marshalAttr = $"[MarshalAs(UnmanagedType.ByValArray, SizeConst = {totalLength})]";
+                }
+
+                break;
+        }
+
+        if (string.IsNullOrWhiteSpace(csType) || string.IsNullOrWhiteSpace(marshalAttr))
+        {
+            return string.Empty;
+        }
+
+        sb.AppendLine(marshalAttr)
+          .Append("public ")
+          .Append(csType)
+          .Append("[] ")
+          .Append(instanceName)
+          .Append(" = new ")
+          .Append(csType)
+          .Append('[')
+          .Append(totalLength)
+          .AppendLine("];");
+
+        return sb.ToString();
     }
 
     /// <summary>
@@ -785,7 +898,7 @@ public class CodeGenerator : ICodeGenerator
                 sb.Append("public ").Append(symbol?.TypeName).AppendLine("()")
                     .AppendLine("{")
                     .AppendLine("}");
-                WriteCSharpClassMembers(ref sb, selectedTN);
+                WriteCSharpClassMembers(ref sb, selectedTN, isTwinCat3);
                 sb.AppendLine("}")
                     .AppendLine(string.Empty);
             }

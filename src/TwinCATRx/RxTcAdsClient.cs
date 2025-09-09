@@ -630,6 +630,10 @@ public partial class RxTcAdsClient : IRxTcAdsClient
                            }
                        }
                    }
+                   catch (SystemException engex)
+                   {
+                       _errorReceived.OnNext(engex);
+                   }
                    catch (Exception ex)
                    {
                        _errorReceived.OnNext(ex);

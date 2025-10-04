@@ -536,6 +536,7 @@ public class CodeGenerator : ICodeGenerator
     /// </summary>
     /// <param name="sb">The sb.</param>
     /// <param name="selectedTN">The selected tn.</param>
+    /// <param name="isTwinCat3">if set to <c>true</c> [is twin cat3].</param>
     private static void WriteCSharpClassMembers(ref StringBuilder sb, INodeEmulator selectedTN, bool isTwinCat3)
     {
         HashSet<INodeEmulator>.Enumerator enumerator = default;

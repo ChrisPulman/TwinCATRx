@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HashTableRx" Version="2.2.2" />
+    <PackageReference Include="HashTableRx" Version="2.3.2" />
   </ItemGroup>
 
   <ItemGroup>

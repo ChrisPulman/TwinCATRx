@@ -1,6 +1,6 @@
 ﻿// Copyright (c) Chris Pulman. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
-
+#if WINDOWS
 using System.Reactive.Disposables;
 using System.Reactive.Disposables.Fluent;
 using System.Reactive.Linq;
@@ -74,11 +74,20 @@ public class ObservableServiceController : IObservableServiceController
         Observable.Create<ObservableServiceController>(o =>
             {
                 var d = new CompositeDisposable();
-                foreach (var sc in ServiceController.GetServices())
+                try
                 {
-                    var service = new ObservableServiceController(sc);
-                    service.DisposeWith(d);
-                    o.OnNext(service);
+                    foreach (var sc in ServiceController.GetServices())
+                    {
+                        var service = new ObservableServiceController(sc);
+                        service.DisposeWith(d);
+                        o.OnNext(service);
+                    }
+                }
+                catch (PlatformNotSupportedException)
+                {
+                    // ServiceController may not be supported on certain Windows environments (e.g., Nano/containers).
+                    // Treat as no services available and complete the sequence gracefully.
+                    o.OnCompleted();
                 }
 
                 return d;
@@ -207,3 +216,4 @@ public class ObservableServiceController : IObservableServiceController
         }).DisposeWith(_cleanup);
     }
 }
+#endif

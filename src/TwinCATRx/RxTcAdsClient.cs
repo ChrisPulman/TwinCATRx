@@ -11,6 +11,7 @@ using System.Reactive.Subjects;
 #if WINDOWS
 using System.ServiceProcess;
 #endif
+using System.Runtime.InteropServices;
 using CP.TwinCatRx.Core;
 using TwinCAT.Ads;
 using TwinCAT.TypeSystem;
@@ -456,57 +457,72 @@ public partial class RxTcAdsClient : IRxTcAdsClient
                 }
 
 #if WINDOWS
-                var serviceList = new Dictionary<string, ServiceControllerStatus>();
-                ObservableServiceController.GetServices()
-                .Where(s => s.DisplayName == "TwinCAT System Service" || s.DisplayName == "TwinCAT3 System Service")
-                .Retry()
-                .Subscribe(s =>
+                // If running on non-Windows (e.g., Windows TFM deployed on Linux), skip ServiceController usage.
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    serviceList.Add(s.DisplayName, s.Status);
-#pragma warning disable RCS1198 // Avoid unnecessary boxing of value type.
-                    Console.WriteLine($"ServiceName: {s.DisplayName} is {s.Status}");
-#pragma warning restore RCS1198 // Avoid unnecessary boxing of value type.
-                    if (s.Status != ServiceControllerStatus.Running)
-                    {
-                        s.Start();
-                        var ex = new Exception("Service Fault");
+                    var serviceList = new Dictionary<string, ServiceControllerStatus>(StringComparer.OrdinalIgnoreCase);
+                    ObservableServiceController.GetServices()
 
-                        _errorReceived.OnNext(ex);
-                        o.OnError(ex);
-                    }
-
-                    s.StatusObserver.Retry().Subscribe(status =>
+                    // Use non-localized ServiceName instead of DisplayName
+                    .Where(s => string.Equals(s.ServiceName, "TcSysSrv", StringComparison.OrdinalIgnoreCase))
+                    .Retry()
+                    .Subscribe(s =>
                     {
+                        // Idempotent update (avoid duplicate-key exceptions on resubscribe)
+                        serviceList[s.ServiceName] = s.Status;
 #pragma warning disable RCS1198 // Avoid unnecessary boxing of value type.
-                        Console.WriteLine($"ServiceName: {s.DisplayName} is {status}");
+                        Console.WriteLine($"ServiceName: {s.ServiceName} is {s.Status}");
 #pragma warning restore RCS1198 // Avoid unnecessary boxing of value type.
-                        serviceList[s.DisplayName] = status;
-                        if (status != ServiceControllerStatus.Running)
+                        if (s.Status != ServiceControllerStatus.Running)
                         {
                             s.Start();
                             var ex = new Exception("Service Fault");
+
                             _errorReceived.OnNext(ex);
                             o.OnError(ex);
                         }
-                    }).DisposeWith(_cleanup);
-                }).DisposeWith(_cleanup);
 
-                // Periodically update service status
-                Observable.Interval(TimeSpan.FromSeconds(1))
-                .Retry()
-                .Subscribe(_ =>
+                        s.StatusObserver.Retry().Subscribe(status =>
+                        {
+#pragma warning disable RCS1198 // Avoid unnecessary boxing of value type.
+                            Console.WriteLine($"ServiceName: {s.ServiceName} is {status}");
+#pragma warning restore RCS1198 // Avoid unnecessary boxing of value type.
+                            serviceList[s.ServiceName] = status;
+                            if (status != ServiceControllerStatus.Running)
+                            {
+                                s.Start();
+                                var ex = new Exception("Service Fault");
+                                _errorReceived.OnNext(ex);
+                                o.OnError(ex);
+                            }
+                        }).DisposeWith(_cleanup);
+                    }).DisposeWith(_cleanup);
+
+                    // Periodically update service status
+                    Observable.Interval(TimeSpan.FromSeconds(1))
+                    .Retry()
+                    .Subscribe(_ =>
+                    {
+                        if (!serviceList.TryGetValue("TcSysSrv", out var tc))
+                        {
+                            // SCM likely unavailable; treat as running to align with non-Windows behavior
+                            _serviceStatus.OnNext(ServiceStatus.Running);
+                        }
+                        else if (tc == ServiceControllerStatus.Running)
+                        {
+                            _serviceStatus.OnNext(ServiceStatus.Running);
+                        }
+                        else
+                        {
+                            _serviceStatus.OnNext(ServiceStatus.Faulted);
+                        }
+                    }).DisposeWith(_cleanup);
+                }
+                else
                 {
-                    if (serviceList.Count >= 1
-                        && ((serviceList.TryGetValue("TwinCAT System Service", out var tc2) && tc2 == ServiceControllerStatus.Running)
-                        || (serviceList.TryGetValue("TwinCAT3 System Service", out var tc3) && tc3 == ServiceControllerStatus.Running)))
-                    {
-                        _serviceStatus.OnNext(ServiceStatus.Running);
-                    }
-                    else
-                    {
-                        _serviceStatus.OnNext(ServiceStatus.Faulted);
-                    }
-                }).DisposeWith(_cleanup);
+                    // On non-Windows runtime, assume service is available and running
+                    _serviceStatus.OnNext(ServiceStatus.Running);
+                }
 #else
                 // On non-Windows, assume service is available and running
                 _serviceStatus.OnNext(ServiceStatus.Running);

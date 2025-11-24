@@ -14,39 +14,30 @@ namespace TwinCATRx.Tests.Core;
 /// </summary>
 public class TwinCatRxExtensionsCoreTests
 {
-    /// <summary>
-    /// Verifies AddNotification adds an item to settings.
-    /// </summary>
-    [Fact]
+    [Test]
     public void AddNotification_Should_Add_To_List()
     {
         var s = new Settings();
-        s.Notifications.Should().BeEmpty();
+        Assert.That(s.Notifications, Is.Empty);
         s.AddNotification(".MyVar", cycleTime: 200, arraySize: 5);
-        s.Notifications.Should().HaveCount(1);
-        s.Notifications[0].Variable.Should().Be(".MyVar");
-        s.Notifications[0].UpdateRate.Should().Be(200);
-        s.Notifications[0].ArraySize.Should().Be(5);
+        Assert.That(s.Notifications, Has.Count.EqualTo(1));
+        Assert.That(s.Notifications[0].Variable, Is.EqualTo(".MyVar"));
+        Assert.That(s.Notifications[0].UpdateRate, Is.EqualTo(200));
+        Assert.That(s.Notifications[0].ArraySize, Is.EqualTo(5));
     }
 
-    /// <summary>
-    /// Verifies AddWriteVariable adds an item to settings.
-    /// </summary>
-    [Fact]
+    [Test]
     public void AddWriteVariable_Should_Add_To_List()
     {
         var s = new Settings();
-        s.WriteVariables.Should().BeEmpty();
+        Assert.That(s.WriteVariables, Is.Empty);
         s.AddWriteVariable(".MyWrite", arraySize: 10);
-        s.WriteVariables.Should().HaveCount(1);
-        s.WriteVariables[0].Variable.Should().Be(".MyWrite");
-        s.WriteVariables[0].ArraySize.Should().Be(10);
+        Assert.That(s.WriteVariables, Has.Count.EqualTo(1));
+        Assert.That(s.WriteVariables[0].Variable, Is.EqualTo(".MyWrite"));
+        Assert.That(s.WriteVariables[0].ArraySize, Is.EqualTo(10));
     }
 
-    /// <summary>
-    /// Ensures OnErrorRetry retries until success.
-    /// </summary>
-    [Fact]
+    [Test]
     public void OnErrorRetry_Basic_Retry_Works()
     {
         var attempts = 0;
@@ -57,38 +48,31 @@ public class TwinCatRxExtensionsCoreTests
             {
                 return Observable.Throw<int>(new InvalidOperationException());
             }
-
             return Observable.Return(42);
         });
 
         var result = seq.OnErrorRetry<int, InvalidOperationException>(_ => { }).ToEnumerable().Last();
-        result.Should().Be(42);
-        attempts.Should().Be(3);
+        Assert.That(result, Is.EqualTo(42));
+        Assert.That(attempts, Is.EqualTo(3));
     }
 
-    /// <summary>
-    /// AssemblyLoad/GetType return null for non-existent files.
-    /// </summary>
-    [Fact]
+    [Test]
     public void AssemblyLoad_And_GetType_Returns_Null_For_Missing_File()
     {
         var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".dll");
         var asm = path.AssemblyLoad();
-        asm.Should().BeNull();
-        path.GetType("Some.Type").Should().BeNull();
+        Assert.That(asm, Is.Null);
+        Assert.That(path.GetType("Some.Type"), Is.Null);
     }
 
-    /// <summary>
-    /// Defaults populate a Settings instance.
-    /// </summary>
-    [Fact]
+    [Test]
     public void Settings_Defaults_Populates_Defaults()
     {
         var s = new Settings().Defaults<Settings>();
-        s.SettingsId.Should().Be("Defaults");
-        s.Notifications.Should().NotBeNull();
-        s.WriteVariables.Should().NotBeNull();
-        s.Notifications.Should().NotBeEmpty();
-        s.WriteVariables.Should().NotBeEmpty();
+        Assert.That(s.SettingsId, Is.EqualTo("Defaults"));
+        Assert.That(s.Notifications, Is.Not.Null);
+        Assert.That(s.WriteVariables, Is.Not.Null);
+        Assert.That(s.Notifications, Is.Not.Empty);
+        Assert.That(s.WriteVariables, Is.Not.Empty);
     }
 }

@@ -20,7 +20,7 @@
     <PackageReference Include="Beckhoff.TwinCAT.Ads" Version="6.2.511" />
     <!-- Use CSharp compiler APIs only; Workspaces adds heavy dependencies not used at runtime -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
-    <PackageReference Include="System.CodeDom" Version="9.0.11" />
+    <PackageReference Include="System.CodeDom" Version="10.0.0" />
     <PackageReference Include="Mono.Cecil" Version="0.11.6" />
     <PackageReference Include="System.Reactive" Version="6.1.0" />
   </ItemGroup>

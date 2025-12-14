@@ -12,7 +12,7 @@
     <NoWarn>CS1591</NoWarn>
     <Nullable>enable</Nullable>
     <PackageIcon>TwinCATRx.png</PackageIcon>
-    <PackageReleaseNotes>Compatability with Net 8, Net 9 and netstandard2.0</PackageReleaseNotes>
+    <PackageReleaseNotes>Compatability with Net 8, Net 9, Net 10 and netstandard2.0</PackageReleaseNotes>
     <PackageTags>Beckhoff;TwinCAT;rx;reactive;extensions;observable;LINQ;net;netstandard</PackageTags>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>

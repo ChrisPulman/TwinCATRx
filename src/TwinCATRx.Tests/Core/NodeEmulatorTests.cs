@@ -14,19 +14,18 @@ public class NodeEmulatorTests
     /// <summary>
     /// Dispose clears Nodes and Tag.
     /// </summary>
-    [Fact]
+    [Test]
     public void Dispose_Clears_State()
     {
-        // Can't construct internal NodeEmulator type from tests; validate by reflection creating instance
         var type = typeof(Settings).Assembly.GetType("CP.TwinCatRx.Core.NodeEmulator");
-        type.Should().NotBeNull();
+        Assert.That(type, Is.Not.Null);
         var n = Activator.CreateInstance(type!);
-        n.Should().NotBeNull();
+        Assert.That(n, Is.Not.Null);
         var nodesProp = type!.GetProperty("Nodes");
-        nodesProp.Should().NotBeNull();
+        Assert.That(nodesProp, Is.Not.Null);
         var nodes = nodesProp!.GetValue(n) as System.Collections.ICollection;
         type!.GetMethod("Dispose")!.Invoke(n, null);
         var nodesAfter = nodesProp!.GetValue(n);
-        nodesAfter.Should().BeNull();
+        Assert.That(nodesAfter, Is.Null);
     }
 }

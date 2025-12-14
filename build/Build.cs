@@ -1,16 +1,16 @@
+//using CP.BuildTools;
+using System.Linq;
+using CP.BuildTools;
 using Nuke.Common;
-using Nuke.Common.CI.GitHubActions;
 using Nuke.Common.Git;
 using Nuke.Common.IO;
 using Nuke.Common.ProjectModel;
 using Nuke.Common.Tooling;
-using Nuke.Common.Tools.NerdbankGitVersioning;
 using Nuke.Common.Tools.DotNet;
+using Nuke.Common.Tools.NerdbankGitVersioning;
+using Nuke.Common.Tools.PowerShell;
 using Serilog;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
-using Nuke.Common.Tools.PowerShell;
-using CP.BuildTools;
-using System.Linq;
 
 partial class Build : NukeBuild
 {
@@ -38,8 +38,6 @@ partial class Build : NukeBuild
             }
 
             PackagesDirectory.CreateOrCleanDirectory();
-            await this.UpdateVisualStudio();
-            await this.InstallDotNetSdk("8.x.x", "9.x.x");
         });
 
     Target Restore => _ => _
@@ -47,8 +45,11 @@ partial class Build : NukeBuild
         .Executes(() =>
         {
             DotNetRestore(s => s.SetProjectFile(Solution));
-
-            Solution.RestoreSolutionWorkloads();
+            var settings = new DotNetWorkloadRestoreSettings()
+                .SetProject(Solution)
+                .SetNoCache(true)
+                .SetIgnoreFailedSources(true);
+            DotNetWorkloadRestore(settings);
         });
 
     Target Compile => _ => _

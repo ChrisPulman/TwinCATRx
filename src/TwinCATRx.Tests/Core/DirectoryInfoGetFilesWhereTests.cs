@@ -12,10 +12,7 @@ namespace TwinCATRx.Tests.Core;
 /// </summary>
 public class DirectoryInfoGetFilesWhereTests
 {
-    /// <summary>
-    /// Basic filter should return matching files.
-    /// </summary>
-    [Fact]
+    [Test]
     public void GetFilesWhere_Basic_Filter_Works()
     {
         var dir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "GetFilesWhere_" + Guid.NewGuid()));
@@ -27,7 +24,7 @@ public class DirectoryInfoGetFilesWhereTests
             File.WriteAllText(Path.Combine(dir.FullName, "c.asp"), string.Empty);
 
             var files = dir.GetFilesWhere(f => f.Extension == ".txt" || f.Extension == ".cs");
-            files.Should().HaveCount(2);
+            Assert.That(files, Has.Length.EqualTo(2));
         }
         finally
         {
@@ -35,10 +32,7 @@ public class DirectoryInfoGetFilesWhereTests
         }
     }
 
-    /// <summary>
-    /// Search pattern overload.
-    /// </summary>
-    [Fact]
+    [Test]
     public void GetFilesWhere_With_SearchPattern_Works()
     {
         var dir = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "GetFilesWhere2_" + Guid.NewGuid()));
@@ -50,7 +44,7 @@ public class DirectoryInfoGetFilesWhereTests
             File.WriteAllText(Path.Combine(dir.FullName, "c.asp"), string.Empty);
 
             var files = dir.GetFilesWhere("*.cs", f => true);
-            files.Should().HaveCount(1);
+            Assert.That(files, Has.Length.EqualTo(1));
         }
         finally
         {

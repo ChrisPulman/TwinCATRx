@@ -29,7 +29,7 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     private readonly Subject<Exception> _errorReceived = new();
     private readonly Subject<string?> _onWriteSubject = new();
     private readonly Subject<(uint? handle, Type type, int length, string? id)> _readPLC = new();
-    private readonly Subject<ServiceStatus> _serviceStatus = new();
+    private readonly ReplaySubject<ServiceStatus> _serviceStatus = new(1);
     private readonly Subject<(uint? handle, object value, int length, string? id)> _writePLC = new();
     private readonly ReplaySubject<Unit> _initCompleteSubject = new(1);
     private readonly ReplaySubject<bool> _isPausedSubject = new(1);

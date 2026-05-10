@@ -5,6 +5,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Linq;
 using System.Reflection;
 using CP.Collections;
+#if NET8_0_OR_GREATER
+using ReactiveUI.Extensions.Async;
+#endif
 
 namespace CP.TwinCatRx;
 
@@ -28,6 +31,18 @@ public static class TwinCatRxExtensions
             .Where(x => string.Equals(x.Variable, variable, StringComparison.OrdinalIgnoreCase) && x.Data != null)
             .Select(x => (T)x.Data!)!;
 
+#if NET8_0_OR_GREATER
+    /// <summary>
+    /// Observes the specified variable as an async observable.
+    /// </summary>
+    /// <typeparam name="T">The Type of the data.</typeparam>
+    /// <param name="this">The this.</param>
+    /// <param name="variable">The variable.</param>
+    /// <returns>An async observable of T.</returns>
+    public static IObservableAsync<T> ObserveAsync<T>(this IRxTcAdsClient @this, string variable) =>
+        @this.Observe<T>(variable).ToObservableAsync();
+#endif
+
     /// <summary>
     /// Observes the specified variable.
     /// </summary>
@@ -45,6 +60,19 @@ public static class TwinCatRxExtensions
         @this?.DataReceived
             .Where(x => string.Equals(x.Id, id) && string.Equals(x.Variable, variable, StringComparison.OrdinalIgnoreCase) && x.Data != null)
             .Select(x => (T)x.Data!)!;
+
+#if NET8_0_OR_GREATER
+    /// <summary>
+    /// Observes the specified variable and identifier as an async observable.
+    /// </summary>
+    /// <typeparam name="T">The Type of the data.</typeparam>
+    /// <param name="this">The this.</param>
+    /// <param name="variable">The variable.</param>
+    /// <param name="id">The identifier.</param>
+    /// <returns>An async observable of T.</returns>
+    public static IObservableAsync<T> ObserveAsync<T>(this IRxTcAdsClient @this, string variable, string id) =>
+        @this.Observe<T>(variable, id).ToObservableAsync();
+#endif
 
     /// <summary>
     /// Creates the structure.

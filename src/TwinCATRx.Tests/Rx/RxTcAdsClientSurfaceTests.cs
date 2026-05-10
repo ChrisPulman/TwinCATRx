@@ -17,14 +17,11 @@ public class RxTcAdsClientSurfaceTests
     public void RxTcAdsClient_Default_State_And_Dispose()
     {
         var c = new RxTcAdsClient();
-        Assert.Multiple(() =>
-        {
-            Assert.That(c.IsDisposed, Is.False);
-            Assert.That(c.Connected, Is.False);
-        });
+        TestAssert.False(c.IsDisposed);
+        TestAssert.False(c.Connected);
 
         c.Dispose();
 
-        Assert.That(c.Connected, Is.False);
+        TestAssert.False(c.Connected);
     }
 }

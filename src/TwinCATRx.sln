@@ -23,6 +23,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_build", "..\build\_build.c
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwinCATRx.Tests", "TwinCATRx.Tests\TwinCATRx.Tests.csproj", "{7310CE65-0944-1DF7-3865-90A3D60D3C31}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TwinCATRx.SourceGenerators", "TwinCATRx.SourceGenerators\TwinCATRx.SourceGenerators.csproj", "{C69C90D1-4F97-4F31-A3E1-1E8C53E0C100}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,10 @@ Global
 		{7310CE65-0944-1DF7-3865-90A3D60D3C31}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7310CE65-0944-1DF7-3865-90A3D60D3C31}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7310CE65-0944-1DF7-3865-90A3D60D3C31}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C69C90D1-4F97-4F31-A3E1-1E8C53E0C100}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C69C90D1-4F97-4F31-A3E1-1E8C53E0C100}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C69C90D1-4F97-4F31-A3E1-1E8C53E0C100}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C69C90D1-4F97-4F31-A3E1-1E8C53E0C100}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

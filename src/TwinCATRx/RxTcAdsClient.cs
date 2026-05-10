@@ -15,6 +15,9 @@ using System.Runtime.InteropServices;
 using CP.TwinCatRx.Core;
 using TwinCAT.Ads;
 using TwinCAT.TypeSystem;
+#if NET8_0_OR_GREATER
+using ReactiveUI.Extensions.Async;
+#endif
 
 namespace CP.TwinCatRx;
 
@@ -61,17 +64,32 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// </value>
     public IObservable<Unit> InitializeComplete => _initCompleteSubject.Retry().Publish().RefCount();
 
+#if NET8_0_OR_GREATER
+    /// <inheritdoc/>
+    public IObservableAsync<Unit> InitializeCompleteAsync => InitializeComplete.ToObservableAsync();
+#endif
+
     /// <summary>
     /// Gets the data received.
     /// </summary>
     /// <value>The data received.</value>
     public IObservable<(string Variable, object? Data, string? Id)> DataReceived => _dataReceived.Retry().Publish().RefCount();
 
+#if NET8_0_OR_GREATER
+    /// <inheritdoc/>
+    public IObservableAsync<(string Variable, object? Data, string? Id)> DataReceivedAsync => DataReceived.ToObservableAsync();
+#endif
+
     /// <summary>
     /// Gets error received.
     /// </summary>
     /// <returns>A Value.</returns>
     public IObservable<Exception> ErrorReceived => _errorReceived.Retry().Publish().RefCount();
+
+#if NET8_0_OR_GREATER
+    /// <inheritdoc/>
+    public IObservableAsync<Exception> ErrorReceivedAsync => ErrorReceived.ToObservableAsync();
+#endif
 
     /// <summary>
     /// Gets a value indicating whether gets a value that indicates whether the object is disposed.
@@ -83,6 +101,11 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// </summary>
     /// <value>The on write.</value>
     public IObservable<string?> OnWrite => _onWriteSubject.Retry().Publish().RefCount();
+
+#if NET8_0_OR_GREATER
+    /// <inheritdoc/>
+    public IObservableAsync<string?> OnWriteAsync => OnWrite.ToObservableAsync();
+#endif
 
     /// <summary>
     /// Gets the read write handle information.
@@ -119,6 +142,11 @@ public partial class RxTcAdsClient : IRxTcAdsClient
     /// The is paused observable.
     /// </value>
     public IObservable<bool> IsPausedObservable => _isPausedSubject.Retry().Publish().RefCount();
+
+#if NET8_0_OR_GREATER
+    /// <inheritdoc/>
+    public IObservableAsync<bool> IsPausedObservableAsync => IsPausedObservable.ToObservableAsync();
+#endif
 
     /// <summary>
     /// Connects the specified settings.

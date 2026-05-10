@@ -24,7 +24,7 @@ public class DirectoryInfoGetFilesWhereTests
             File.WriteAllText(Path.Combine(dir.FullName, "c.asp"), string.Empty);
 
             var files = dir.GetFilesWhere(f => f.Extension == ".txt" || f.Extension == ".cs");
-            Assert.That(files, Has.Length.EqualTo(2));
+            TestAssert.Length(2, files);
         }
         finally
         {
@@ -44,7 +44,7 @@ public class DirectoryInfoGetFilesWhereTests
             File.WriteAllText(Path.Combine(dir.FullName, "c.asp"), string.Empty);
 
             var files = dir.GetFilesWhere("*.cs", f => true);
-            Assert.That(files, Has.Length.EqualTo(1));
+            TestAssert.Length(1, files);
         }
         finally
         {

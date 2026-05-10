@@ -28,8 +28,8 @@ public class TwinCatRxExtensionsRxTests
         var client = new RxFakeClient(stream);
 
         var vals = client.Observe<int>(".A").ToEnumerable().ToArray();
-        Assert.That(vals, Does.Contain(123));
-        Assert.That(vals, Does.Not.Contain(456));
+        TestAssert.Contains(123, vals);
+        TestAssert.DoesNotContain(456, vals);
     }
 
     [Test]
@@ -43,7 +43,7 @@ public class TwinCatRxExtensionsRxTests
         var client = new RxFakeClient(stream);
 
         var vals = client.Observe<int>(".A", "y").ToEnumerable().ToArray();
-        Assert.That(vals, Is.EqualTo(new[] { 200 }));
+        TestAssert.SequenceEqual(new[] { 200 }, vals);
     }
 
     [Test]
@@ -54,10 +54,10 @@ public class TwinCatRxExtensionsRxTests
         client.Connect(new Settings { Port = 801 });
 
         var ht = client.CreateStruct(".Struct1");
-        Assert.That(ht, Is.Not.Null);
-        Assert.That(ht!.Tag, Is.Not.Null);
-        Assert.That(ht.Tag!.ContainsKey(nameof(RxTcAdsClient)), Is.True);
-        Assert.That(ht.Tag!.ContainsKey("Variable"), Is.True);
+        TestAssert.NotNull(ht);
+        TestAssert.NotNull(ht!.Tag);
+        TestAssert.True(ht.Tag!.ContainsKey(nameof(RxTcAdsClient)));
+        TestAssert.True(ht.Tag!.ContainsKey("Variable"));
     }
 
     [Test]
@@ -66,13 +66,13 @@ public class TwinCatRxExtensionsRxTests
         var client = new RxFakeClient(Observable.Empty<(string Variable, object? Data, string? Id)>());
         var ht = client.CreateStruct(".Any");
         var ok = await ht!.WriteValuesAsync(h => { }, TimeSpan.FromMilliseconds(1));
-        Assert.That(ok, Is.False);
+        TestAssert.False(ok);
     }
 
     [Test]
     public void StructureReady_Throws_On_Null()
     {
-        Assert.That(() => CP.TwinCatRx.TwinCatRxExtensions.StructureReady(null!), Throws.TypeOf<ArgumentNullException>());
+        TestAssert.Throws<ArgumentNullException>(() => CP.TwinCatRx.TwinCatRxExtensions.StructureReady(null!));
     }
 
     [Test]
@@ -83,7 +83,7 @@ public class TwinCatRxExtensionsRxTests
         ht![true] = new { A = 1 };
 
         var clone = ht.CreateClone();
-        Assert.That(clone, Is.Not.SameAs(ht));
-        Assert.That(clone.ToString(), Is.Not.Null);
+        TestAssert.NotSame(ht, clone);
+        TestAssert.NotNull(clone.ToString());
     }
 }

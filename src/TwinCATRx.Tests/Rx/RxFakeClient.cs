@@ -6,6 +6,9 @@ using System.Collections.Generic;
 using System.Reactive.Linq;
 using CP.TwinCatRx;
 using CP.TwinCatRx.Core;
+#if NET8_0_OR_GREATER
+using ReactiveUI.Extensions.Async;
+#endif
 
 namespace TwinCATRx.Tests.Rx;
 
@@ -26,11 +29,27 @@ internal sealed class RxFakeClient : IRxTcAdsClient
 
     public IObservable<System.Reactive.Unit> InitializeComplete => Observable.Return(System.Reactive.Unit.Default);
 
+#if NET8_0_OR_GREATER
+    public IObservableAsync<System.Reactive.Unit> InitializeCompleteAsync => InitializeComplete.ToObservableAsync();
+#endif
+
     public IObservable<(string Variable, object? Data, string? Id)> DataReceived { get; }
+
+#if NET8_0_OR_GREATER
+    public IObservableAsync<(string Variable, object? Data, string? Id)> DataReceivedAsync => DataReceived.ToObservableAsync();
+#endif
 
     public IObservable<Exception> ErrorReceived => Observable.Empty<Exception>();
 
+#if NET8_0_OR_GREATER
+    public IObservableAsync<Exception> ErrorReceivedAsync => ErrorReceived.ToObservableAsync();
+#endif
+
     public IObservable<string?> OnWrite => Observable.Empty<string?>();
+
+#if NET8_0_OR_GREATER
+    public IObservableAsync<string?> OnWriteAsync => OnWrite.ToObservableAsync();
+#endif
 
     public IDictionary<string, uint?> ReadWriteHandleInfo { get; } = new Dictionary<string, uint?>();
 
@@ -41,6 +60,10 @@ internal sealed class RxFakeClient : IRxTcAdsClient
     public bool IsPaused { get; private set; }
 
     public IObservable<bool> IsPausedObservable => Observable.Return(IsPaused);
+
+#if NET8_0_OR_GREATER
+    public IObservableAsync<bool> IsPausedObservableAsync => IsPausedObservable.ToObservableAsync();
+#endif
 
     public bool IsDisposed => _canceled;
 

@@ -4,7 +4,7 @@
 
 # TwinCATRx
 
-A reactive, cross-platform wrapper for Beckhoff TwinCAT ADS built on System.Reactive (Rx). It lets you observe PLC variables as IObservable<T>, write values, and work with structured tags using a HashTable-like API.
+A reactive, cross-platform wrapper for Beckhoff TwinCAT ADS built on System.Reactive (Rx). It lets you observe PLC variables as IObservable<T>, expose .NET 8+ streams as ReactiveUI.Extensions async observables, write values, and work with structured tags using a HashTable-like API.
 
 ### Packages
 - CP.TwinCATRx: main reactive client and extension APIs.
@@ -12,9 +12,12 @@ A reactive, cross-platform wrapper for Beckhoff TwinCAT ADS built on System.Reac
 
 ### Supported frameworks
 - .NET Standard 2.0
+- .NET Framework 4.7.1
 - .NET 8
 - .NET 9
-- Windows-specific features (service monitoring) are enabled for net8.0-windows10.0.17763.0 and net9.0-windows10.0.17763.0.
+- .NET 10
+- Windows-specific features (service monitoring) are enabled for net8.0-windows10.0.19041.0, net9.0-windows10.0.19041.0, and net10.0-windows10.0.19041.0.
+- ReactiveUI.Extensions async observable APIs are available on .NET 8 and later target frameworks.
 
 ### Install
 ```bash
@@ -61,19 +64,40 @@ client.Observe<short>(".AInt").Subscribe(v => Console.WriteLine($"AInt: {v}"));
 client.Observe<short[]>(".ArrInt").Subscribe(arr => Console.WriteLine($"ArrInt[{arr.Length}]: {string.Join(",", arr)}"));
 ```
 
+### Async observables
+
+On .NET 8+, TwinCATRx exposes ReactiveUI.Extensions `IObservableAsync<T>` streams alongside the classic Rx streams.
+```csharp
+using ReactiveUI.Extensions.Async;
+
+IObservableAsync<short> asyncAInt = client.ObserveAsync<short>(".AInt");
+
+client.DataReceivedAsync
+    .Where(x => x.Variable == ".AInt")
+    .SubscribeAsync(async (value, cancellationToken) =>
+    {
+        await Console.Out.WriteLineAsync($"AInt: {value.Data}");
+    });
+```
+
 ## 📖 API Reference
 
 IRxTcAdsClient API
 - Code: IObservable<string[]> of generated code artifacts (internal diagnostics).
 - InitializeComplete: IObservable<Unit> signaled when connected and initialized.
+- InitializeCompleteAsync: IObservableAsync<Unit> on .NET 8+.
 - DataReceived: IObservable<(string Variable, object? Data, string? Id)> of raw variable updates.
+- DataReceivedAsync: IObservableAsync<(string Variable, object? Data, string? Id)> on .NET 8+.
 - ErrorReceived: IObservable<Exception> of client errors.
+- ErrorReceivedAsync: IObservableAsync<Exception> on .NET 8+.
 - OnWrite: IObservable<string?> of write results (e.g., "Success" or error text).
+- OnWriteAsync: IObservableAsync<string?> on .NET 8+.
 - ReadWriteHandleInfo: IDictionary<string, uint?> of handles for notification variables.
 - WriteHandleInfo: IDictionary<string, (uint? Handle, int ArrayLength)> of handles for write variables.
 - Settings: ISettings? used during Connect.
 - IsPaused: bool indicating WriteValuesAsync throttling state.
 - IsPausedObservable: IObservable<bool> of pause/resume state.
+- IsPausedObservableAsync: IObservableAsync<bool> on .NET 8+.
 - Connect(ISettings settings): connect and initialize.
 - Disconnect(): stop the client.
 - Read(string variable, int? arrayLength = null, string? id = null): one-shot read for simple or array variables.
@@ -138,6 +162,8 @@ var okAsync = await tag1.WriteValuesAsync(ht =>
 
 - Observe<T>(this IRxTcAdsClient, string variable)
 - Observe<T>(this IRxTcAdsClient, string variable, string id)
+- ObserveAsync<T>(this IRxTcAdsClient, string variable) on .NET 8+
+- ObserveAsync<T>(this IRxTcAdsClient, string variable, string id) on .NET 8+
 - CreateStruct(this IRxTcAdsClient, string variable): HashTableRx
 - WriteValues(this HashTableRx, Action<HashTableRx>): bool
 - WriteValuesAsync(this HashTableRx, Action<HashTableRx>, TimeSpan): Task<bool>
@@ -196,6 +222,31 @@ ads.AdsStateObserver().Subscribe(si => Console.WriteLine($"ADS: {si.AdsState}"))
 ## Advanced (dynamic code generation)
 TwinCATRx can generate types for complex structures at runtime to simplify marshaling. This is handled internally, but you can hook into emitted content via IRxTcAdsClient.Code. Dynamic emit/reflective APIs carry AOT/trimming caveats and are annotated accordingly.
 
+### Source-generated reactive streams
+
+TwinCATRx includes a Roslyn source generator for typed PLC view models. Annotate a partial class with one or more `TwinCatReactiveStream` attributes and the generator creates:
+- A latest-value property.
+- A matching `IObservable<T?>`.
+- A `BindTwinCatRx(IRxTcAdsClient)` method that subscribes to the relevant PLC variable and updates both.
+
+```csharp
+using CP.TwinCatRx;
+
+[TwinCatReactiveStream(".AInt", typeof(short), PropertyName = "AInt", ObservableName = "AIntChanged")]
+[TwinCatReactiveStream(".AString", typeof(string), PropertyName = "AString")]
+public partial class PlcState
+{
+}
+
+var state = new PlcState();
+using var binding = state.BindTwinCatRx(client);
+
+state.AIntChanged.Subscribe(value => Console.WriteLine(value));
+Console.WriteLine(state.AInt);
+```
+
+Use the optional `Id` named argument when a generated stream should bind to a correlated read result.
+
 ### Windows-only: service monitoring
 Available on Windows-targeted TFMs.
 ```csharp
@@ -221,6 +272,13 @@ client.OnWrite.Subscribe(msg => Console.WriteLine($"Write: {msg}"));
 - Case-insensitive maps are used to avoid repeated string allocations.
 - Reads use O(1) reverse handle lookups.
 - Library is trimmable; dynamic features are annotated for AOT.
+- Source-generated streams avoid runtime reflection for application-level stream wiring and are preferred for typed UI/view-model bindings.
+
+### Tests
+Tests run on TUnit with Microsoft.Testing.Platform. With the .NET 10 SDK, run them through the generated executable path:
+```bash
+dotnet run --project src/TwinCATRx.Tests/TwinCATRx.Tests.csproj -- --disable-logo --timeout 30s
+```
 
 ### Limitations
 - Arrays of string are not supported at this time (including arrays of string inside structures).

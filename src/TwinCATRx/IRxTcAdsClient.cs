@@ -5,6 +5,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reactive;
 using System.Reactive.Disposables;
 using CP.TwinCatRx.Core;
+#if NET8_0_OR_GREATER
+using ReactiveUI.Extensions.Async;
+#endif
 
 namespace CP.TwinCatRx;
 
@@ -28,11 +31,25 @@ public interface IRxTcAdsClient : ICancelable
     /// </value>
     IObservable<Unit> InitializeComplete { get; }
 
+#if NET8_0_OR_GREATER
+    /// <summary>
+    /// Gets the async initialize complete stream.
+    /// </summary>
+    IObservableAsync<Unit> InitializeCompleteAsync { get; }
+#endif
+
     /// <summary>
     /// Gets the data received.
     /// </summary>
     /// <value>The data received.</value>
     IObservable<(string Variable, object? Data, string? Id)> DataReceived { get; }
+
+#if NET8_0_OR_GREATER
+    /// <summary>
+    /// Gets the async data received stream.
+    /// </summary>
+    IObservableAsync<(string Variable, object? Data, string? Id)> DataReceivedAsync { get; }
+#endif
 
     /// <summary>
     /// Gets the error received.
@@ -40,11 +57,25 @@ public interface IRxTcAdsClient : ICancelable
     /// <value>The error received.</value>
     IObservable<Exception> ErrorReceived { get; }
 
+#if NET8_0_OR_GREATER
+    /// <summary>
+    /// Gets the async error received stream.
+    /// </summary>
+    IObservableAsync<Exception> ErrorReceivedAsync { get; }
+#endif
+
     /// <summary>
     /// Gets the on write.
     /// </summary>
     /// <value>The on write.</value>
     IObservable<string?> OnWrite { get; }
+
+#if NET8_0_OR_GREATER
+    /// <summary>
+    /// Gets the async write result stream.
+    /// </summary>
+    IObservableAsync<string?> OnWriteAsync { get; }
+#endif
 
     /// <summary>
     /// Gets the read write handle information.
@@ -81,6 +112,13 @@ public interface IRxTcAdsClient : ICancelable
     /// The is paused observable.
     /// </value>
     IObservable<bool> IsPausedObservable { get; }
+
+#if NET8_0_OR_GREATER
+    /// <summary>
+    /// Gets the async paused state stream.
+    /// </summary>
+    IObservableAsync<bool> IsPausedObservableAsync { get; }
+#endif
 
     /// <summary>
     /// Pauses the specified time.

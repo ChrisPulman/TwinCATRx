@@ -16,18 +16,19 @@ public class CodeGeneratorTests
     /// </summary>
     /// <param name="plc">PLC type.</param>
     /// <param name="expectedStartsWith">Expected start of mapped type.</param>
-    [TestCase("BOOL", "System.Boolean")]
-    [TestCase("DINT", "System.Int32")]
-    [TestCase("REAL", "System.Single")]
-    [TestCase("LREAL", "System.Double")]
-    [TestCase("BYTE", "System.Byte")]
-    [TestCase("STRING(80)", "System.String")]
-    [TestCase("ARRAY [0..10] OF BOOL", "System.Boolean[]")]
-    [TestCase("ARRAY [0..10] OF BYTE", "System.Byte[]")]
+    [Test]
+    [Arguments("BOOL", "System.Boolean")]
+    [Arguments("DINT", "System.Int32")]
+    [Arguments("REAL", "System.Single")]
+    [Arguments("LREAL", "System.Double")]
+    [Arguments("BYTE", "System.Byte")]
+    [Arguments("STRING(80)", "System.String")]
+    [Arguments("ARRAY [0..10] OF BOOL", "System.Boolean[]")]
+    [Arguments("ARRAY [0..10] OF BYTE", "System.Byte[]")]
     public void PLCToCSharpTypeConverter_Maps_Known_Types(string plc, string expectedStartsWith)
     {
         var result = CodeGenerator.PLCToCSharpTypeConverter(plc);
-        Assert.That(result, Does.StartWith(expectedStartsWith));
+        TestAssert.StartsWith(expectedStartsWith, result);
     }
 
     /// <summary>
@@ -38,11 +39,11 @@ public class CodeGeneratorTests
     {
         var cg = new CodeGenerator();
         var method = typeof(CodeGenerator).GetMethod("CreateCsharpCodeFile", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        Assert.That(method, Is.Not.Null);
+        TestAssert.NotNull(method);
         var sb = new System.Text.StringBuilder();
         var fake = new FakeNodeEmulator();
-        Assert.That(() => method!.Invoke(cg, new object?[] { sb, fake, "TwinCATRx", false }), Throws.TypeOf<System.Reflection.TargetInvocationException>()
-            .With.InnerException.TypeOf<SimpleTypeException>());
+        var ex = TestAssert.Throws<System.Reflection.TargetInvocationException>(() => method!.Invoke(cg, new object?[] { sb, fake, "TwinCATRx", false }));
+        TestAssert.True(ex.InnerException is SimpleTypeException);
     }
 
     /// <summary>
@@ -54,7 +55,7 @@ public class CodeGeneratorTests
         var cg = new CodeGenerator();
         var simple = new FakeNodeEmulator();
         var code = cg.CreateCSharpCodeString(simple);
-        Assert.That(code, Is.Empty);
+        TestAssert.Equal(string.Empty, code);
     }
 
     private sealed class FakeNodeEmulator : INodeEmulator

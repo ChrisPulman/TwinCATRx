@@ -18,23 +18,23 @@ public class TwinCatRxExtensionsCoreTests
     public void AddNotification_Should_Add_To_List()
     {
         var s = new Settings();
-        Assert.That(s.Notifications, Is.Empty);
+        TestAssert.Empty(s.Notifications);
         s.AddNotification(".MyVar", cycleTime: 200, arraySize: 5);
-        Assert.That(s.Notifications, Has.Count.EqualTo(1));
-        Assert.That(s.Notifications[0].Variable, Is.EqualTo(".MyVar"));
-        Assert.That(s.Notifications[0].UpdateRate, Is.EqualTo(200));
-        Assert.That(s.Notifications[0].ArraySize, Is.EqualTo(5));
+        TestAssert.Count(1, s.Notifications);
+        TestAssert.Equal(".MyVar", s.Notifications[0].Variable);
+        TestAssert.Equal(200, s.Notifications[0].UpdateRate);
+        TestAssert.Equal(5, s.Notifications[0].ArraySize);
     }
 
     [Test]
     public void AddWriteVariable_Should_Add_To_List()
     {
         var s = new Settings();
-        Assert.That(s.WriteVariables, Is.Empty);
+        TestAssert.Empty(s.WriteVariables);
         s.AddWriteVariable(".MyWrite", arraySize: 10);
-        Assert.That(s.WriteVariables, Has.Count.EqualTo(1));
-        Assert.That(s.WriteVariables[0].Variable, Is.EqualTo(".MyWrite"));
-        Assert.That(s.WriteVariables[0].ArraySize, Is.EqualTo(10));
+        TestAssert.Count(1, s.WriteVariables);
+        TestAssert.Equal(".MyWrite", s.WriteVariables[0].Variable);
+        TestAssert.Equal(10, s.WriteVariables[0].ArraySize);
     }
 
     [Test]
@@ -52,8 +52,8 @@ public class TwinCatRxExtensionsCoreTests
         });
 
         var result = seq.OnErrorRetry<int, InvalidOperationException>(_ => { }).ToEnumerable().Last();
-        Assert.That(result, Is.EqualTo(42));
-        Assert.That(attempts, Is.EqualTo(3));
+        TestAssert.Equal(42, result);
+        TestAssert.Equal(3, attempts);
     }
 
     [Test]
@@ -61,18 +61,18 @@ public class TwinCatRxExtensionsCoreTests
     {
         var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".dll");
         var asm = path.AssemblyLoad();
-        Assert.That(asm, Is.Null);
-        Assert.That(path.GetType("Some.Type"), Is.Null);
+        TestAssert.Null(asm);
+        TestAssert.Null(path.GetType("Some.Type"));
     }
 
     [Test]
     public void Settings_Defaults_Populates_Defaults()
     {
         var s = new Settings().Defaults<Settings>();
-        Assert.That(s.SettingsId, Is.EqualTo("Defaults"));
-        Assert.That(s.Notifications, Is.Not.Null);
-        Assert.That(s.WriteVariables, Is.Not.Null);
-        Assert.That(s.Notifications, Is.Not.Empty);
-        Assert.That(s.WriteVariables, Is.Not.Empty);
+        TestAssert.Equal("Defaults", s.SettingsId);
+        TestAssert.NotNull(s.Notifications);
+        TestAssert.NotNull(s.WriteVariables);
+        TestAssert.NotEmpty(s.Notifications);
+        TestAssert.NotEmpty(s.WriteVariables);
     }
 }

@@ -18,14 +18,14 @@ public class NodeEmulatorTests
     public void Dispose_Clears_State()
     {
         var type = typeof(Settings).Assembly.GetType("CP.TwinCatRx.Core.NodeEmulator");
-        Assert.That(type, Is.Not.Null);
+        TestAssert.NotNull(type);
         var n = Activator.CreateInstance(type!);
-        Assert.That(n, Is.Not.Null);
+        TestAssert.NotNull(n);
         var nodesProp = type!.GetProperty("Nodes");
-        Assert.That(nodesProp, Is.Not.Null);
+        TestAssert.NotNull(nodesProp);
         var nodes = nodesProp!.GetValue(n) as System.Collections.ICollection;
         type!.GetMethod("Dispose")!.Invoke(n, null);
         var nodesAfter = nodesProp!.GetValue(n);
-        Assert.That(nodesAfter, Is.Null);
+        TestAssert.Null(nodesAfter);
     }
 }

@@ -1,3 +1,7 @@
+// Copyright (c) 2022-2026 Chris Pulman. All rights reserved.
+// Chris Pulman licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
+
 //using CP.BuildTools;
 using System.Linq;
 using CP.BuildTools;
@@ -12,18 +16,20 @@ using Nuke.Common.Tools.PowerShell;
 using Serilog;
 using static Nuke.Common.Tools.DotNet.DotNetTasks;
 
-partial class Build : NukeBuild
+namespace TwinCATRx.Build;
+
+sealed partial class Build : NukeBuild
 {
     public static int Main() => Execute<Build>(x => x.Test);
 
-    [GitRepository] readonly GitRepository Repository;
-    [Solution(GenerateProjects = true)] readonly Solution Solution;
-    [NerdbankGitVersioning] readonly NerdbankGitVersioning NerdbankVersioning;
-    [Parameter][Secret] readonly string NuGetApiKey;
+    [GitRepository] readonly GitRepository Repository = null!;
+    [Solution(GenerateProjects = true)] readonly Solution Solution = null!;
+    [NerdbankGitVersioning] readonly NerdbankGitVersioning NerdbankVersioning = null!;
+    [Parameter][Secret] readonly string NuGetApiKey = null!;
     [Parameter("Configuration to build - Default is 'Debug' (local) or 'Release' (server)")]
     readonly Configuration Configuration = IsLocalBuild ? Configuration.Debug : Configuration.Release;
 
-    AbsolutePath PackagesDirectory => RootDirectory / "output";
+    static AbsolutePath PackagesDirectory => RootDirectory / "output";
 
     Target Print => _ => _
         .Executes(() => Log.Information("NerdbankVersioning = {Value}", NerdbankVersioning.NuGetPackageVersion));

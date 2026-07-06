@@ -9,11 +9,10 @@
     <LangVersion>preview</LangVersion>
     <Configuration>$(TargetFramework)</Configuration>
     <Company>ChrisPulman</Company>
-    <NoWarn>CS1591</NoWarn>
     <Nullable>enable</Nullable>
     <PackageIcon>TwinCATRx.png</PackageIcon>
-    <PackageReleaseNotes>Compatability with Net 8, Net 9, Net 10 and netstandard2.0</PackageReleaseNotes>
-    <PackageTags>Beckhoff;TwinCAT;rx;reactive;extensions;observable;LINQ;net;netstandard</PackageTags>
+    <PackageReleaseNotes>Compatibility with .NET Framework 4.6.2, 4.7.2, 4.8, 4.8.1, Net 8, Net 9, Net 10 and Net 11</PackageReleaseNotes>
+    <PackageTags>Beckhoff;TwinCAT;reactive;primitives;observable;LINQ;net</PackageTags>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
@@ -29,12 +28,19 @@
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
   </PropertyGroup>
+  
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
   </PropertyGroup>
+  
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0'))">
+    <Features>$(Features);runtime-async=on</Features>
+  </PropertyGroup>
+  
   <ItemGroup Condition="'$(IsTestProject)' != 'true'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" PrivateAssets="All" />
   </ItemGroup>
@@ -47,8 +53,7 @@
   <ItemGroup>
     <!--<Compile Update="**\*.cs" DependentUpon="I%(Filename).cs" />-->
     <PackageReference Include="Nerdbank.GitVersioning" Version="3.10.85" />
-    <PackageReference Include="stylecop.analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />
+    <PackageReference Include="StyleSharp.Analyzers" Version="3.13.4" PrivateAssets="all" />
     <PackageReference Include="Roslynator.Analyzers" Version="4.15.0" PrivateAssets="All" />
-    <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
   </ItemGroup>
 </Project>

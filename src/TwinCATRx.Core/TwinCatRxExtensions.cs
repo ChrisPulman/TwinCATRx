@@ -1,220 +1,227 @@
-﻿// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+// Copyright (c) 2022-2026 Chris Pulman. All rights reserved.
+// Chris Pulman licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Reactive.Concurrency;
-using System.Reactive.Disposables;
-using System.Reactive.Linq;
 using System.Reflection;
 using TwinCAT.Ads;
 
 namespace CP.TwinCatRx.Core;
 
-/// <summary>
-/// Observable TwinCAT Extensions.
-/// </summary>
+/// <summary>Observable TwinCAT extensions.</summary>
 public static class TwinCatRxExtensions
 {
-    /// <summary>
-    /// Adds the notification.
-    /// </summary>
-    /// <param name="settings">The settings.</param>
-    /// <param name="variableName">Name of the variable.</param>
-    /// <param name="cycleTime">The cycle time.</param>
-    /// <param name="arraySize">Size of the array.</param>
-    public static void AddNotification(this ISettings settings, string variableName, int cycleTime = 100, int arraySize = -1)
+    /// <summary>Extends ADS clients with observable state helpers.</summary>
+    /// <param name="client">The ADS client.</param>
+    extension(AdsClient client)
     {
-        if (settings == null)
-        {
-            return;
-        }
+        /// <summary>Observes ADS state changed events.</summary>
+        /// <returns>The ADS state changed observable sequence.</returns>
+        public IObservable<AdsStateChangedEventArgs> AdsStateChangedObserver() =>
+            Observable.FromEventPattern<EventHandler<AdsStateChangedEventArgs>, AdsStateChangedEventArgs>(
+                handler => client.AdsStateChanged += handler,
+                handler => client.AdsStateChanged -= handler).Select(pattern => pattern.EventArgs);
 
-        settings.Notifications.Add(new Notification(cycleTime, variableName, arraySize));
-    }
-
-    /// <summary>
-    /// Adds the write variable.
-    /// </summary>
-    /// <param name="settings">The settings.</param>
-    /// <param name="variableName">Name of the variable.</param>
-    /// <param name="arraySize">Size of the array.</param>
-    public static void AddWriteVariable(this ISettings settings, string variableName, int arraySize = -1)
-    {
-        if (settings == null)
-        {
-            return;
-        }
-
-        settings.WriteVariables.Add(new WriteVariable(variableName, arraySize));
-    }
-
-    /// <summary>
-    /// <para>Repeats the source observable sequence until it successfully terminates.</para>
-    /// <para>This is same as Retry().</para>
-    /// </summary>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <returns>A Value.</returns>
-    public static IObservable<TSource?> OnErrorRetry<TSource>(this IObservable<TSource?> source) => source.Retry();
-
-    /// <summary>
-    /// When caught exception, do onError action and repeat observable sequence.
-    /// </summary>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <typeparam name="TException">The type of the exception.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="onError">The on error.</param>
-    /// <returns>A Value.</returns>
-    public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError)
-        where TException : Exception => source.OnErrorRetry(onError, TimeSpan.Zero);
-
-    /// <summary>
-    /// When caught exception, do onError action and repeat observable sequence after delay time.
-    /// </summary>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <typeparam name="TException">The type of the exception.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="onError">The on error.</param>
-    /// <param name="delay">The delay.</param>
-    /// <returns>A Value.</returns>
-#pragma warning disable RCS1231 // Make parameter ref read-only.
-    public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, TimeSpan delay)
-        where TException : Exception => source.OnErrorRetry(onError, int.MaxValue, delay);
-
-    /// <summary>
-    /// When caught exception, do onError action and repeat observable sequence during within retryCount.
-    /// </summary>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <typeparam name="TException">The type of the exception.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="onError">The on error.</param>
-    /// <param name="retryCount">The retry count.</param>
-    /// <returns>A Value.</returns>
-    public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, int retryCount)
-        where TException : Exception => source.OnErrorRetry(onError, retryCount, TimeSpan.Zero);
-
-    /// <summary>
-    /// When caught exception, do onError action and repeat observable sequence after delay time
-    /// during within retryCount.
-    /// </summary>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <typeparam name="TException">The type of the exception.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="onError">The on error.</param>
-    /// <param name="retryCount">The retry count.</param>
-    /// <param name="delay">The delay.</param>
-    /// <returns>A Value.</returns>
-    public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, int retryCount, TimeSpan delay)
-#pragma warning restore RCS1231 // Make parameter ref read-only.
-        where TException : Exception => source.OnErrorRetry(onError, retryCount, delay, Scheduler.Default);
-
-    /// <summary>
-    /// When caught exception, do onError action and repeat observable sequence after delay
-    /// time(work on delayScheduler) during within retryCount.
-    /// </summary>
-    /// <typeparam name="TSource">The type of the source.</typeparam>
-    /// <typeparam name="TException">The type of the exception.</typeparam>
-    /// <param name="source">The source.</param>
-    /// <param name="onError">The on error.</param>
-    /// <param name="retryCount">The retry count.</param>
-    /// <param name="delay">The delay.</param>
-    /// <param name="delayScheduler">The delay scheduler.</param>
-    /// <returns>A Value.</returns>
-    public static IObservable<TSource?> OnErrorRetry<TSource, TException>(this IObservable<TSource?> source, Action<TException> onError, int retryCount, TimeSpan delay, IScheduler delayScheduler)
-        where TException : Exception => Observable.Defer(() =>
-        {
-            var dueTime = (delay.Ticks < 0) ? TimeSpan.Zero : delay;
-            var empty = Observable.Empty<TSource?>();
-            var count = 0;
-            IObservable<TSource?>? self = null;
-            self = source.Catch((TException ex) =>
+        /// <summary>Polls ADS state from the client.</summary>
+        /// <returns>The ADS state observable sequence.</returns>
+        public IObservable<StateInfo> AdsStateObserver() =>
+            Observable.Create<StateInfo>(observer =>
             {
-                onError(ex);
+                var timer = new Timer(
+                    _ =>
+                    {
+                        try
+                        {
+                            observer.OnNext(client.IsConnected ? client.ReadState() : new StateInfo { AdsState = AdsState.Invalid });
+                        }
+                        catch (Exception ex)
+                        {
+                            observer.OnError(ex);
+                        }
+                    },
+                    null,
+                    TimeSpan.Zero,
+                    TimeSpan.FromSeconds(1));
 
-                return (++count < retryCount)
-                    ? (dueTime == TimeSpan.Zero)
-                        ? self!.SubscribeOn(Scheduler.CurrentThread)
-                        : empty.Delay(dueTime, delayScheduler).Concat(self!).SubscribeOn(Scheduler.CurrentThread)
-                    : Observable.Throw<TSource?>(ex);
+                return ReactiveUI.Primitives.Disposables.Scope.Create(timer.Dispose);
             });
-            return self;
-        });
+    }
 
-    /// <summary>
-    /// Loads the Assembly.
-    /// </summary>
-    /// <param name="dllFullName">Full name of the DLL.</param>
-    /// <returns>assembly loaded.</returns>
-#if NET8_0_OR_GREATER
-    [RequiresDynamicCode("Loads an assembly at runtime via Assembly.Load which requires dynamic code.")]
-    [RequiresUnreferencedCode("Uses reflection-based assembly loading which may be trimmed.")]
-#endif
-    public static Assembly? AssemblyLoad(this string dllFullName)
+    /// <summary>Extends observable sequences with retry helpers.</summary>
+    /// <typeparam name="TSource">The observable value type.</typeparam>
+    /// <param name="source">The observable sequence.</param>
+    extension<TSource>(IObservable<TSource?> source)
     {
-        Assembly? assembly = null;
-        if (File.Exists(dllFullName))
+        /// <summary>Repeats the observable sequence until it completes successfully.</summary>
+        /// <returns>The retrying observable sequence.</returns>
+        public IObservable<TSource?> OnErrorRetry()
         {
-            using (var fs = File.Open(dllFullName, FileMode.Open, FileAccess.Read))
-            using (var ms = new MemoryStream())
+            var checkedSource = Require(source, nameof(source));
+            return checkedSource.Retry(int.MaxValue);
+        }
+    }
+
+    /// <summary>Extends observable sequences with typed error retry helpers.</summary>
+    /// <typeparam name="TSource">The observable value type.</typeparam>
+    /// <typeparam name="TException">The handled exception type.</typeparam>
+    /// <param name="source">The observable sequence.</param>
+    extension<TSource, TException>(IObservable<TSource?> source)
+        where TException : Exception
+    {
+        /// <summary>Runs the error handler and repeats the observable sequence.</summary>
+        /// <param name="onError">The error handler.</param>
+        /// <returns>The retrying observable sequence.</returns>
+        public IObservable<TSource?> OnErrorRetry(Action<TException> onError)
+        {
+            var checkedSource = Require(source, nameof(source));
+            var checkedOnError = Require(onError, nameof(onError));
+            return checkedSource.OnErrorRetry(checkedOnError, TimeSpan.Zero);
+        }
+
+        /// <summary>Runs the error handler and repeats the observable sequence after a delay.</summary>
+        /// <param name="onError">The error handler.</param>
+        /// <param name="delay">The retry delay.</param>
+        /// <returns>The retrying observable sequence.</returns>
+        public IObservable<TSource?> OnErrorRetry(Action<TException> onError, TimeSpan delay)
+        {
+            var checkedSource = Require(source, nameof(source));
+            var checkedOnError = Require(onError, nameof(onError));
+            return checkedSource.OnErrorRetry(checkedOnError, int.MaxValue, delay);
+        }
+
+        /// <summary>Runs the error handler and repeats the observable sequence for the retry count.</summary>
+        /// <param name="onError">The error handler.</param>
+        /// <param name="retryCount">The retry count.</param>
+        /// <returns>The retrying observable sequence.</returns>
+        public IObservable<TSource?> OnErrorRetry(Action<TException> onError, int retryCount)
+        {
+            var checkedSource = Require(source, nameof(source));
+            var checkedOnError = Require(onError, nameof(onError));
+            return checkedSource.OnErrorRetry(checkedOnError, retryCount, TimeSpan.Zero);
+        }
+
+        /// <summary>Runs the error handler and repeats the observable sequence after a delay for the retry count.</summary>
+        /// <param name="onError">The error handler.</param>
+        /// <param name="retryCount">The retry count.</param>
+        /// <param name="delay">The retry delay.</param>
+        /// <returns>The retrying observable sequence.</returns>
+        public IObservable<TSource?> OnErrorRetry(Action<TException> onError, int retryCount, TimeSpan delay)
+        {
+            var checkedSource = Require(source, nameof(source));
+            var checkedOnError = Require(onError, nameof(onError));
+            return checkedSource.OnErrorRetry(checkedOnError, retryCount, delay, TaskPoolSequencer.Default);
+        }
+
+        /// <summary>Runs the error handler and repeats the observable sequence using the supplied delay sequencer.</summary>
+        /// <param name="onError">The error handler.</param>
+        /// <param name="retryCount">The retry count.</param>
+        /// <param name="delay">The retry delay.</param>
+        /// <param name="delaySequencer">The delay sequencer.</param>
+        /// <returns>The retrying observable sequence.</returns>
+        public IObservable<TSource?> OnErrorRetry(Action<TException> onError, int retryCount, TimeSpan delay, ISequencer delaySequencer)
+        {
+            var checkedSource = Require(source, nameof(source));
+            var checkedOnError = Require(onError, nameof(onError));
+            var checkedDelaySequencer = Require(delaySequencer, nameof(delaySequencer));
+
+            return Observable.Defer(() =>
             {
+                var dueTime = delay.Ticks < 0 ? TimeSpan.Zero : delay;
+                var empty = Observable.Empty<TSource?>();
+                var count = 0;
+                IObservable<TSource?>? self = null;
+                self = checkedSource.Catch((TException ex) =>
+                {
+                    checkedOnError(ex);
+
+                    if (++count >= retryCount)
+                    {
+                        return Observable.Throw<TSource?>(ex);
+                    }
+
+                    return dueTime == TimeSpan.Zero
+                        ? self!
+                        : empty.Delay(dueTime, checkedDelaySequencer).Concat(self!);
+                });
+                return self;
+            });
+        }
+    }
+
+    /// <summary>Extends settings with TwinCAT variable registration helpers.</summary>
+    /// <param name="settings">The TwinCAT settings.</param>
+    extension(ISettings settings)
+    {
+        /// <summary>Adds a notification variable to the settings.</summary>
+        /// <param name="variableName">The PLC variable name.</param>
+        /// <param name="cycleTime">The polling cycle time.</param>
+        /// <param name="arraySize">The array size.</param>
+        public void AddNotification(string variableName, int cycleTime = 100, int arraySize = -1)
+        {
+            if (settings is null)
+            {
+                return;
+            }
+
+            settings.Notifications.Add(new Notification(cycleTime, variableName, arraySize));
+        }
+
+        /// <summary>Adds a write variable to the settings.</summary>
+        /// <param name="variableName">The PLC variable name.</param>
+        /// <param name="arraySize">The array size.</param>
+        public void AddWriteVariable(string variableName, int arraySize = -1)
+        {
+            if (settings is null)
+            {
+                return;
+            }
+
+            settings.WriteVariables.Add(new WriteVariable(variableName, arraySize));
+        }
+    }
+
+    /// <summary>Extends assembly path strings with dynamic loading helpers.</summary>
+    /// <param name="dllFullName">The full DLL path.</param>
+    extension(string dllFullName)
+    {
+        /// <summary>Loads an assembly from a DLL file path.</summary>
+        /// <returns>The loaded assembly.</returns>
+        [RequiresDynamicCode("Loads an assembly at runtime via Assembly.Load which requires dynamic code.")]
+        [RequiresUnreferencedCode("Uses reflection-based assembly loading which may be trimmed.")]
+        public Assembly? AssemblyLoad()
+        {
+            Assembly? assembly = null;
+            if (File.Exists(dllFullName))
+            {
+                using var fs = File.Open(dllFullName, FileMode.Open, FileAccess.Read);
+                using var ms = new MemoryStream();
                 var buffer = new byte[1024];
                 int read;
-                while ((read = fs.Read(buffer, 0, 1024)) > 0)
+                while ((read = fs.Read(buffer, 0, buffer.Length)) > 0)
                 {
                     ms.Write(buffer, 0, read);
                 }
 
                 assembly = Assembly.Load(ms.ToArray());
             }
+
+            return assembly;
         }
 
-        return assembly;
+        /// <summary>Gets a type from an assembly file.</summary>
+        /// <param name="engineType">The type name.</param>
+        /// <returns>The resolved type.</returns>
+        [RequiresDynamicCode("Accesses type by name using reflection which may require dynamic code.")]
+        [RequiresUnreferencedCode("Uses reflection to access type by name which may be trimmed in AOT.")]
+        public Type? GetType(string engineType) => dllFullName.AssemblyLoad()?.GetType(engineType);
     }
 
-    /// <summary>
-    /// Gets the type from the assembly file.
-    /// </summary>
-    /// <param name="dllFullName">Full name of the DLL.</param>
-    /// <param name="engineType">Type of the engine.</param>
-    /// <returns>A type.</returns>
-#if NET8_0_OR_GREATER
-    [RequiresDynamicCode("Accesses type by name using reflection which may require dynamic code.")]
-    [RequiresUnreferencedCode("Uses reflection to access type by name which may be trimmed in AOT.")]
-#endif
-    public static Type? GetType(this string dllFullName, string engineType) => dllFullName.AssemblyLoad()?.GetType(engineType);
-
-    /// <summary>
-    /// The ADS state changed observer.
-    /// </summary>
-    /// <param name="this">The @.</param>
-    /// <returns>A Value.</returns>
-    public static IObservable<AdsStateChangedEventArgs> AdsStateChangedObserver(this AdsClient @this) => Observable.FromEventPattern<EventHandler<AdsStateChangedEventArgs>, AdsStateChangedEventArgs>(h => @this.AdsStateChanged += h, h => @this.AdsStateChanged -= h).Select(x => x.EventArgs);
-
-    /// <summary>
-    /// ADS state observer.
-    /// </summary>
-    /// <param name="this">The this.</param>
-    /// <returns>Observable State Info.</returns>
-    public static IObservable<StateInfo> AdsStateObserver(this AdsClient @this) =>
-        Observable.Create<StateInfo>(obs => new SingleAssignmentDisposable
-        {
-            Disposable = Observable.Interval(TimeSpan.FromSeconds(1)).Subscribe(_ =>
-            {
-                try
-                {
-                    if (!@this.IsConnected)
-                    {
-                        obs.OnNext(new StateInfo { AdsState = AdsState.Invalid });
-                    }
-                    else
-                    {
-                        obs.OnNext(@this.ReadState());
-                    }
-                }
-                catch (Exception ex)
-                {
-                    obs.OnError(ex);
-                }
-            })
-        });
+    /// <summary>Returns a value or throws when it is null.</summary>
+    /// <typeparam name="T">The value type.</typeparam>
+    /// <param name="value">The value to check.</param>
+    /// <param name="parameterName">The parameter name.</param>
+    /// <returns>The non-null value.</returns>
+    private static T Require<T>(T? value, string parameterName)
+        where T : class =>
+        value ?? throw new ArgumentNullException(parameterName);
 }

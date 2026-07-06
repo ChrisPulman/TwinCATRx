@@ -1,78 +1,87 @@
-// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+// Copyright (c) 2022-2026 Chris Pulman. All rights reserved.
+// Chris Pulman licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
 
 using System;
 using System.IO;
 using System.Linq;
-using System.Reactive.Linq;
 using CP.TwinCatRx.Core;
 
 namespace TwinCATRx.Tests.Core;
 
-/// <summary>
-/// Tests for core TwinCatRx extensions and helpers.
-/// </summary>
+/// <summary>Tests for core TwinCatRx extensions and helpers.</summary>
 public class TwinCatRxExtensionsCoreTests
 {
+    /// <summary>Verifies notification registration.</summary>
+    /// <returns>The test task.</returns>
     [Test]
-    public void AddNotification_Should_Add_To_List()
+    public async Task AddNotification_Should_Add_To_List()
     {
         var s = new Settings();
-        TestAssert.Empty(s.Notifications);
+        await TUnitAssert.That(s.Notifications).IsEmpty();
         s.AddNotification(".MyVar", cycleTime: 200, arraySize: 5);
-        TestAssert.Count(1, s.Notifications);
-        TestAssert.Equal(".MyVar", s.Notifications[0].Variable);
-        TestAssert.Equal(200, s.Notifications[0].UpdateRate);
-        TestAssert.Equal(5, s.Notifications[0].ArraySize);
+        await TUnitAssert.That(s.Notifications.Count).IsEqualTo(1);
+        await TUnitAssert.That(s.Notifications[0].Variable).IsEqualTo(".MyVar");
+        await TUnitAssert.That(s.Notifications[0].UpdateRate).IsEqualTo(200);
+        await TUnitAssert.That(s.Notifications[0].ArraySize).IsEqualTo(5);
     }
 
+    /// <summary>Verifies write-variable registration.</summary>
+    /// <returns>The test task.</returns>
     [Test]
-    public void AddWriteVariable_Should_Add_To_List()
+    public async Task AddWriteVariable_Should_Add_To_List()
     {
         var s = new Settings();
-        TestAssert.Empty(s.WriteVariables);
+        await TUnitAssert.That(s.WriteVariables).IsEmpty();
         s.AddWriteVariable(".MyWrite", arraySize: 10);
-        TestAssert.Count(1, s.WriteVariables);
-        TestAssert.Equal(".MyWrite", s.WriteVariables[0].Variable);
-        TestAssert.Equal(10, s.WriteVariables[0].ArraySize);
+        await TUnitAssert.That(s.WriteVariables.Count).IsEqualTo(1);
+        await TUnitAssert.That(s.WriteVariables[0].Variable).IsEqualTo(".MyWrite");
+        await TUnitAssert.That(s.WriteVariables[0].ArraySize).IsEqualTo(10);
     }
 
+    /// <summary>Verifies retrying until success.</summary>
+    /// <returns>The test task.</returns>
     [Test]
-    public void OnErrorRetry_Basic_Retry_Works()
+    public async Task OnErrorRetry_Basic_Retry_Works()
     {
         var attempts = 0;
-        var seq = Observable.Defer(() =>
+        var seq = Observable.Defer<int>(() =>
         {
             attempts++;
-            if (attempts < 3)
-            {
-                return Observable.Throw<int>(new InvalidOperationException());
-            }
-            return Observable.Return(42);
+            return attempts < 3 ? Observable.Throw<int>(new InvalidOperationException()) : Observable.Return(42);
         });
 
-        var result = seq.OnErrorRetry<int, InvalidOperationException>(_ => { }).ToEnumerable().Last();
-        TestAssert.Equal(42, result);
-        TestAssert.Equal(3, attempts);
+        var result = 0;
+        foreach (var value in CP.TwinCatRx.Core.TwinCatRxExtensions.OnErrorRetry<int, InvalidOperationException>(seq, _ => { }).ToEnumerable())
+        {
+            result = value;
+        }
+
+        await TUnitAssert.That(result).IsEqualTo(42);
+        await TUnitAssert.That(attempts).IsEqualTo(3);
     }
 
+    /// <summary>Verifies missing assembly load returns null.</summary>
+    /// <returns>The test task.</returns>
     [Test]
-    public void AssemblyLoad_And_GetType_Returns_Null_For_Missing_File()
+    public async Task AssemblyLoad_And_GetType_Returns_Null_For_Missing_File()
     {
         var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".dll");
         var asm = path.AssemblyLoad();
-        TestAssert.Null(asm);
-        TestAssert.Null(path.GetType("Some.Type"));
+        await TUnitAssert.That(asm).IsNull();
+        await TUnitAssert.That(path.GetType("Some.Type")).IsNull();
     }
 
+    /// <summary>Verifies default settings are populated.</summary>
+    /// <returns>The test task.</returns>
     [Test]
-    public void Settings_Defaults_Populates_Defaults()
+    public async Task Settings_Defaults_Populates_Defaults()
     {
         var s = new Settings().Defaults<Settings>();
-        TestAssert.Equal("Defaults", s.SettingsId);
-        TestAssert.NotNull(s.Notifications);
-        TestAssert.NotNull(s.WriteVariables);
-        TestAssert.NotEmpty(s.Notifications);
-        TestAssert.NotEmpty(s.WriteVariables);
+        await TUnitAssert.That(s.SettingsId).IsEqualTo("Defaults");
+        await TUnitAssert.That(s.Notifications).IsNotNull();
+        await TUnitAssert.That(s.WriteVariables).IsNotNull();
+        await TUnitAssert.That(s.Notifications).IsNotEmpty();
+        await TUnitAssert.That(s.WriteVariables).IsNotEmpty();
     }
 }

@@ -2,25 +2,48 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0-windows10.0.19041.0</TargetFramework>
+    <TargetFrameworks>net48;net9.0-windows10.0.19041.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <!-- Suppress StyleCop documentation/style warnings for test migration -->
-    <NoWarn>$(NoWarn);SA1600;SA1513;SA1515;SA1516;SA1502;SA1133</NoWarn>
+    <UseAppHost>false</UseAppHost>
+    <TUnitAssertionsImplicitUsings>false</TUnitAssertionsImplicitUsings>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" PrivateAssets="all" />
-    <PackageReference Include="System.Reactive" Version="6.1.0" />
-    <PackageReference Include="TUnit" Version="1.57.14" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+    <PackageReference Include="ReactiveUI.Primitives" Version="6.0.0" />
+    <PackageReference Include="ReactiveUI.Primitives.Async" Version="6.0.0" />
+    <PackageReference Include="ReactiveUI.Primitives.Extensions" Version="6.0.0" />
+    <PackageReference Include="TUnit" Version="1.58.0" />
+    <PackageReference Include="TUnit.Assertions" Version="1.58.0" />
+    <PackageReference Include="coverlet.collector" Version="10.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TwinCATRx.SourceGenerators\TwinCATRx.SourceGenerators.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     <ProjectReference Include="..\TwinCATRx\TwinCATRx.csproj" />
     <ProjectReference Include="..\TwinCATRx.Core\TwinCATRx.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="CP.TwinCatRx" />
+    <Using Include="ReactiveUI.Primitives" />
+    <Using Include="ReactiveUI.Primitives.Async" />
+    <Using Include="ReactiveUI.Primitives.Extensions" />
+    <Using Include="ReactiveUI.Primitives.Signals" />
+    <Using Include="ReactiveUI.Primitives.Signals.Signal" Alias="Observable" />
+    <Using Include="ReactiveUI.Primitives.RxVoid" Alias="Unit" />
+    <Using Include="TUnit.Core" />
+    <Using Include="TUnit.Assertions.Extensions" />
+    <Using Include="TUnit.Assertions.Assert" Alias="TUnitAssert" />
   </ItemGroup>
 
 </Project>

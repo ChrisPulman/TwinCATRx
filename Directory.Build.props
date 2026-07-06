@@ -11,7 +11,7 @@
     <Company>ChrisPulman</Company>
     <Nullable>enable</Nullable>
     <PackageIcon>TwinCATRx.png</PackageIcon>
-    <PackageReleaseNotes>Compatibility with .NET Framework 4.6.2, 4.7.2, 4.8, 4.8.1, Net 8, Net 9, Net 10 and Net 11</PackageReleaseNotes>
+    <PackageReleaseNotes>Compatibility with .NET Framework 4.6.2, 4.7.2, 4.8, 4.8.1, Net 8, Net 9 and Net 10</PackageReleaseNotes>
     <PackageTags>Beckhoff;TwinCAT;reactive;primitives;observable;LINQ;net</PackageTags>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
@@ -37,10 +37,6 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
 
-  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net11.0'))">
-    <Features>$(Features);runtime-async=on</Features>
-  </PropertyGroup>
-  
   <ItemGroup Condition="'$(IsTestProject)' != 'true'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" PrivateAssets="All" />
   </ItemGroup>

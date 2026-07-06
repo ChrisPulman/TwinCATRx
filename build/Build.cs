@@ -51,11 +51,6 @@ sealed partial class Build : NukeBuild
         .Executes(() =>
         {
             DotNetRestore(s => s.SetProjectFile(Solution));
-            var settings = new DotNetWorkloadRestoreSettings()
-                .SetProject(Solution)
-                .SetNoCache(true)
-                .SetIgnoreFailedSources(true);
-            DotNetWorkloadRestore(settings);
         });
 
     Target Compile => _ => _

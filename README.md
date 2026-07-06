@@ -4,20 +4,22 @@
 
 # TwinCATRx
 
-A reactive, cross-platform wrapper for Beckhoff TwinCAT ADS built on System.Reactive (Rx). It lets you observe PLC variables as IObservable<T>, expose .NET 8+ streams as ReactiveUI.Extensions async observables, write values, and work with structured tags using a HashTable-like API.
+A reactive, cross-platform wrapper for Beckhoff TwinCAT ADS built on ReactiveUI.Primitives. It lets you observe PLC variables as IObservable<T>, expose async observable streams, write values, and work with structured tags using a HashTable-like API.
 
 ### Packages
 - CP.TwinCATRx: main reactive client and extension APIs.
-- CP.TwinCATRx.Core: shared helpers (settings, code generation, Rx extensions, ADS observables).
+- CP.TwinCATRx.Core: shared helpers (settings, code generation, reactive extensions, ADS observables).
 
 ### Supported frameworks
-- .NET Standard 2.0
-- .NET Framework 4.7.1
+- .NET Framework 4.6.2
+- .NET Framework 4.7.2
+- .NET Framework 4.8
+- .NET Framework 4.8.1
 - .NET 8
 - .NET 9
 - .NET 10
 - Windows-specific features (service monitoring) are enabled for net8.0-windows10.0.19041.0, net9.0-windows10.0.19041.0, and net10.0-windows10.0.19041.0.
-- ReactiveUI.Extensions async observable APIs are available on .NET 8 and later target frameworks.
+- ReactiveUI.Primitives async observable APIs are available across the supported target frameworks.
 
 ### Install
 ```bash
@@ -32,6 +34,7 @@ dotnet add package CP.TwinCATRx.Core
 ```csharp
 using CP.TwinCatRx;
 using CP.TwinCatRx.Core;
+using ReactiveUI.Primitives.Extensions;
 
 // Create client and settings
 var client = new RxTcAdsClient();
@@ -46,7 +49,7 @@ settings.AddWriteVariable(".ArrInt", 11);  // arrays require a length
 client.Connect(settings);
 
 // Wait for PLC to be ready
-client.InitializeComplete.Subscribe(_ =>
+client.InitializeComplete.SubscribeTo(_ =>
 {
     // One-shot reads of simple types
     client.Read(".AString");
@@ -57,18 +60,18 @@ client.InitializeComplete.Subscribe(_ =>
 });
 
 // Observe tag changes as streams
-client.Observe<string>(".AString").Subscribe(v => Console.WriteLine($"AString: {v}"));
-client.Observe<short>(".AInt").Subscribe(v => Console.WriteLine($"AInt: {v}"));
+client.Observe<string>(".AString").SubscribeTo(v => Console.WriteLine($"AString: {v}"));
+client.Observe<short>(".AInt").SubscribeTo(v => Console.WriteLine($"AInt: {v}"));
 
 // Observe arrays (triggered by reads)
-client.Observe<short[]>(".ArrInt").Subscribe(arr => Console.WriteLine($"ArrInt[{arr.Length}]: {string.Join(",", arr)}"));
+client.Observe<short[]>(".ArrInt").SubscribeTo(arr => Console.WriteLine($"ArrInt[{arr.Length}]: {string.Join(",", arr)}"));
 ```
 
 ### Async observables
 
-On .NET 8+, TwinCATRx exposes ReactiveUI.Extensions `IObservableAsync<T>` streams alongside the classic Rx streams.
+TwinCATRx exposes ReactiveUI.Primitives `IObservableAsync<T>` streams alongside the classic `IObservable<T>` streams.
 ```csharp
-using ReactiveUI.Extensions.Async;
+using ReactiveUI.Primitives.Async;
 
 IObservableAsync<short> asyncAInt = client.ObserveAsync<short>(".AInt");
 
@@ -108,11 +111,11 @@ IRxTcAdsClient API
 
 ### Observe variable updates
 ```csharp
-client.Observe<bool>(".ABool").Subscribe(v => Console.WriteLine($"ABool: {v}"));
-client.Observe<int>(".ADInt").Subscribe(v => Console.WriteLine($"ADInt: {v}"));
+client.Observe<bool>(".ABool").SubscribeTo(v => Console.WriteLine($"ABool: {v}"));
+client.Observe<int>(".ADInt").SubscribeTo(v => Console.WriteLine($"ADInt: {v}"));
 
 // With correlation id
-client.Observe<int>(".AInt", id: "R1").Subscribe(v => Console.WriteLine($"AInt[R1]: {v}"));
+client.Observe<int>(".AInt", id: "R1").SubscribeTo(v => Console.WriteLine($"AInt[R1]: {v}"));
 ```
 
 ### Read and write values
@@ -139,8 +142,8 @@ var tag1 = client.CreateStruct(".Tag1");
 await tag1!.StructureReady();
 
 // Stream inner fields
-tag1.Observe<bool>("ABool").Subscribe(v => Console.WriteLine($"Tag1.ABool: {v}"));
-tag1.Observe<short>("AInt").Subscribe(v => Console.WriteLine($"Tag1.AInt: {v}"));
+tag1.Observe<bool>("ABool").SubscribeTo(v => Console.WriteLine($"Tag1.ABool: {v}"));
+tag1.Observe<short>("AInt").SubscribeTo(v => Console.WriteLine($"Tag1.AInt: {v}"));
 
 // Clone, set values, and write back atomically
 var ok = tag1.WriteValues(ht =>
@@ -162,8 +165,8 @@ var okAsync = await tag1.WriteValuesAsync(ht =>
 
 - Observe<T>(this IRxTcAdsClient, string variable)
 - Observe<T>(this IRxTcAdsClient, string variable, string id)
-- ObserveAsync<T>(this IRxTcAdsClient, string variable) on .NET 8+
-- ObserveAsync<T>(this IRxTcAdsClient, string variable, string id) on .NET 8+
+- ObserveAsync<T>(this IRxTcAdsClient, string variable)
+- ObserveAsync<T>(this IRxTcAdsClient, string variable, string id)
 - CreateStruct(this IRxTcAdsClient, string variable): HashTableRx
 - WriteValues(this HashTableRx, Action<HashTableRx>): bool
 - WriteValuesAsync(this HashTableRx, Action<HashTableRx>, TimeSpan): Task<bool>
@@ -213,10 +216,10 @@ var ads = new AdsClient();
 ads.Connect(801);
 
 // State changed events
-ads.AdsStateChangedObserver().Subscribe(e => Console.WriteLine($"ADS state changed: {e.State}"));
+ads.AdsStateChangedObserver().SubscribeTo(e => Console.WriteLine($"ADS state changed: {e.State}"));
 
 // Polling observer for StateInfo
-ads.AdsStateObserver().Subscribe(si => Console.WriteLine($"ADS: {si.AdsState}"));
+ads.AdsStateObserver().SubscribeTo(si => Console.WriteLine($"ADS: {si.AdsState}"));
 ```
 
 ## Advanced (dynamic code generation)
@@ -241,7 +244,7 @@ public partial class PlcState
 var state = new PlcState();
 using var binding = state.BindTwinCatRx(client);
 
-state.AIntChanged.Subscribe(value => Console.WriteLine(value));
+state.AIntChanged.SubscribeTo(value => Console.WriteLine(value));
 Console.WriteLine(state.AInt);
 ```
 
@@ -254,18 +257,18 @@ using CP.TwinCatRx;
 
 ObservableServiceController.GetServices()
     .Where(s => s.DisplayName is "TwinCAT System Service" or "TwinCAT3 System Service")
-    .Subscribe(s =>
+    .SubscribeTo(s =>
     {
         Console.WriteLine($"{s.DisplayName}: {s.Status}");
-        s.StatusObserver.Subscribe(st => Console.WriteLine($"Status: {st}"));
+        s.StatusObserver.SubscribeTo(st => Console.WriteLine($"Status: {st}"));
         if (s.Status != ServiceControllerStatus.Running) s.Start();
     });
 ```
 
 ### Error handling
 ```csharp
-client.ErrorReceived.Subscribe(ex => Console.WriteLine($"Error: {ex}"));
-client.OnWrite.Subscribe(msg => Console.WriteLine($"Write: {msg}"));
+client.ErrorReceived.SubscribeTo(ex => Console.WriteLine($"Error: {ex}"));
+client.OnWrite.SubscribeTo(msg => Console.WriteLine($"Write: {msg}"));
 ```
 
 ### Performance and AOT notes

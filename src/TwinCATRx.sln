@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.3.32922.545
+# Visual Studio Version 18
+VisualStudioVersion = 18.8.11925.187 insiders
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TwinCATRx", "TwinCATRx\TwinCATRx.csproj", "{4620B673-4D62-4117-9B1B-314AD216CEAA}"
 EndProject
@@ -11,7 +11,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ProjectConfig", "ProjectCon
 		..\.gitignore = ..\.gitignore
 		..\Directory.Build.props = ..\Directory.Build.props
 		..\README.md = ..\README.md
-		..\stylecop.json = ..\stylecop.json
 		..\version.json = ..\version.json
 	EndProjectSection
 EndProject

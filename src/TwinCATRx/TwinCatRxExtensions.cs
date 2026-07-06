@@ -1,165 +1,70 @@
-﻿// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+// Copyright (c) 2022-2026 Chris Pulman. All rights reserved.
+// Chris Pulman licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
-using System.Reactive.Linq;
-using System.Reflection;
 using CP.Collections;
-#if NET8_0_OR_GREATER
-using ReactiveUI.Extensions.Async;
-#endif
 
 namespace CP.TwinCatRx;
 
-/// <summary>
-/// Observable TwinCAT Extensions.
-/// </summary>
+/// <summary>Observable TwinCAT extensions.</summary>
 public static class TwinCatRxExtensions
 {
-    /// <summary>
-    /// Observes the specified variable.
-    /// </summary>
-    /// <typeparam name="T">The Type of the data.</typeparam>
-    /// <param name="this">The this.</param>
-    /// <param name="variable">The variable.</param>
-    /// <returns>An Observable of T.</returns>
-#if NET8_0_OR_GREATER
-    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "Generic cast is driven by the user's T; trimming will not remove observed payload types in typical usage.")]
-#endif
-    public static IObservable<T> Observe<T>(this IRxTcAdsClient @this, string variable) =>
-        @this?.DataReceived
-            .Where(x => string.Equals(x.Variable, variable, StringComparison.OrdinalIgnoreCase) && x.Data != null)
-            .Select(x => (T)x.Data!)!;
-
-#if NET8_0_OR_GREATER
-    /// <summary>
-    /// Observes the specified variable as an async observable.
-    /// </summary>
-    /// <typeparam name="T">The Type of the data.</typeparam>
-    /// <param name="this">The this.</param>
-    /// <param name="variable">The variable.</param>
-    /// <returns>An async observable of T.</returns>
-    public static IObservableAsync<T> ObserveAsync<T>(this IRxTcAdsClient @this, string variable) =>
-        @this.Observe<T>(variable).ToObservableAsync();
-#endif
-
-    /// <summary>
-    /// Observes the specified variable.
-    /// </summary>
-    /// <typeparam name="T">The Type of the data.</typeparam>
-    /// <param name="this">The this.</param>
-    /// <param name="variable">The variable.</param>
-    /// <param name="id">The identifier.</param>
-    /// <returns>
-    /// An Observable of T.
-    /// </returns>
-#if NET8_0_OR_GREATER
-    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "Generic cast is driven by the user's T; trimming will not remove observed payload types in typical usage.")]
-#endif
-    public static IObservable<T> Observe<T>(this IRxTcAdsClient @this, string variable, string id) =>
-        @this?.DataReceived
-            .Where(x => string.Equals(x.Id, id) && string.Equals(x.Variable, variable, StringComparison.OrdinalIgnoreCase) && x.Data != null)
-            .Select(x => (T)x.Data!)!;
-
-#if NET8_0_OR_GREATER
-    /// <summary>
-    /// Observes the specified variable and identifier as an async observable.
-    /// </summary>
-    /// <typeparam name="T">The Type of the data.</typeparam>
-    /// <param name="this">The this.</param>
-    /// <param name="variable">The variable.</param>
-    /// <param name="id">The identifier.</param>
-    /// <returns>An async observable of T.</returns>
-    public static IObservableAsync<T> ObserveAsync<T>(this IRxTcAdsClient @this, string variable, string id) =>
-        @this.Observe<T>(variable, id).ToObservableAsync();
-#endif
-
-    /// <summary>
-    /// Creates the structure.
-    /// </summary>
-    /// <param name="this">The this.</param>
-    /// <param name="variable">The variable.</param>
-    /// <returns>
-    /// A HashTableRx with a link to the PLC.
-    /// </returns>
-#if NET8_0_OR_GREATER
-    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "HashTableRx usage is explicit; no reflection-based access required.")]
-#endif
-    public static HashTableRx? CreateStruct(this IRxTcAdsClient @this, string variable)
+    /// <summary>Extends HashTableRx instances with TwinCAT write helpers.</summary>
+    /// <param name="hashTable">The HashTableRx instance.</param>
+    extension(HashTableRx hashTable)
     {
-        if (@this == null)
+        /// <summary>Writes the values.</summary>
+        /// <param name="setValues">The set values.</param>
+        /// <returns>True if successful.</returns>
+        [RequiresUnreferencedCode("May use reflection if the structure contains fields or properties.")]
+        public bool WriteValues(Action<HashTableRx> setValues)
         {
-            return default;
-        }
+            if (hashTable is null || setValues is null)
+            {
+                return false;
+            }
 
-        var ht = new HashTableRx(@this.Settings?.Port < 851);
-        ht.Tag?.Add(nameof(RxTcAdsClient), @this);
-        ht.Tag?.Add("Variable", variable);
-        @this?.DataReceived
-            .Where(x => x.Variable.ToUpperInvariant().Equals(variable.ToUpperInvariant(), StringComparison.InvariantCulture) && x.Data != null)
-            .Subscribe(x => ht[true] = x.Data);
-        return ht;
-    }
+            if (hashTable.Tag?[nameof(RxTcAdsClient)] is not RxTcAdsClient plc || hashTable.Tag?["Variable"] is not string variable)
+            {
+                return false;
+            }
 
-    /// <summary>
-    /// Writes the values.
-    /// </summary>
-    /// <param name="this">The HashTableRx to write values into.</param>
-    /// <param name="setValues">The set values.</param>
-    /// <returns>True if successful.</returns>
-#if NET8_0_OR_GREATER
-    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "No reflection or dynamic code; strongly-typed write path.")]
-#endif
-    public static bool WriteValues(this HashTableRx @this, Action<HashTableRx> setValues)
-    {
-        if (@this == null || setValues == null)
-        {
-            return false;
-        }
-
-        if (@this.Tag?[nameof(RxTcAdsClient)] is RxTcAdsClient plc && @this.Tag?["Variable"] is string variable)
-        {
             if (!plc.Connected)
             {
                 return false;
             }
 
-            using (var htClone = @this.CreateClone())
+            using var clone = hashTable.CreateClone();
+            setValues(clone);
+            var structure =
+                clone.Structure;
+            if (structure is null)
             {
-                setValues(htClone);
-                var structure = htClone.GetStructure();
-                if (structure == null)
-                {
-                    return false;
-                }
-
-                plc.Write(variable, structure);
-                return true;
+                return false;
             }
+
+            plc.Write(variable, structure);
+            return true;
         }
 
-        return false;
-    }
-
-    /// <summary>
-    /// Writes the values asynchronous.
-    /// </summary>
-    /// <param name="this">The this.</param>
-    /// <param name="setValues">The set values.</param>
-    /// <param name="time">The time to delay between writes.</param>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-#if NET8_0_OR_GREATER
-    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "No reflection or dynamic code; async path delegates to strongly-typed write.")]
-#endif
-    public static async Task<bool> WriteValuesAsync(this HashTableRx @this, Action<HashTableRx> setValues, TimeSpan time)
-    {
-        if (@this == null || setValues == null)
+        /// <summary>Writes the values asynchronously.</summary>
+        /// <param name="setValues">The set values.</param>
+        /// <param name="time">The time to delay between writes.</param>
+        /// <returns>A <see cref="Task{TResult}"/> representing the asynchronous operation.</returns>
+        [RequiresUnreferencedCode("May use reflection if the structure contains fields or properties.")]
+        public async Task<bool> WriteValuesAsync(Action<HashTableRx> setValues, TimeSpan time)
         {
-            return false;
-        }
+            if (hashTable is null || setValues is null)
+            {
+                return false;
+            }
 
-        if (@this.Tag?[nameof(RxTcAdsClient)] is RxTcAdsClient plc && @this.Tag?["Variable"] is string variable)
-        {
+            if (hashTable.Tag?[nameof(RxTcAdsClient)] is not RxTcAdsClient plc || hashTable.Tag?["Variable"] is not string variable)
+            {
+                return false;
+            }
+
             if (!plc.Connected)
             {
                 return false;
@@ -167,80 +72,130 @@ public static class TwinCatRxExtensions
 
             if (plc.IsPaused)
             {
-                // If the PLC is paused, wait until it is resumed.
-                var tcs = new TaskCompletionSource<bool>();
-                var d = plc.IsPausedObservable.Subscribe(isPaused =>
+                var completion = new TaskCompletionSource<bool>();
+                var subscription = plc.IsPausedObservable.SubscribeTo(isPaused =>
                 {
-                    if (!isPaused)
+                    if (isPaused)
                     {
-                        tcs.TrySetResult(true);
+                        return;
                     }
+
+                    _ = completion.TrySetResult(true);
                 });
-                _ = await tcs.Task;
-                d.Dispose();
+
+                _ = await completion.Task.ConfigureAwait(false);
+                subscription.Dispose();
             }
             else
             {
-                // If the PLC is not paused, pause it for the specified time.
                 plc.Pause(time);
             }
 
-            using (var htClone = @this.CreateClone())
+            using var clone = hashTable.CreateClone();
+            setValues(clone);
+            var structure =
+                clone.Structure;
+
+            if (structure is null)
             {
-                setValues(htClone);
-                var structure = htClone.GetStructure();
-                if (structure == null)
-                {
-                    return false;
-                }
-
-                plc.Write(variable, structure);
-                return true;
+                return false;
             }
+
+            plc.Write(variable, structure);
+            return true;
         }
 
-        return false;
+        /// <summary>Returns an observable that fires when the structure is ready.</summary>
+        /// <returns>An observable when values have been set.</returns>
+        /// <exception cref="ArgumentNullException">The HashTableRx cannot be null.</exception>
+        public IObservable<HashTableRx> StructureReady()
+        {
+            if (hashTable is null)
+            {
+                throw new ArgumentNullException(nameof(hashTable));
+            }
+
+            return hashTable.ObserveAll.Where(_ => hashTable.Count > 0).Take(1).Delay(TimeSpan.FromSeconds(2)).Select(_ => hashTable);
+        }
+
+        /// <summary>Clones the specified HashTableRx.</summary>
+        /// <returns>A HashTableRx.</returns>
+        /// <exception cref="ArgumentNullException">The HashTableRx cannot be null.</exception>
+        [RequiresUnreferencedCode("May use reflection if the structure contains fields or properties.")]
+        public HashTableRx CreateClone()
+        {
+            if (hashTable is null)
+            {
+                throw new ArgumentNullException(nameof(hashTable));
+            }
+
+            var clone = new HashTableRx(hashTable.UseUpperCase);
+            var structure = hashTable.Structure;
+            if (structure is not null)
+            {
+                clone.SetStructure(structure);
+            }
+
+            return clone;
+        }
     }
 
-    /// <summary>
-    /// Structures the ready.
-    /// </summary>
-    /// <param name="this">The this.</param>
-    /// <returns>
-    /// An Observable when values have been set.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">The HashTableRx cannot be null.</exception>
-#if NET8_0_OR_GREATER
-    [UnconditionalSuppressMessage("AOT", "IL2026", Justification = "Pure Rx composition; no reflection or dynamic code.")]
-#endif
-    public static IObservable<HashTableRx> StructureReady(this HashTableRx @this)
+    /// <summary>Extends reactive TwinCAT clients with observation helpers.</summary>
+    /// <param name="client">The reactive TwinCAT client.</param>
+    extension(IRxTcAdsClient client)
     {
-        if (@this == null)
+        /// <summary>Observes the specified variable.</summary>
+        /// <typeparam name="T">The Type of the data.</typeparam>
+        /// <param name="variable">The variable.</param>
+        /// <returns>An observable of T.</returns>
+        public IObservable<T> Observe<T>(string variable) =>
+            client.DataReceived
+                .Where(x => string.Equals(x.Variable, variable, StringComparison.OrdinalIgnoreCase) && x.Data is not null)
+                .Select(x => (T)x.Data!)!;
+
+        /// <summary>Observes the specified variable as an async observable.</summary>
+        /// <typeparam name="T">The Type of the data.</typeparam>
+        /// <param name="variable">The variable.</param>
+        /// <returns>An async observable of T.</returns>
+        public IObservableAsync<T> ObserveAsyncObservable<T>(string variable) =>
+            client.Observe<T>(variable).ToAsyncObservable();
+
+        /// <summary>Observes the specified variable.</summary>
+        /// <typeparam name="T">The Type of the data.</typeparam>
+        /// <param name="variable">The variable.</param>
+        /// <param name="id">The identifier.</param>
+        /// <returns>An observable of T.</returns>
+        public IObservable<T> Observe<T>(string variable, string id) =>
+            client.DataReceived
+                .Where(x => string.Equals(x.Id, id, StringComparison.Ordinal) && string.Equals(x.Variable, variable, StringComparison.OrdinalIgnoreCase) && x.Data is not null)
+                .Select(x => (T)x.Data!)!;
+
+        /// <summary>Observes the specified variable and identifier as an async observable.</summary>
+        /// <typeparam name="T">The Type of the data.</typeparam>
+        /// <param name="variable">The variable.</param>
+        /// <param name="id">The identifier.</param>
+        /// <returns>An async observable of T.</returns>
+        public IObservableAsync<T> ObserveAsyncObservable<T>(string variable, string id) =>
+            client.Observe<T>(variable, id).ToAsyncObservable();
+
+        /// <summary>Creates the structure.</summary>
+        /// <param name="variable">The variable.</param>
+        /// <returns>A HashTableRx with a link to the PLC.</returns>
+        [RequiresUnreferencedCode("HashTableRx.SetStructure may use reflection over fields and properties.")]
+        public HashTableRx? CreateStruct(string variable)
         {
-            throw new ArgumentNullException(nameof(@this));
+            if (client is null)
+            {
+                return default;
+            }
+
+            var table = new HashTableRx(client.Settings?.Port < 851);
+            table.Tag?.Add(nameof(RxTcAdsClient), client);
+            table.Tag?.Add("Variable", variable);
+            _ = client.DataReceived
+                .Where(x => string.Equals(x.Variable, variable, StringComparison.OrdinalIgnoreCase) && x.Data is not null)
+                .SubscribeTo(x => table.SetStructure(x.Data!));
+            return table;
         }
-
-        return @this.ObserveAll.Where(_ => @this.Count > 0).Take(1).Delay(TimeSpan.FromSeconds(2)).Select(_ => @this);
-    }
-
-    /// <summary>
-    /// Clones the specified HashTableRx.
-    /// </summary>
-    /// <param name="this">The this.</param>
-    /// <returns>
-    /// A HashTableRx.
-    /// </returns>
-    /// <exception cref="ArgumentNullException">The HashTableRx cannot be null.</exception>
-#if NET8_0_OR_GREATER
-    [RequiresUnreferencedCode("May use reflection if structure contains fields/properties.")]
-#endif
-    public static HashTableRx CreateClone(this HashTableRx @this)
-    {
-        if (@this == null)
-        {
-            throw new ArgumentNullException(nameof(@this));
-        }
-
-        return new(@this!.UseUpperCase) { [true] = @this.GetStructure() };
     }
 }

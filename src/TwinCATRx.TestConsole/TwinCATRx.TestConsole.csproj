@@ -9,7 +9,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ReactiveUI.Primitives" Version="6.0.0" />
+    <PackageReference Include="ReactiveUI.Primitives.Extensions" Version="6.0.0" />
+    <ProjectReference Include="..\TwinCATRx.SourceGenerators\TwinCATRx.SourceGenerators.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     <ProjectReference Include="..\TwinCATRx\TwinCATRx.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="ReactiveUI.Primitives" />
+    <Using Include="ReactiveUI.Primitives.Extensions" />
+    <Using Include="ReactiveUI.Primitives.Signals" />
+    <Using Include="ReactiveUI.Primitives.Signals.Signal" Alias="Observable" />
   </ItemGroup>
 
 </Project>

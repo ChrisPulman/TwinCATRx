@@ -1,5 +1,6 @@
-﻿// Copyright (c) Chris Pulman. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+// Copyright (c) 2022-2026 Chris Pulman. All rights reserved.
+// Chris Pulman licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
@@ -9,21 +10,18 @@ using Mono.Cecil;
 
 namespace CP.TwinCatRx.Core;
 
-/// <summary>
-/// C Sharp Language.
-/// </summary>
+/// <summary>C Sharp Language.</summary>
 /// <seealso cref="ILanguageService" />
-internal class CSharpLanguage : ILanguageService
+internal sealed class CSharpLanguage : ILanguageService
 {
+    /// <summary>Contains metadata references required for dynamic compilation.</summary>
     private static readonly IReadOnlyCollection<MetadataReference> _references =
     [
       MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location),
       MetadataReference.CreateFromFile(typeof(ValueTuple<>).GetTypeInfo().Assembly.Location)
     ];
 
-    /// <summary>
-    /// Creates the assembly.
-    /// </summary>
+    /// <summary>Creates the assembly.</summary>
     /// <param name="code">The code.</param>
     /// <param name="assemblyFileName">Name of the assembly file.</param>
     /// <returns>A bool.</returns>
@@ -47,19 +45,17 @@ internal class CSharpLanguage : ILanguageService
             return false;
         }
 
-        using (var stream = new FileStream(assemblyFileName, FileMode.Create))
+        using var stream = new FileStream(assemblyFileName, FileMode.Create);
+        var emitResult = compilation.Emit(stream);
+
+        if (!emitResult.Success)
         {
-            var emitResult = compilation.Emit(stream);
-
-            if (emitResult.Success)
-            {
-                stream.Seek(0, SeekOrigin.Begin);
-                _ = AssemblyDefinition.ReadAssembly(stream);
-                return true;
-            }
-
             return false;
         }
+
+        _ = stream.Seek(0, SeekOrigin.Begin);
+        _ = AssemblyDefinition.ReadAssembly(stream);
+        return true;
     }
 
     /// <inheritdoc />

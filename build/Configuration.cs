@@ -5,7 +5,7 @@
 using System.ComponentModel;
 using Nuke.Common.Tooling;
 
-namespace TwinCATRx.Build;
+namespace TwinCATRx.Building;
 
 [TypeConverter(typeof(TypeConverter<Configuration>))]
 public class Configuration : Enumeration

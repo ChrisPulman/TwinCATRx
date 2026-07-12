@@ -12,6 +12,9 @@ namespace TwinCATRx.Tests.Rx;
 /// <summary>Simple fake implementation of IRxTcAdsClient for testing extensions.</summary>
 internal sealed class RxFakeClient : IRxTcAdsClient
 {
+    /// <summary>The default TwinCAT 3 ADS port used by the fake client.</summary>
+    private const int TwinCat3Port = 851;
+
     /// <summary>Stores fake write notifications.</summary>
     private readonly Signal<string?> _onWrite = new();
 
@@ -23,7 +26,7 @@ internal sealed class RxFakeClient : IRxTcAdsClient
     public RxFakeClient(IObservable<(string Variable, object? Data, string? Id)> data)
     {
         DataReceived = data;
-        Settings = new Settings { Port = 851, AdsAddress = string.Empty, SettingsId = "Default" };
+        Settings = new Settings { Port = TwinCat3Port, AdsAddress = string.Empty, SettingsId = "Default" };
     }
 
     /// <inheritdoc/>

@@ -1,0 +1,33 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageVersion Include="Beckhoff.TwinCAT.Ads" Version="7.0.292" />
+    <PackageVersion Include="coverlet.collector" Version="10.0.1" />
+    <PackageVersion Include="CP.Nuke.BuildTools" Version="3.0.2" />
+    <PackageVersion Include="HashTableRx" Version="3.2.0" />
+    <PackageVersion Include="HashTableRx.Reactive" Version="3.2.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Analyzers" Version="5.3.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
+    <PackageVersion Include="Microsoft.SourceLink.GitHub" Version="10.0.300" />
+    <PackageVersion Include="Mono.Cecil" Version="0.11.6" />
+    <PackageVersion Include="MinVer" Version="7.0.0" />
+    <PackageVersion Include="Nuke.Common" Version="10.1.0" />
+    <PackageVersion Include="Polyfill" Version="10.11.2" />
+    <PackageVersion Include="ReactiveUI.Primitives" Version="6.0.0" />
+    <PackageVersion Include="ReactiveUI.Primitives.Async" Version="6.0.0" />
+    <PackageVersion Include="ReactiveUI.Primitives.Async.Reactive" Version="6.0.0" />
+    <PackageVersion Include="ReactiveUI.Primitives.Extensions" Version="6.0.0" />
+    <PackageVersion Include="ReactiveUI.Primitives.Extensions.Reactive" Version="6.0.0" />
+    <PackageVersion Include="ReactiveUI.Primitives.Reactive" Version="6.0.0" />
+    <PackageVersion Include="Roslynator.Analyzers" Version="4.15.0" />
+    <PackageVersion Include="StyleSharp.Analyzers" Version="3.20.0" />
+    <PackageVersion Include="System.CodeDom" Version="10.0.9" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="10.0.9" />
+    <PackageVersion Include="TUnit" Version="1.58.0" />
+    <PackageVersion Include="TUnit.Assertions" Version="1.58.0" />
+  </ItemGroup>
+</Project>

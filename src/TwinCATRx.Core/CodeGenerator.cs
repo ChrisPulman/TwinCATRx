@@ -5,7 +5,9 @@
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Collections;
+#if NET8_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
+#endif
 using System.Runtime.CompilerServices;
 using System.Text;
 using Microsoft.CSharp;
@@ -14,12 +16,25 @@ using TwinCAT.Ads;
 using TwinCAT.Ads.TypeSystem;
 using TwinCAT.TypeSystem;
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Core.Reactive;
+#else
 namespace CP.TwinCatRx.Core;
+#endif
 
 /// <summary>Code Generator.</summary>
 /// <seealso cref="ICodeGenerator"/>
 public class CodeGenerator : ICodeGenerator
 {
+    /// <summary>Stores the PLC array declaration prefix.</summary>
+    private const string ArrayDeclarationPrefix = "ARRAY [";
+
+    /// <summary>Stores the generated public-member prefix.</summary>
+    private const string PublicMemberPrefix = "public ";
+
+    /// <summary>Stores the generated object-initializer fragment.</summary>
+    private const string ObjectInitializerFragment = " = new ";
+
     /// <summary>Separates PLC array lower and upper bounds.</summary>
     private static readonly string[] RangeSeparator = [".."];
 
@@ -106,6 +121,9 @@ public class CodeGenerator : ICodeGenerator
     /// <summary>Stores generated type names while code is emitted.</summary>
     private readonly Hashtable _typeList = [];
 
+    /// <summary>Receives failures caught by compatibility methods.</summary>
+    private readonly Action<Exception>? _errorHandler;
+
     /// <summary>Stores the current ADS client.</summary>
     private AdsClient? _adsClient;
 
@@ -116,24 +134,24 @@ public class CodeGenerator : ICodeGenerator
     private ISymbolLoader? _symbolLoader;
 
     /// <summary>Initializes a new instance of the <see cref="CodeGenerator"/> class.</summary>
-    public CodeGenerator() => _disposedValue = false;
+    public CodeGenerator()
+        : this(null)
+    {
+    }
+
+    /// <summary>Initializes a new instance of the <see cref="CodeGenerator"/> class.</summary>
+    /// <param name="errorHandler">An optional composable error sink for caught generation failures.</param>
+    public CodeGenerator(Action<Exception>? errorHandler)
+    {
+        _errorHandler = errorHandler;
+        _disposedValue = false;
+    }
 
     /// <summary>Gets the symbol list.</summary>
     /// <value>The symbol list.</value>
     public HashSet<INodeEmulator> SymbolList { get; } = [];
 
-    /// <summary>
-    /// PLCs to c sharp type converter. BIT BOOL System.Boolean bool Boolean For info about
-    /// specific PLC data type, see: TwinCAT PLC Control - Data Types BIT8 BOOL System.Boolean
-    /// bool Boolean BITARR8 BYTE System.Byte byte Byte BITARR16 WORD System.UInt16 ushort -
-    /// BITARR32 DWORD System.UInt32 uint - INT8 SINT System.SByte sbyte - INT16 INT System.Int16
-    /// short Short INT32 DINT System.Int32 int Integer INT64 LINT System.Int64 long Long Integer
-    /// type with size of 8 bytes.Currently not supported by TwinCAT PLC. UINT8 USINT System.Byte
-    /// byte Byte UINT16 UINT System.UInt16 ushort - UINT32 UDINT System.UInt32 uint - UINT64
-    /// ULINT System.UInt64 ulong - Unsigned integer type with size of 8 bytes.Currently not
-    /// supported by TwinCAT PLC. FLOAT REAL System.Single float Single DOUBLE LREAL
-    /// System.Double double Double.
-    /// </summary>
+    /// <summary>Converts a supported PLC scalar, string, or array type name to its CLR representation.</summary>
     /// <param name="plcType">Type of the PLC.</param>
     /// <returns>A Value.</returns>
     /// <exception cref="Exception">
@@ -171,7 +189,7 @@ public class CodeGenerator : ICodeGenerator
     /// Result as a Boolean.
     /// </returns>
     public bool CreateCSharpCode(INodeEmulator selectedTN, bool isTwinCat3 = false) =>
-        CreateCSharpCode(selectedTN, string.Empty, isTwinCat3, "TwinCATRx");
+        CreateCSharpCode(selectedTN, string.Empty, isTwinCat3, CodeGeneratorDefaults.Namespace);
 
     /// <summary>Creates a C# code file based on the selected node structure.</summary>
     /// <param name="selectedTN">The selected tn.</param>
@@ -181,7 +199,7 @@ public class CodeGenerator : ICodeGenerator
     /// <returns>
     /// Result as a Boolean.
     /// </returns>
-    public bool CreateCSharpCode(INodeEmulator selectedTN, string fileName, bool isTwinCat3 = false, string classNamespace = "TwinCATRx")
+    public bool CreateCSharpCode(INodeEmulator selectedTN, string fileName, bool isTwinCat3 = false, string classNamespace = CodeGeneratorDefaults.Namespace)
     {
         if (selectedTN?.Nodes?.Count <= 0)
         {
@@ -213,7 +231,7 @@ public class CodeGenerator : ICodeGenerator
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex);
+            ReportFailure(ex);
             return false;
         }
     }
@@ -223,7 +241,7 @@ public class CodeGenerator : ICodeGenerator
     /// <param name="isTwinCat3">if set to <c>true</c> [is twin cat3].</param>
     /// <param name="classNamespace">The class namespace.</param>
     /// <returns>A Value.</returns>
-    public string CreateCSharpCodeString(INodeEmulator? selectedTN, bool isTwinCat3 = false, string classNamespace = "TwinCATRx")
+    public string CreateCSharpCodeString(INodeEmulator? selectedTN, bool isTwinCat3 = false, string classNamespace = CodeGeneratorDefaults.Namespace)
     {
         if (selectedTN?.Nodes?.Count != 0)
         {
@@ -247,7 +265,7 @@ public class CodeGenerator : ICodeGenerator
     [RequiresUnreferencedCode("Dynamic compilation may access trimmed members.")]
 #endif
     public bool CreateDll(INodeEmulator selectedTN, bool isTwinCat3 = false) =>
-        CreateDll(selectedTN, string.Empty, isTwinCat3, "TwinCATRx");
+        CreateDll(selectedTN, string.Empty, isTwinCat3, CodeGeneratorDefaults.Namespace);
 
     /// <summary>Creates a DLL based on the selected node structure.</summary>
     /// <param name="selectedTN">The selected tn.</param>
@@ -261,7 +279,7 @@ public class CodeGenerator : ICodeGenerator
     [RequiresDynamicCode("Emits and loads assemblies dynamically via Roslyn/Mono.Cecil.")]
     [RequiresUnreferencedCode("Dynamic compilation may access trimmed members.")]
 #endif
-    public bool CreateDll(INodeEmulator? selectedTN, string fileName, bool isTwinCat3 = false, string classNamespace = "TwinCATRx")
+    public bool CreateDll(INodeEmulator? selectedTN, string fileName, bool isTwinCat3 = false, string classNamespace = CodeGeneratorDefaults.Namespace)
     {
         if (string.IsNullOrWhiteSpace(fileName) || selectedTN?.Nodes?.Count <= 0)
         {
@@ -284,7 +302,7 @@ public class CodeGenerator : ICodeGenerator
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex);
+            ReportFailure(ex);
             return false;
         }
     }
@@ -311,7 +329,7 @@ public class CodeGenerator : ICodeGenerator
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex);
+            ReportFailure(ex);
             return false;
         }
     }
@@ -328,7 +346,7 @@ public class CodeGenerator : ICodeGenerator
     /// <returns>
     /// HashSet(Of NodeEmulator).
     /// </returns>
-    public HashSet<INodeEmulator> LoadSymbols(string adsAddress) => LoadSymbols(adsAddress, 801);
+    public HashSet<INodeEmulator> LoadSymbols(string adsAddress) => LoadSymbols(adsAddress, CodeGeneratorDefaults.AdsPort);
 
     /// <summary>Loads symbols from the specified PLC ADS address and port.</summary>
     /// <param name="adsAddress">The ADS address.</param>
@@ -464,7 +482,7 @@ public class CodeGenerator : ICodeGenerator
                 continue;
             }
 
-            var bounds = plcType.Replace("ARRAY [", string.Empty);
+            var bounds = plcType.Replace(ArrayDeclarationPrefix, string.Empty);
             bounds = bounds.Replace("] " + mapping.PlcType, string.Empty);
             arrayType = mapping.CSharpType + "," + bounds;
             return true;
@@ -516,7 +534,7 @@ public class CodeGenerator : ICodeGenerator
         var memberName = symbol.InstanceName;
         if (IsGeneratedStructure(symbol))
         {
-            _ = sb.Append("public ").Append(symbol.TypeName).Append(' ').Append(memberName).Append(" = new ").Append(symbol.TypeName).AppendLine("();");
+            _ = sb.Append(PublicMemberPrefix).Append(symbol.TypeName).Append(' ').Append(memberName).Append(ObjectInitializerFragment).Append(symbol.TypeName).AppendLine("();");
             return;
         }
 
@@ -538,7 +556,7 @@ public class CodeGenerator : ICodeGenerator
         symbol.Category != DataTypeCategory.Array
         && symbol.Category != DataTypeCategory.String
         && symbol.Category != DataTypeCategory.Primitive
-        && !symbol.TypeName.Contains("ARRAY [");
+        && !symbol.TypeName.Contains(ArrayDeclarationPrefix);
 
     /// <summary>Writes one primitive C# class member.</summary>
     /// <param name="sb">The string builder.</param>
@@ -549,14 +567,14 @@ public class CodeGenerator : ICodeGenerator
         if (csharpType == "System.Boolean")
         {
             _ = sb.AppendLine("[MarshalAs(UnmanagedType.I1)]")
-                .Append("public ").Append(csharpType).Append(' ').Append(memberName).AppendLine(";");
+                .Append(PublicMemberPrefix).Append(csharpType).Append(' ').Append(memberName).AppendLine(";");
             return;
         }
 
         if (csharpType == "System.String")
         {
             _ = sb.AppendLine("[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 81)]")
-                .Append("public ").Append(csharpType).Append(' ').Append(memberName).AppendLine(";");
+                .Append(PublicMemberPrefix).Append(csharpType).Append(' ').Append(memberName).AppendLine(";");
             return;
         }
 
@@ -576,7 +594,7 @@ public class CodeGenerator : ICodeGenerator
             return;
         }
 
-        _ = sb.Append("public ").Append(csharpType).Append(' ').Append(memberName).AppendLine(";");
+        _ = sb.Append(PublicMemberPrefix).Append(csharpType).Append(' ').Append(memberName).AppendLine(";");
     }
 
     /// <summary>Creates the new node.</summary>
@@ -639,7 +657,7 @@ public class CodeGenerator : ICodeGenerator
     private static bool TryParseArrayType(string typeName, out string dimensions, out string elementType)
     {
         var trimmedTypeName = typeName.Trim();
-        var arrayIndex = trimmedTypeName.IndexOf("ARRAY [", StringComparison.OrdinalIgnoreCase);
+        var arrayIndex = trimmedTypeName.IndexOf(ArrayDeclarationPrefix, StringComparison.OrdinalIgnoreCase);
         var ofIndex = trimmedTypeName.IndexOf("] OF ", StringComparison.OrdinalIgnoreCase);
         if (arrayIndex < 0 || ofIndex < 0)
         {
@@ -648,7 +666,7 @@ public class CodeGenerator : ICodeGenerator
             return false;
         }
 
-        dimensions = trimmedTypeName.Substring(arrayIndex + "ARRAY [".Length, ofIndex - (arrayIndex + "ARRAY [".Length)).Trim();
+        dimensions = trimmedTypeName.Substring(arrayIndex + ArrayDeclarationPrefix.Length, ofIndex - (arrayIndex + ArrayDeclarationPrefix.Length)).Trim();
         elementType = trimmedTypeName.Substring(ofIndex + "] OF ".Length).Trim();
         return true;
     }
@@ -776,17 +794,21 @@ public class CodeGenerator : ICodeGenerator
     {
         var sb = new StringBuilder();
         _ = sb.AppendLine(marshalAttribute)
-            .Append("public ")
+            .Append(PublicMemberPrefix)
             .Append(csharpType)
             .Append("[] ")
             .Append(instanceName)
-            .Append(" = new ")
+            .Append(ObjectInitializerFragment)
             .Append(csharpType)
             .Append('[')
             .Append(totalLength)
             .AppendLine("];");
         return sb.ToString();
     }
+
+    /// <summary>Reports a caught compatibility failure to the optional composed error sink.</summary>
+    /// <param name="exception">The caught exception.</param>
+    private void ReportFailure(Exception exception) => _errorHandler?.Invoke(exception);
 
     /// <summary>Builds the symbol list.</summary>
     private void BuildSymbolList()
@@ -828,7 +850,7 @@ public class CodeGenerator : ICodeGenerator
         {
             WriteCSharpClasses(ref sb, node, isTwinCat3);
             var symbol = (ISymbol?)node.Tag;
-            if (node.Nodes?.Count <= 0 || symbol?.TypeName.Contains("ARRAY [") == true)
+            if (node.Nodes?.Count <= 0 || symbol?.TypeName.Contains(ArrayDeclarationPrefix) == true)
             {
                 continue;
             }
@@ -856,7 +878,7 @@ public class CodeGenerator : ICodeGenerator
                 continue;
             }
 
-            if (!_typeList.ContainsKey(symbol.TypeName!) && !symbol.TypeName!.Contains("ARRAY ["))
+            if (!_typeList.ContainsKey(symbol.TypeName!) && !symbol.TypeName!.Contains(ArrayDeclarationPrefix))
             {
                 return node;
             }
@@ -887,7 +909,7 @@ public class CodeGenerator : ICodeGenerator
             .Append("public class ").AppendLine(symbol?.TypeName)
             .AppendLine("{");
         _typeList.Add(symbol!.TypeName, symbol!.InstanceName);
-        _ = sb.Append("public ").Append(symbol?.TypeName).AppendLine("()")
+        _ = sb.Append(PublicMemberPrefix).Append(symbol?.TypeName).AppendLine("()")
             .AppendLine("{")
             .AppendLine("}");
         WriteCSharpClassMembers(ref sb, selectedTN, isTwinCat3);

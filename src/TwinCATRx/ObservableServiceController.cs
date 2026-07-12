@@ -5,11 +5,18 @@
 using System.ComponentModel;
 using System.ServiceProcess;
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Reactive;
+#else
 namespace CP.TwinCatRx;
+#endif
 
 /// <summary>Observable Service Controller.</summary>
 public class ObservableServiceController : IObservableServiceController
 {
+    /// <summary>Stores the default service refresh interval in seconds.</summary>
+    private const double DefaultRefreshIntervalSeconds = 0.5;
+
     /// <summary>Stores disposable resources owned by this instance.</summary>
     private readonly CompositeDisposable _cleanup = [];
 
@@ -21,7 +28,7 @@ public class ObservableServiceController : IObservableServiceController
 
     /// <summary>Initializes a new instance of the <see cref="ObservableServiceController"/> class.</summary>
     /// <param name="service">The service.</param>
-    public ObservableServiceController(ServiceController service) => CreateObject(service, TimeSpan.FromSeconds(.5));
+    public ObservableServiceController(ServiceController service) => CreateObject(service, TimeSpan.FromSeconds(DefaultRefreshIntervalSeconds));
 
     /// <summary>Initializes a new instance of the <see cref="ObservableServiceController"/> class.</summary>
     /// <param name="service">The service.</param>

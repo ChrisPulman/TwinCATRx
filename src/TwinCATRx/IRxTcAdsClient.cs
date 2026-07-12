@@ -3,9 +3,17 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+#if REACTIVE_SHIM
+using CP.TwinCatRx.Core.Reactive;
+#else
 using CP.TwinCatRx.Core;
+#endif
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Reactive;
+#else
 namespace CP.TwinCatRx;
+#endif
 
 /// <summary>Interface for Rx Tc Ads Client.</summary>
 /// <seealso cref="IDisposable"/>

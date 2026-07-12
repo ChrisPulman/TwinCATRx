@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net462;net472;net48;net481;net8.0;net9.0;net10.0;net8.0-windows10.0.19041.0;net9.0-windows10.0.19041.0;net10.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks>$(CoreTargetFrameworks);net8.0-windows10.0.19041.0;net9.0-windows10.0.19041.0;net10.0-windows10.0.19041.0;net11.0-windows10.0.19041.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PackageId>CP.TwinCATRx</PackageId>
@@ -9,7 +9,7 @@
     <RootNamespace>CP.TwinCatRx</RootNamespace>
   </PropertyGroup>
   
-  <PropertyGroup Condition="!$([System.String]::new('$(TargetFramework)').StartsWith('net4'))">
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
     <!-- Allow consumers to trim unused APIs from this library -->
     <IsTrimmable>true</IsTrimmable>
     <!-- Enable AOT compatibility analysis on modern TFMs -->
@@ -19,19 +19,19 @@
   </PropertyGroup>
 
   <!-- Define WINDOWS symbol for Windows-targeted TFMs -->
-  <PropertyGroup Condition="$([System.String]::new('$(TargetFramework)').StartsWith('net4')) or '$(TargetFramework)' == 'net8.0-windows10.0.19041.0' or '$(TargetFramework)' == 'net9.0-windows10.0.19041.0' or '$(TargetFramework)' == 'net10.0-windows10.0.19041.0'">
+  <PropertyGroup Condition="$([System.String]::new('$(TargetFramework)').StartsWith('net4')) or '$(TargetFramework)' == 'net8.0-windows10.0.19041.0' or '$(TargetFramework)' == 'net9.0-windows10.0.19041.0' or '$(TargetFramework)' == 'net10.0-windows10.0.19041.0' or '$(TargetFramework)' == 'net11.0-windows10.0.19041.0'">
     <DefineConstants>$(DefineConstants);WINDOWS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup Condition="$([System.String]::new('$(TargetFramework)').StartsWith('net4'))">
-    <PackageReference Include="Polyfill" Version="10.11.2" PrivateAssets="all" />
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HashTableRx" Version="3.2.0" />
-    <PackageReference Include="ReactiveUI.Primitives" Version="6.0.0" />
-    <PackageReference Include="ReactiveUI.Primitives.Async" Version="6.0.0" />
-    <PackageReference Include="ReactiveUI.Primitives.Extensions" Version="6.0.0" />
+    <PackageReference Include="HashTableRx" />
+    <PackageReference Include="ReactiveUI.Primitives" />
+    <PackageReference Include="ReactiveUI.Primitives.Async" />
+    <PackageReference Include="ReactiveUI.Primitives.Extensions" />
   </ItemGroup>
 
   <ItemGroup>

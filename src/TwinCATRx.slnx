@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/ProjectConfig/">
+    <File Path="../.editorconfig" />
+    <File Path="../.gitignore" />
+    <File Path="../Directory.Build.props" />
+    <File Path="../Directory.Packages.props" />
+    <File Path="../README.md" />
+    <File Path="../version.json" />
+  </Folder>
+  <Project Path="../build/_build.csproj">
+    <Build Project="false" />
+  </Project>
+  <Project Path="TwinCATRx.Core/TwinCATRx.Core.csproj" />
+  <Project Path="TwinCATRx.Core.Reactive/TwinCATRx.Core.Reactive.csproj" />
+  <Project Path="TwinCATRx.SourceGenerators/TwinCATRx.SourceGenerators.csproj" />
+  <Project Path="TwinCATRx.SourceGenerators.Tests/TwinCATRx.SourceGenerators.Tests.csproj" />
+  <Project Path="TwinCATRx.TestConsole/TwinCATRx.TestConsole.csproj" />
+  <Project Path="TwinCATRx.Tests/TwinCATRx.Tests.csproj" />
+  <Project Path="TwinCATRx/TwinCATRx.csproj" />
+  <Project Path="TwinCATRx.Reactive/TwinCATRx.Reactive.csproj" />
+</Solution>

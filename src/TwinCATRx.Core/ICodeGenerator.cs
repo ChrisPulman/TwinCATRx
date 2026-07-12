@@ -2,9 +2,15 @@
 // Chris Pulman licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if NET8_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
+#endif
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Core.Reactive;
+#else
 namespace CP.TwinCatRx.Core;
+#endif
 
 /// <summary>Interface for Code Generator.</summary>
 /// <seealso cref="IDisposable"/>
@@ -26,14 +32,14 @@ public interface ICodeGenerator : IDisposable
     /// <param name="isTwinCat3">if set to <c>true</c> [is twin cat3].</param>
     /// <param name="classNamespace">The class namespace.</param>
     /// <returns>A Value.</returns>
-    bool CreateCSharpCode(INodeEmulator selectedTN, string fileName, bool isTwinCat3 = false, string classNamespace = "TwinCATRx");
+    bool CreateCSharpCode(INodeEmulator selectedTN, string fileName, bool isTwinCat3 = false, string classNamespace = CodeGeneratorDefaults.Namespace);
 
     /// <summary>Creates the c sharp code string.</summary>
     /// <param name="selectedTN">The selected tn.</param>
     /// <param name="isTwinCat3">if set to <c>true</c> [is twin cat3].</param>
     /// <param name="classNamespace">The class namespace.</param>
     /// <returns>A Value.</returns>
-    string CreateCSharpCodeString(INodeEmulator? selectedTN, bool isTwinCat3 = false, string classNamespace = "TwinCATRx");
+    string CreateCSharpCodeString(INodeEmulator? selectedTN, bool isTwinCat3 = false, string classNamespace = CodeGeneratorDefaults.Namespace);
 
     /// <summary>Creates the DLL.</summary>
     /// <param name="selectedTN">The selected tn.</param>
@@ -65,7 +71,7 @@ public interface ICodeGenerator : IDisposable
     [RequiresDynamicCode("Emits and loads assemblies dynamically via Roslyn/Mono.Cecil.")]
     [RequiresUnreferencedCode("Dynamic compilation may access trimmed members.")]
 #endif
-    bool CreateDll(INodeEmulator? selectedTN, string fileName, bool isTwinCat3 = false, string classNamespace = "TwinCATRx");
+    bool CreateDll(INodeEmulator? selectedTN, string fileName, bool isTwinCat3 = false, string classNamespace = CodeGeneratorDefaults.Namespace);
 
     /// <summary>Loads the symbols.</summary>
     /// <param name="adsAddress">The ADS address.</param>

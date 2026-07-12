@@ -4,7 +4,11 @@
 
 using Microsoft.CodeAnalysis;
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Core.Reactive;
+#else
 namespace CP.TwinCatRx.Core;
+#endif
 
 /// <summary>I Language Service.</summary>
 public interface ILanguageService

@@ -5,19 +5,36 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 #if WINDOWS
+using System.Runtime.InteropServices;
 using System.ServiceProcess;
 #endif
-using System.Runtime.InteropServices;
+#if REACTIVE_SHIM
+using CP.TwinCatRx.Core.Reactive;
+using CoreTwinCatRxExtensions = CP.TwinCatRx.Core.Reactive.TwinCatRxExtensions;
+using RxNotification = CP.TwinCatRx.Core.Reactive.INotification;
+#else
 using CP.TwinCatRx.Core;
+using CoreTwinCatRxExtensions = CP.TwinCatRx.Core.TwinCatRxExtensions;
+using RxNotification = CP.TwinCatRx.Core.INotification;
+#endif
 using TwinCAT.Ads;
 using TwinCAT.TypeSystem;
-using RxNotification = CP.TwinCatRx.Core.INotification;
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Reactive;
+#else
 namespace CP.TwinCatRx;
+#endif
 
 /// <summary>Observable TwinCAT ADS Client.</summary>
 public class RxTcAdsClient : IRxTcAdsClient
 {
+    /// <summary>Stores the first TwinCAT 3 ADS port.</summary>
+    private const int TwinCat3Port = 851;
+
+    /// <summary>Stores the retry delay used when establishing a PLC connection.</summary>
+    private const int ConnectionRetryDelaySeconds = 5;
+
     /// <summary>Publishes ADS client state changes.</summary>
     private readonly Signal<AdsState> _clientState = new();
 
@@ -433,7 +450,7 @@ public class RxTcAdsClient : IRxTcAdsClient
             return null;
         }
 
-        var isTwinCat3 = client.Address?.Port >= 851;
+        var isTwinCat3 = client.Address?.Port >= TwinCat3Port;
         for (var i = 0; i < notifications.Count; i++)
         {
             var notification = notifications[i];
@@ -523,7 +540,7 @@ public class RxTcAdsClient : IRxTcAdsClient
             return null;
         }
 
-        var isTC3 = client.Address?.Port >= 851;
+        var isTC3 = client.Address?.Port >= TwinCat3Port;
         foreach (var writeVariable in writeVariables)
         {
             try
@@ -581,7 +598,7 @@ public class RxTcAdsClient : IRxTcAdsClient
     [RequiresUnreferencedCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
     [RequiresDynamicCode("Invokes dynamic code generation and reflection to materialize PLC types.")]
     private IObservable<Unit> InitPLC() =>
-        CP.TwinCatRx.Core.TwinCatRxExtensions.OnErrorRetry<Unit, Exception>(
+        CoreTwinCatRxExtensions.OnErrorRetry<Unit, Exception>(
             Observable.Create<Unit>(o =>
             {
                 _cleanup = [];
@@ -634,7 +651,6 @@ public class RxTcAdsClient : IRxTcAdsClient
                     {
                         // Idempotent update (avoid duplicate-key exceptions on resubscribe)
                         serviceList[s.ServiceName] = s.Status;
-                        Console.WriteLine($"ServiceName: {s.ServiceName} is {s.Status}");
                         if (s.Status != ServiceControllerStatus.Running)
                         {
                             s.Start();
@@ -646,7 +662,6 @@ public class RxTcAdsClient : IRxTcAdsClient
 
                         _ = s.StatusObserver.Retry(int.MaxValue).SubscribeTo(status =>
                         {
-                            Console.WriteLine($"ServiceName: {s.ServiceName} is {status}");
                             serviceList[s.ServiceName] = status;
                             if (status == ServiceControllerStatus.Running)
                             {
@@ -855,7 +870,7 @@ public class RxTcAdsClient : IRxTcAdsClient
                 return _cleanup;
             }),
             _errorReceived.OnNext,
-            TimeSpan.FromSeconds(5)).Publish().RefCount();
+            TimeSpan.FromSeconds(ConnectionRetryDelaySeconds)).Publish().RefCount();
 
     /// <summary>Queues a PLC array read request.</summary>
     /// <param name="handle">The ADS variable handle.</param>

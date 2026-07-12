@@ -4,7 +4,11 @@
 
 using System.Xml.Serialization;
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Core.Reactive;
+#else
 namespace CP.TwinCatRx.Core;
+#endif
 
 /// <summary>Base settings for Engine Settings file.</summary>
 [Serializable]

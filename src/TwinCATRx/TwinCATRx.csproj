@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="HashTableRx" Version="3.0.1" />
+    <PackageReference Include="HashTableRx" Version="3.2.0" />
     <PackageReference Include="ReactiveUI.Primitives" Version="6.0.0" />
     <PackageReference Include="ReactiveUI.Primitives.Async" Version="6.0.0" />
     <PackageReference Include="ReactiveUI.Primitives.Extensions" Version="6.0.0" />

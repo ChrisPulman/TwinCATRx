@@ -39,6 +39,16 @@
     <Features>$(Features);runtime-async=on</Features>
   </PropertyGroup>
 
+  <!-- MinVer (versioning) — replaces Nerdbank.GitVersioning. Floor at 2.2
+       so untagged builds produce 2.2.x-alpha.0.<height> until a v2.2.x
+       (or later) tag is reachable. -->
+  <PropertyGroup>
+    <MinVerAutoIncrement>minor</MinVerAutoIncrement>
+    <MinVerDefaultPreReleaseIdentifiers>alpha.0</MinVerDefaultPreReleaseIdentifiers>
+    <MinVerTagPrefix>v</MinVerTagPrefix>
+    <MinVerMinimumMajorMinor>2.2</MinVerMinimumMajorMinor>
+  </PropertyGroup>
+
   <ItemGroup Condition="'$(IsTestProject)' != 'true'">
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>

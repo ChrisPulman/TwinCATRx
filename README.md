@@ -7,8 +7,11 @@
 A reactive, cross-platform wrapper for Beckhoff TwinCAT ADS built on ReactiveUI.Primitives. It lets you observe PLC variables as IObservable<T>, expose async observable streams, write values, and work with structured tags using a HashTable-like API.
 
 ### Packages
+
 - CP.TwinCATRx: main reactive client and extension APIs.
 - CP.TwinCATRx.Core: shared helpers (settings, code generation, reactive extensions, ADS observables).
+- CP.TwinCATRx.Reactive: System.Reactive-compatible client built with ReactiveUI.Primitives.Reactive.
+- CP.TwinCATRx.Core.Reactive: System.Reactive-compatible shared helpers built with ReactiveUI.Primitives.Reactive.
 
 ### Supported frameworks
 - .NET Framework 4.6.2
@@ -18,16 +21,27 @@ A reactive, cross-platform wrapper for Beckhoff TwinCAT ADS built on ReactiveUI.
 - .NET 8
 - .NET 9
 - .NET 10
-- Windows-specific features (service monitoring) are enabled for net8.0-windows10.0.19041.0, net9.0-windows10.0.19041.0, and net10.0-windows10.0.19041.0.
+- .NET 11
+- Windows-specific features (service monitoring) are enabled for net8.0-windows10.0.19041.0, net9.0-windows10.0.19041.0, net10.0-windows10.0.19041.0, and net11.0-windows10.0.19041.0.
 - ReactiveUI.Primitives async observable APIs are available across the supported target frameworks.
 
 ### Install
+
 ```bash
 # Main package
 dotnet add package CP.TwinCATRx
 # Optional low-level helpers (usually not required directly)
 dotnet add package CP.TwinCATRx.Core
 ```
+
+For System.Reactive interoperability, use the matching Reactive variants together:
+
+```bash
+dotnet add package CP.TwinCATRx.Reactive
+dotnet add package CP.TwinCATRx.Core.Reactive
+```
+
+The Reactive packages use the `CP.TwinCatRx.Reactive` and `CP.TwinCatRx.Core.Reactive` namespaces. Namespace aliases allow both package families to coexist in one application without importing conflicting Rx operators globally.
 
 ## 🚀 Quick Start
 
@@ -278,9 +292,9 @@ client.OnWrite.SubscribeTo(msg => Console.WriteLine($"Write: {msg}"));
 - Source-generated streams avoid runtime reflection for application-level stream wiring and are preferred for typed UI/view-model bindings.
 
 ### Tests
-Tests run on TUnit with Microsoft.Testing.Platform. With the .NET 10 SDK, run them through the generated executable path:
+Tests run on TUnit with Microsoft.Testing.Platform across .NET Framework 4.8, .NET 9 Windows, and .NET 11 Windows:
 ```bash
-dotnet run --project src/TwinCATRx.Tests/TwinCATRx.Tests.csproj -- --disable-logo --timeout 30s
+dotnet test --solution src/TwinCATRx.slnx --configuration Release
 ```
 
 ### Limitations

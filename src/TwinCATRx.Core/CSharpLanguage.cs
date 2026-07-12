@@ -2,13 +2,19 @@
 // Chris Pulman licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if NET8_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
+#endif
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Mono.Cecil;
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Core.Reactive;
+#else
 namespace CP.TwinCatRx.Core;
+#endif
 
 /// <summary>C Sharp Language.</summary>
 /// <seealso cref="ILanguageService" />
@@ -35,7 +41,7 @@ internal sealed class CSharpLanguage : ILanguageService
         var syntaxTree = sourceLanguage.ParseText(code, SourceCodeKind.Regular);
         var compilation = sourceLanguage
           .CreateLibraryCompilation(
-              assemblyName: assemblyFileName?.Replace(".dll", string.Empty)!,
+              assemblyName: Path.GetFileNameWithoutExtension(assemblyFileName),
               enableOptimisations: false)
           .AddReferences(_references)
           .AddSyntaxTrees(syntaxTree);

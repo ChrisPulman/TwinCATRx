@@ -1,0 +1,46 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(CoreTargetFrameworks)</TargetFrameworks>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>CP.TwinCATRx.Core.Reactive</PackageId>
+    <Title>TwinCATRx.Core.Reactive</Title>
+    <RootNamespace>CP.TwinCatRx.Core.Reactive</RootNamespace>
+    <DefineConstants>$(DefineConstants);REACTIVE_SHIM</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net8.0'))">
+    <IsTrimmable>true</IsTrimmable>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\TwinCATRx.Core\**\*.cs"
+             Exclude="..\TwinCATRx.Core\bin\**;..\TwinCATRx.Core\obj\**"
+             Link="%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Polyfill" PrivateAssets="all" />
+    <PackageReference Include="ReactiveUI.Primitives.Reactive" />
+    <PackageReference Include="ReactiveUI.Primitives.Extensions.Reactive" />
+    <PackageReference Include="Beckhoff.TwinCAT.Ads" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
+    <PackageReference Include="System.CodeDom" />
+    <PackageReference Include="Mono.Cecil" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="ReactiveUI.Primitives.Reactive" />
+    <Using Include="ReactiveUI.Primitives.Reactive.Concurrency" />
+    <Using Include="ReactiveUI.Primitives.Extensions.Reactive" />
+    <Using Include="ReactiveUI.Primitives.Reactive.Signals" />
+    <Using Include="ReactiveUI.Primitives.Disposables.OnceDisposable" Alias="SingleAssignmentDisposable" />
+    <Using Include="ReactiveUI.Primitives.Reactive.Signals.Signal" Alias="Observable" />
+    <Using Include="System.Reactive.Concurrency.IScheduler" Alias="ISequencer" />
+    <Using Include="System.Reactive.Concurrency.TaskPoolScheduler" Alias="TaskPoolSequencer" />
+  </ItemGroup>
+
+</Project>

@@ -2,7 +2,9 @@
 // Chris Pulman licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if NET9_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
+#endif
 using CP.Collections;
 using CP.TwinCatRx;
 using CP.TwinCatRx.Core;
@@ -12,6 +14,21 @@ namespace TwinCATRx.Tests.Rx;
 /// <summary>Tests for TwinCatRx extensions in CP.TwinCatRx.</summary>
 public class TwinCatRxExtensionsRxTests
 {
+    /// <summary>The value attached to the matching test variable.</summary>
+    private const int MatchingValue = 123;
+
+    /// <summary>The value attached to the nonmatching test variable.</summary>
+    private const int NonMatchingValue = 456;
+
+    /// <summary>The value carrying the nonmatching identifier.</summary>
+    private const int FirstIdentifiedValue = 100;
+
+    /// <summary>The value carrying the expected identifier.</summary>
+    private const int ExpectedIdentifiedValue = 200;
+
+    /// <summary>The TwinCAT 2 ADS port used by the structure test.</summary>
+    private const int TwinCat2Port = 801;
+
     /// <summary>Verifies variable filtering and casting.</summary>
     /// <returns>The test task.</returns>
     [Test]
@@ -20,8 +37,8 @@ public class TwinCatRxExtensionsRxTests
         var data = new (string Variable, object? Data, string? Id)[]
         {
             (".A", null, null),
-            (".A", 123, null),
-            (".B", 456, null),
+            (".A", MatchingValue, null),
+            (".B", NonMatchingValue, null),
         };
         var stream = Observable.FromEnumerable(data);
         var client = new RxFakeClient(stream);
@@ -30,12 +47,12 @@ public class TwinCatRxExtensionsRxTests
         var saw456 = false;
         foreach (var value in client.Observe<int>(".A").ToEnumerable())
         {
-            if (value == 123)
+            if (value == MatchingValue)
             {
                 saw123 = true;
             }
 
-            if (value == 456)
+            if (value == NonMatchingValue)
             {
                 saw456 = true;
             }
@@ -52,8 +69,8 @@ public class TwinCatRxExtensionsRxTests
     {
         var data = new (string Variable, object? Data, string? Id)[]
         {
-            (".A", 100, "x"),
-            (".A", 200, "y"),
+            (".A", FirstIdentifiedValue, "x"),
+            (".A", ExpectedIdentifiedValue, "y"),
         };
         var stream = Observable.FromEnumerable(data);
         var client = new RxFakeClient(stream);
@@ -67,7 +84,7 @@ public class TwinCatRxExtensionsRxTests
         }
 
         await TUnitAssert.That(observedCount).IsEqualTo(1);
-        await TUnitAssert.That(observedValue).IsEqualTo(200);
+        await TUnitAssert.That(observedValue).IsEqualTo(ExpectedIdentifiedValue);
     }
 
     /// <summary>Verifies structure creation tags the client and variable.</summary>
@@ -80,7 +97,7 @@ public class TwinCatRxExtensionsRxTests
     {
         var stream = Observable.Empty<(string Variable, object? Data, string? Id)>();
         var client = new RxFakeClient(stream);
-        client.Connect(new Settings { Port = 801 });
+        client.Connect(new Settings { Port = TwinCat2Port });
 
         var table = client.CreateStruct(".Struct1");
         await TUnitAssert.That(table).IsNotNull();

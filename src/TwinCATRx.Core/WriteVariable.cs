@@ -4,7 +4,11 @@
 
 using System.Runtime.Serialization;
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Core.Reactive;
+#else
 namespace CP.TwinCatRx.Core;
+#endif
 
 /// <summary>WriteVariable for ISettings.</summary>
 /// <remarks>

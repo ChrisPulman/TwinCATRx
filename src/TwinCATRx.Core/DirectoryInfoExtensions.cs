@@ -2,7 +2,11 @@
 // Chris Pulman licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Core.Reactive;
+#else
 namespace CP.TwinCatRx.Core;
+#endif
 
 /// <summary>Provides filtered file enumeration extensions for <see cref="DirectoryInfo"/>.</summary>
 public static class DirectoryInfoExtensions

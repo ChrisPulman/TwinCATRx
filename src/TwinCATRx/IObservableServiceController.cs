@@ -4,7 +4,11 @@
 
 using System.ServiceProcess;
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Reactive;
+#else
 namespace CP.TwinCatRx;
+#endif
 
 /// <summary>Interface for Observable Service Controller.</summary>
 /// <seealso cref="IDisposable"/>

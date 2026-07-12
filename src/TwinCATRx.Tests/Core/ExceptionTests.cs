@@ -10,6 +10,9 @@ namespace TwinCATRx.Tests.Core;
 /// <summary>Tests for custom exception constructors.</summary>
 public class ExceptionTests
 {
+    /// <summary>The expected message for wrapped exception cases.</summary>
+    private const string WrappedMessage = "wrapped";
+
     /// <summary>Verifies the SimpleTypeException constructors.</summary>
     /// <returns>The test task.</returns>
     [Test]
@@ -18,11 +21,11 @@ public class ExceptionTests
         var defaultException = new SimpleTypeException();
         var messageException = new SimpleTypeException("simple");
         var inner = new InvalidOperationException("inner");
-        var wrappedException = new SimpleTypeException("wrapped", inner);
+        var wrappedException = new SimpleTypeException(WrappedMessage, inner);
 
         await TUnitAssert.That(defaultException).IsNotNull();
         await TUnitAssert.That(messageException.Message).IsEqualTo("simple");
-        await TUnitAssert.That(wrappedException.Message).IsEqualTo("wrapped");
+        await TUnitAssert.That(wrappedException.Message).IsEqualTo(WrappedMessage);
         await TUnitAssert.That(wrappedException.InnerException).IsSameReferenceAs(inner);
     }
 
@@ -34,11 +37,11 @@ public class ExceptionTests
         var defaultException = new UnsuportedTypeException();
         var messageException = new UnsuportedTypeException("unsupported");
         var inner = new InvalidOperationException("inner");
-        var wrappedException = new UnsuportedTypeException("wrapped", inner);
+        var wrappedException = new UnsuportedTypeException(WrappedMessage, inner);
 
         await TUnitAssert.That(defaultException).IsNotNull();
         await TUnitAssert.That(messageException.Message).IsEqualTo("unsupported");
-        await TUnitAssert.That(wrappedException.Message).IsEqualTo("wrapped");
+        await TUnitAssert.That(wrappedException.Message).IsEqualTo(WrappedMessage);
         await TUnitAssert.That(wrappedException.InnerException).IsSameReferenceAs(inner);
     }
 }

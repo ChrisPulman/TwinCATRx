@@ -4,7 +4,11 @@
 
 using ReactiveUI.Primitives.Async;
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Reactive;
+#else
 namespace CP.TwinCatRx;
+#endif
 
 /// <summary>Adapts an observable sequence to the async observable contract.</summary>
 /// <typeparam name="T">The value type.</typeparam>

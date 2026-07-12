@@ -2,13 +2,63 @@
 // Chris Pulman licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for full license information.
 
+#if NET9_0_OR_GREATER
 using System.Diagnostics.CodeAnalysis;
+#endif
 
 namespace TwinCATRx.Tests.Rx;
 
 /// <summary>Tests source generator bindings.</summary>
 public class SourceGeneratorTests
 {
+    /// <summary>The direct PLC variable emitted by the generator.</summary>
+    private const string DirectVariable = ".DirectValue";
+
+    /// <summary>The structured PLC root variable emitted by the generator.</summary>
+    private const string StructureVariable = ".Struct";
+
+    /// <summary>The direct notification value used by the tests.</summary>
+    private const int DirectValue = 123;
+
+    /// <summary>The structured notification value used by the tests.</summary>
+    private const int StructuredValue = 321;
+
+    /// <summary>The writable structured value used by the tests.</summary>
+    private const int StructuredWritableValue = 654;
+
+    /// <summary>The value dispatched through generated write methods.</summary>
+    private const int WriteValue = 456;
+
+    /// <summary>The value dispatched through generated write-only methods.</summary>
+    private const int WriteOnlyValue = 789;
+
+    /// <summary>The TwinCAT 3 ADS port emitted by the generator.</summary>
+    private const int TwinCat3Port = 851;
+
+    /// <summary>The expected generated notification count.</summary>
+    private const int NotificationCount = 2;
+
+    /// <summary>The expected generated write-variable count.</summary>
+    private const int WriteVariableCount = 5;
+
+    /// <summary>The direct notification cycle time emitted by the generator.</summary>
+    private const int DirectCycleTime = 50;
+
+    /// <summary>The structured notification cycle time emitted by the generator.</summary>
+    private const int StructuredCycleTime = 200;
+
+    /// <summary>The index of the structured writable variable.</summary>
+    private const int StructuredWritableIndex = 2;
+
+    /// <summary>The index of the direct write-only variable.</summary>
+    private const int WriteOnlyIndex = 3;
+
+    /// <summary>The index of the structured write-only variable.</summary>
+    private const int StructuredWriteOnlyIndex = 4;
+
+    /// <summary>The expected number of direct write calls.</summary>
+    private const int DirectWriteCount = 2;
+
     /// <summary>Verifies generated property and observable updates.</summary>
     /// <returns>The test task.</returns>
     [Test]
@@ -16,7 +66,7 @@ public class SourceGeneratorTests
     {
         var data = new[]
         {
-            (Variable: ".A", Data: (object?)123, Id: (string?)null),
+            (Variable: ".A", Data: (object?)DirectValue, Id: (string?)null),
         };
         var client = new RxFakeClient(Observable.FromEnumerable(data));
         var generated = new GeneratedStreams();
@@ -25,11 +75,11 @@ public class SourceGeneratorTests
 
         using var binding = generated.BindTwinCatRx(client);
 
-        await TUnitAssert.That(generated.AValue).IsEqualTo(123);
+        await TUnitAssert.That(generated.AValue).IsEqualTo(DirectValue);
         var hasObservedValue = false;
         foreach (var value in observed)
         {
-            if (value == 123)
+            if (value == DirectValue)
             {
                 hasObservedValue = true;
                 break;
@@ -49,19 +99,19 @@ public class SourceGeneratorTests
         var settings = generated.CreateTwinCatRxSettings();
 
         await TUnitAssert.That(settings.AdsAddress).IsEqualTo("1.2.3.4.5.6");
-        await TUnitAssert.That(settings.Port).IsEqualTo(851);
+        await TUnitAssert.That(settings.Port).IsEqualTo(TwinCat3Port);
         await TUnitAssert.That(settings.SettingsId).IsEqualTo("GeneratedSettings");
-        await TUnitAssert.That(settings.Notifications.Count).IsEqualTo(2);
-        await TUnitAssert.That(settings.WriteVariables.Count).IsEqualTo(5);
-        await TUnitAssert.That(settings.Notifications[0].Variable).IsEqualTo(".DirectValue");
-        await TUnitAssert.That(settings.Notifications[0].UpdateRate).IsEqualTo(50);
-        await TUnitAssert.That(settings.Notifications[1].Variable).IsEqualTo(".Struct");
-        await TUnitAssert.That(settings.Notifications[1].UpdateRate).IsEqualTo(200);
-        await TUnitAssert.That(settings.WriteVariables[0].Variable).IsEqualTo(".DirectValue");
-        await TUnitAssert.That(settings.WriteVariables[1].Variable).IsEqualTo(".Struct");
-        await TUnitAssert.That(settings.WriteVariables[2].Variable).IsEqualTo(".Struct.Nested.Writable");
-        await TUnitAssert.That(settings.WriteVariables[3].Variable).IsEqualTo(".WriteOnly");
-        await TUnitAssert.That(settings.WriteVariables[4].Variable).IsEqualTo(".Struct.Nested.WriteOnly");
+        await TUnitAssert.That(settings.Notifications.Count).IsEqualTo(NotificationCount);
+        await TUnitAssert.That(settings.WriteVariables.Count).IsEqualTo(WriteVariableCount);
+        await TUnitAssert.That(settings.Notifications[0].Variable).IsEqualTo(DirectVariable);
+        await TUnitAssert.That(settings.Notifications[0].UpdateRate).IsEqualTo(DirectCycleTime);
+        await TUnitAssert.That(settings.Notifications[1].Variable).IsEqualTo(StructureVariable);
+        await TUnitAssert.That(settings.Notifications[1].UpdateRate).IsEqualTo(StructuredCycleTime);
+        await TUnitAssert.That(settings.WriteVariables[0].Variable).IsEqualTo(DirectVariable);
+        await TUnitAssert.That(settings.WriteVariables[1].Variable).IsEqualTo(StructureVariable);
+        await TUnitAssert.That(settings.WriteVariables[StructuredWritableIndex].Variable).IsEqualTo(".Struct.Nested.Writable");
+        await TUnitAssert.That(settings.WriteVariables[WriteOnlyIndex].Variable).IsEqualTo(".WriteOnly");
+        await TUnitAssert.That(settings.WriteVariables[StructuredWriteOnlyIndex].Variable).IsEqualTo(".Struct.Nested.WriteOnly");
     }
 
     /// <summary>Verifies generated PLC binding updates direct and structured notification properties.</summary>
@@ -81,14 +131,14 @@ public class SourceGeneratorTests
         using var structuredSubscription = generated.StructuredValueObservable.SubscribeTo(structuredValues.Add);
 
         using var binding = generated.BindTwinCatRx(client);
-        data.OnNext((".DirectValue", 123, null));
-        data.OnNext((".Struct", new TestStructure(321, 654, 0), null));
+        data.OnNext((DirectVariable, DirectValue, null));
+        data.OnNext((StructureVariable, new TestStructure(StructuredValue, StructuredWritableValue, 0), null));
 
-        await TUnitAssert.That(generated.DirectValue).IsEqualTo(123);
-        await TUnitAssert.That(generated.StructuredValue).IsEqualTo(321);
-        await TUnitAssert.That(generated.StructuredWritableValue).IsEqualTo(654);
-        await TUnitAssert.That(ContainsValue(directValues, 123)).IsTrue();
-        await TUnitAssert.That(ContainsValue(structuredValues, 321)).IsTrue();
+        await TUnitAssert.That(generated.DirectValue).IsEqualTo(DirectValue);
+        await TUnitAssert.That(generated.StructuredValue).IsEqualTo(StructuredValue);
+        await TUnitAssert.That(generated.StructuredWritableValue).IsEqualTo(StructuredWritableValue);
+        await TUnitAssert.That(ContainsValue(directValues, DirectValue)).IsTrue();
+        await TUnitAssert.That(ContainsValue(structuredValues, StructuredValue)).IsTrue();
     }
 
     /// <summary>Verifies generated read helpers are only emitted for direct notification tags.</summary>
@@ -106,7 +156,7 @@ public class SourceGeneratorTests
         generated.ReadDirectValue();
 
         await TUnitAssert.That(client.ReadCalls.Count).IsEqualTo(1);
-        await TUnitAssert.That(client.ReadCalls[0].Variable).IsEqualTo(".DirectValue");
+        await TUnitAssert.That(client.ReadCalls[0].Variable).IsEqualTo(DirectVariable);
         await TUnitAssert.That(typeof(GeneratedPlcConnection).GetMethod("ReadStructuredValue")).IsNull();
         await TUnitAssert.That(typeof(GeneratedPlcConnection).GetMethod("ReadStructuredWritableValue")).IsNull();
         await TUnitAssert.That(typeof(GeneratedPlcConnection).GetMethod("ReadWriteOnlyValue")).IsNull();
@@ -128,14 +178,14 @@ public class SourceGeneratorTests
         var generated = new GeneratedPlcConnection();
 
         using var binding = generated.BindTwinCatRx(client);
-        data.OnNext((".Struct", new TestStructure(321, 0, 0), null));
+        data.OnNext((StructureVariable, new TestStructure(StructuredValue, 0, 0), null));
         generated.WriteTwinCatRx(
-            (nameof(GeneratedPlcConnection.StructuredWritableValue), 456),
-            (nameof(GeneratedPlcConnection.StructuredWriteOnlyValue), 789));
+            (nameof(GeneratedPlcConnection.StructuredWritableValue), WriteValue),
+            (nameof(GeneratedPlcConnection.StructuredWriteOnlyValue), WriteOnlyValue));
 
         await TUnitAssert.That(client.WriteCalls.Count).IsEqualTo(1);
-        await TUnitAssert.That(client.WriteCalls[0].Variable).IsEqualTo(".Struct");
-        await TUnitAssert.That(generated.StructuredWriteOnlyValue).IsEqualTo(789);
+        await TUnitAssert.That(client.WriteCalls[0].Variable).IsEqualTo(StructureVariable);
+        await TUnitAssert.That(generated.StructuredWriteOnlyValue).IsEqualTo(WriteOnlyValue);
     }
 
     /// <summary>Verifies generated batch writes dispatch direct tag values through direct writes.</summary>
@@ -150,14 +200,14 @@ public class SourceGeneratorTests
         var generated = new GeneratedPlcConnection();
 
         using var binding = generated.BindTwinCatRx(client);
-        generated.WriteTwinCatRx((nameof(GeneratedPlcConnection.DirectValue), 456), (nameof(GeneratedPlcConnection.WriteOnlyValue), 789));
+        generated.WriteTwinCatRx((nameof(GeneratedPlcConnection.DirectValue), WriteValue), (nameof(GeneratedPlcConnection.WriteOnlyValue), WriteOnlyValue));
 
-        await TUnitAssert.That(client.WriteCalls.Count).IsEqualTo(2);
-        await TUnitAssert.That(client.WriteCalls[0].Variable).IsEqualTo(".DirectValue");
-        await TUnitAssert.That(client.WriteCalls[0].Value).IsEqualTo(456);
+        await TUnitAssert.That(client.WriteCalls.Count).IsEqualTo(DirectWriteCount);
+        await TUnitAssert.That(client.WriteCalls[0].Variable).IsEqualTo(DirectVariable);
+        await TUnitAssert.That(client.WriteCalls[0].Value).IsEqualTo(WriteValue);
         await TUnitAssert.That(client.WriteCalls[1].Variable).IsEqualTo(".WriteOnly");
-        await TUnitAssert.That(client.WriteCalls[1].Value).IsEqualTo(789);
-        await TUnitAssert.That(generated.WriteOnlyValue).IsEqualTo(789);
+        await TUnitAssert.That(client.WriteCalls[1].Value).IsEqualTo(WriteOnlyValue);
+        await TUnitAssert.That(generated.WriteOnlyValue).IsEqualTo(WriteOnlyValue);
     }
 
     /// <summary>Gets whether the collection contains a value.</summary>

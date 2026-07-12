@@ -6,7 +6,11 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using TwinCAT.Ads;
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Core.Reactive;
+#else
 namespace CP.TwinCatRx.Core;
+#endif
 
 /// <summary>Observable TwinCAT extensions.</summary>
 public static class TwinCatRxExtensions

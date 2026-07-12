@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net48;net9.0-windows10.0.19041.0</TargetFrameworks>
+    <TargetFrameworks>net48;net9.0-windows10.0.19041.0;net11.0-windows10.0.19041.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -17,20 +17,22 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="5.3.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.7.0" />
-    <PackageReference Include="ReactiveUI.Primitives" Version="6.0.0" />
-    <PackageReference Include="ReactiveUI.Primitives.Async" Version="6.0.0" />
-    <PackageReference Include="ReactiveUI.Primitives.Extensions" Version="6.0.0" />
-    <PackageReference Include="TUnit" Version="1.58.0" />
-    <PackageReference Include="TUnit.Assertions" Version="1.58.0" />
-    <PackageReference Include="coverlet.collector" Version="10.0.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" />
+    <PackageReference Include="ReactiveUI.Primitives" />
+    <PackageReference Include="ReactiveUI.Primitives.Async" />
+    <PackageReference Include="ReactiveUI.Primitives.Extensions" />
+    <PackageReference Include="TUnit" />
+    <PackageReference Include="TUnit.Assertions" />
+    <PackageReference Include="coverlet.collector" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\TwinCATRx.SourceGenerators\TwinCATRx.SourceGenerators.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
     <ProjectReference Include="..\TwinCATRx\TwinCATRx.csproj" />
     <ProjectReference Include="..\TwinCATRx.Core\TwinCATRx.Core.csproj" />
+    <ProjectReference Include="..\TwinCATRx.Reactive\TwinCATRx.Reactive.csproj" />
+    <ProjectReference Include="..\TwinCATRx.Core.Reactive\TwinCATRx.Core.Reactive.csproj" />
   </ItemGroup>
 
   <ItemGroup>

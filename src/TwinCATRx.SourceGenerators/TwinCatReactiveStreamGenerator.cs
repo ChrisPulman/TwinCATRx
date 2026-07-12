@@ -20,17 +20,53 @@ public sealed class TwinCatReactiveStreamGenerator : IIncrementalGenerator
     /// <summary>Stores the legacy stream attribute metadata name.</summary>
     private const string TwinCatReactiveStreamAttributeName = "CP.TwinCatRx.TwinCatReactiveStreamAttribute";
 
+    /// <summary>Stores the Reactive legacy stream attribute metadata name.</summary>
+    private const string ReactiveTwinCatReactiveStreamAttributeName = "CP.TwinCatRx.Reactive.TwinCatReactiveStreamAttribute";
+
     /// <summary>Stores the PLC connection attribute metadata name.</summary>
     private const string TwinCatPlcConnectionAttributeName = "CP.TwinCatRx.TwinCatPlcConnectionAttribute";
+
+    /// <summary>Stores the Reactive PLC connection attribute metadata name.</summary>
+    private const string ReactiveTwinCatPlcConnectionAttributeName = "CP.TwinCatRx.Reactive.TwinCatPlcConnectionAttribute";
 
     /// <summary>Stores the direct notification attribute metadata name.</summary>
     private const string DirectNotificationAttributeName = "CP.TwinCatRx.DirectNotificationAttribute";
 
+    /// <summary>Stores the Reactive direct notification attribute metadata name.</summary>
+    private const string ReactiveDirectNotificationAttributeName = "CP.TwinCatRx.Reactive.DirectNotificationAttribute";
+
     /// <summary>Stores the structured notification attribute metadata name.</summary>
     private const string StructuredNotificationAttributeName = "CP.TwinCatRx.StructuredNotificationAttribute";
 
+    /// <summary>Stores the Reactive structured notification attribute metadata name.</summary>
+    private const string ReactiveStructuredNotificationAttributeName = "CP.TwinCatRx.Reactive.StructuredNotificationAttribute";
+
     /// <summary>Stores the write-only attribute metadata name.</summary>
     private const string WriteOnlyAttributeName = "CP.TwinCatRx.WriteOnlyAttribute";
+
+    /// <summary>Stores the Reactive write-only attribute metadata name.</summary>
+    private const string ReactiveWriteOnlyAttributeName = "CP.TwinCatRx.Reactive.WriteOnlyAttribute";
+
+    /// <summary>Stores the lean library namespace.</summary>
+    private const string LeanLibraryNamespace = "CP.TwinCatRx";
+
+    /// <summary>Stores the Reactive library namespace.</summary>
+    private const string ReactiveLibraryNamespace = "CP.TwinCatRx.Reactive";
+
+    /// <summary>Stores the lean core namespace.</summary>
+    private const string LeanCoreNamespace = "CP.TwinCatRx.Core";
+
+    /// <summary>Stores the Reactive core namespace.</summary>
+    private const string ReactiveCoreNamespace = "CP.TwinCatRx.Core.Reactive";
+
+    /// <summary>Stores the lean collections namespace.</summary>
+    private const string LeanCollectionsNamespace = "CP.Collections";
+
+    /// <summary>Stores the Reactive collections namespace.</summary>
+    private const string ReactiveCollectionsNamespace = "CP.Collections.Reactive";
+
+    /// <summary>Stores the generated using-directive prefix.</summary>
+    private const string UsingDirectivePrefix = "using ";
 
     /// <summary>Stores the direct notification tag kind.</summary>
     private const string DirectKind = "Direct";
@@ -40,6 +76,54 @@ public sealed class TwinCatReactiveStreamGenerator : IIncrementalGenerator
 
     /// <summary>Stores the write-only tag kind.</summary>
     private const string WriteOnlyKind = "WriteOnly";
+
+    /// <summary>Stores the observable-name attribute argument.</summary>
+    private const string ObservableNameArgument = "ObservableName";
+
+    /// <summary>Stores the suffix used for generated observable members.</summary>
+    private const string ObservableSuffix = "Observable";
+
+    /// <summary>Stores the array-size attribute argument.</summary>
+    private const string ArraySizeArgument = "ArraySize";
+
+    /// <summary>Stores a generated class-level opening brace.</summary>
+    private const string ClassOpenBrace = "    {";
+
+    /// <summary>Stores a generated class-level closing brace.</summary>
+    private const string ClassCloseBrace = "    }";
+
+    /// <summary>Stores a generated block-level opening brace.</summary>
+    private const string BlockOpenBrace = "        {";
+
+    /// <summary>Stores a generated block-level closing brace.</summary>
+    private const string BlockCloseBrace = "        }";
+
+    /// <summary>Stores a generated nested-block opening brace.</summary>
+    private const string NestedBlockOpenBrace = "            {";
+
+    /// <summary>Stores a generated nested-block closing brace.</summary>
+    private const string NestedBlockCloseBrace = "            }";
+
+    /// <summary>Stores the modern-framework conditional-compilation directive.</summary>
+    private const string Net5OrGreaterDirective = "#if NET5_0_OR_GREATER";
+
+    /// <summary>Stores the conditional-compilation terminator.</summary>
+    private const string EndIfDirective = "#endif";
+
+    /// <summary>Stores the generated named identifier argument prefix.</summary>
+    private const string IdArgumentPrefix = ", id: \"";
+
+    /// <summary>Stores the generated tag comparison prefix.</summary>
+    private const string OrdinalTagComparisonPrefix = " || string.Equals(tag, \"";
+
+    /// <summary>Stores the generated ordinal tag comparison suffix.</summary>
+    private const string OrdinalTagComparisonSuffix = "\", StringComparison.OrdinalIgnoreCase)";
+
+    /// <summary>Stores an indented generated false return statement.</summary>
+    private const string IndentedReturnFalse = "            return false;";
+
+    /// <summary>Stores the default PLC notification cycle time in milliseconds.</summary>
+    private const int DefaultCycleTime = 100;
 
     /// <summary>Defines the attributes consumed by this source generator.</summary>
     private const string AttributeSource = """
@@ -153,11 +237,27 @@ internal sealed class WriteOnlyAttribute : System.Attribute
 }
 """;
 
+    /// <summary>Identifies the generated TwinCATRx API surface.</summary>
+    private enum ApiSurface
+    {
+        /// <summary>The lean ReactiveUI.Primitives surface.</summary>
+        Lean,
+
+        /// <summary>The System.Reactive-compatible surface.</summary>
+        Reactive,
+    }
+
     /// <summary>Initializes the incremental generator pipeline.</summary>
     /// <param name="context">The generator initialization context.</param>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        context.RegisterPostInitializationOutput(static ctx => ctx.AddSource("TwinCatReactiveStreamAttribute.g.cs", SourceText.From(AttributeSource, Encoding.UTF8)));
+        context.RegisterPostInitializationOutput(static ctx =>
+        {
+            ctx.AddSource("TwinCatReactiveStreamAttribute.Lean.g.cs", SourceText.From(AttributeSource, Encoding.UTF8));
+            ctx.AddSource(
+                "TwinCatReactiveStreamAttribute.Reactive.g.cs",
+                SourceText.From(AttributeSource.Replace("namespace CP.TwinCatRx;", "namespace CP.TwinCatRx.Reactive;"), Encoding.UTF8));
+        });
 
         var legacyCandidates = context.SyntaxProvider.ForAttributeWithMetadataName(
                 TwinCatReactiveStreamAttributeName,
@@ -171,8 +271,22 @@ internal sealed class WriteOnlyAttribute : System.Attribute
                 static (ctx, _) => GetConnection(ctx))
             .Where(static connection => connection is not null);
 
+        var reactiveLegacyCandidates = context.SyntaxProvider.ForAttributeWithMetadataName(
+                ReactiveTwinCatReactiveStreamAttributeName,
+                static (node, _) => node is ClassDeclarationSyntax,
+                static (ctx, _) => GetLegacyStream(ctx))
+            .Where(static stream => stream is not null);
+
+        var reactiveConnectionCandidates = context.SyntaxProvider.ForAttributeWithMetadataName(
+                ReactiveTwinCatPlcConnectionAttributeName,
+                static (node, _) => node is ClassDeclarationSyntax,
+                static (ctx, _) => GetConnection(ctx))
+            .Where(static connection => connection is not null);
+
         context.RegisterSourceOutput(legacyCandidates.Collect(), static (ctx, streams) => ExecuteLegacy(ctx, streams!));
         context.RegisterSourceOutput(connectionCandidates.Collect(), static (ctx, connections) => ExecuteConnections(ctx, connections!));
+        context.RegisterSourceOutput(reactiveLegacyCandidates.Collect(), static (ctx, streams) => ExecuteLegacy(ctx, streams!));
+        context.RegisterSourceOutput(reactiveConnectionCandidates.Collect(), static (ctx, connections) => ExecuteConnections(ctx, connections!));
     }
 
     /// <summary>Creates a stream specification from an attributed class.</summary>
@@ -180,11 +294,12 @@ internal sealed class WriteOnlyAttribute : System.Attribute
     /// <returns>The stream specification, or <c>null</c> when the attribute is invalid.</returns>
     private static LegacyStreamSpec? GetLegacyStream(GeneratorAttributeSyntaxContext context)
     {
-        if (context.TargetSymbol is not INamedTypeSymbol classSymbol)
+        if (context.TargetSymbol is not INamedTypeSymbol classSymbol || context.Attributes.Length == 0)
         {
             return null;
         }
 
+        var surface = GetApiSurface(context.Attributes[0]);
         var specs = new List<LegacyReactivePropertySpec>();
         foreach (var attribute in context.Attributes)
         {
@@ -200,13 +315,13 @@ internal sealed class WriteOnlyAttribute : System.Attribute
             }
 
             var propertyName = GetNamedString(attribute, "PropertyName") ?? SanitizeIdentifier(variable!);
-            var observableName = GetNamedString(attribute, "ObservableName") ?? (propertyName + "Observable");
+            var observableName = GetNamedString(attribute, ObservableNameArgument) ?? (propertyName + ObservableSuffix);
             specs.Add(new LegacyReactivePropertySpec(variable!, dataType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), GetNamedString(attribute, "Id"), propertyName, observableName));
         }
 
         return specs.Count == 0
             ? null
-            : new LegacyStreamSpec(GetNamespace(classSymbol), classSymbol.Name, GetAccessibility(classSymbol), specs);
+            : new LegacyStreamSpec(GetNamespace(classSymbol), classSymbol.Name, GetAccessibility(classSymbol), surface, specs);
     }
 
     /// <summary>Creates a PLC connection specification from an attributed class.</summary>
@@ -219,6 +334,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
             return null;
         }
 
+        var surface = GetApiSurface(context.Attributes[0]);
         var properties = new List<PlcPropertySpec>();
         foreach (var member in classSymbol.GetMembers())
         {
@@ -227,14 +343,17 @@ internal sealed class WriteOnlyAttribute : System.Attribute
                 continue;
             }
 
-            var propertySpec = GetPlcProperty(property);
+            var propertySpec = GetPlcProperty(property, surface);
             if (propertySpec is not null)
             {
                 properties.Add(propertySpec);
             }
         }
 
-        return new ConnectionSpec(GetNamespace(classSymbol), classSymbol.Name, GetAccessibility(classSymbol), adsAddress, port, settingsId, properties);
+        return new ConnectionSpec(GetNamespace(classSymbol), classSymbol.Name, GetAccessibility(classSymbol), adsAddress, port, settingsId, properties)
+        {
+            Surface = surface,
+        };
     }
 
     /// <summary>Tries to read class-level PLC connection values.</summary>
@@ -270,23 +389,27 @@ internal sealed class WriteOnlyAttribute : System.Attribute
 
     /// <summary>Creates a PLC property specification from an attributed property.</summary>
     /// <param name="property">The property symbol.</param>
+    /// <param name="surface">The API surface selected by the connection attribute.</param>
     /// <returns>The property specification, or <c>null</c> when no supported attribute is present.</returns>
-    private static PlcPropertySpec? GetPlcProperty(IPropertySymbol property)
+    private static PlcPropertySpec? GetPlcProperty(IPropertySymbol property, ApiSurface surface)
     {
+        var directAttributeName = surface == ApiSurface.Reactive ? ReactiveDirectNotificationAttributeName : DirectNotificationAttributeName;
+        var structuredAttributeName = surface == ApiSurface.Reactive ? ReactiveStructuredNotificationAttributeName : StructuredNotificationAttributeName;
+        var writeOnlyAttributeName = surface == ApiSurface.Reactive ? ReactiveWriteOnlyAttributeName : WriteOnlyAttributeName;
         foreach (var attribute in property.GetAttributes())
         {
             var attributeName = attribute.AttributeClass?.ToDisplayString();
-            if (attributeName == DirectNotificationAttributeName)
+            if (attributeName == directAttributeName)
             {
                 return GetDirectProperty(property, attribute);
             }
 
-            if (attributeName == StructuredNotificationAttributeName)
+            if (attributeName == structuredAttributeName)
             {
                 return GetStructuredProperty(property, attribute);
             }
 
-            if (attributeName == WriteOnlyAttributeName)
+            if (attributeName == writeOnlyAttributeName)
             {
                 return GetWriteOnlyProperty(property, attribute);
             }
@@ -305,16 +428,19 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         return string.IsNullOrWhiteSpace(address)
             ? null
             : new PlcPropertySpec(
-                property.Name,
-                property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                DirectKind,
-                address!,
-                null,
-                GetNamedString(attribute, "WriteAddress"),
-                GetNamedString(attribute, "Id"),
-                GetNamedString(attribute, "ObservableName") ?? (property.Name + "Observable"),
-                GetNamedInt(attribute, "CycleTime", 100),
-                GetNamedInt(attribute, "ArraySize", -1),
+                new PlcPropertyIdentity(
+                    property.Name,
+                    property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                    GetNamedString(attribute, ObservableNameArgument) ?? (property.Name + ObservableSuffix)),
+                new PlcAddressSpec(
+                    DirectKind,
+                    address!,
+                    null,
+                    GetNamedString(attribute, "WriteAddress"),
+                    GetNamedString(attribute, "Id")),
+                new PlcNotificationSpec(
+                    GetNamedInt(attribute, "CycleTime", DefaultCycleTime),
+                    GetNamedInt(attribute, ArraySizeArgument, -1)),
                 GetNamedBool(attribute, "CanWrite", true));
     }
 
@@ -329,16 +455,19 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         return string.IsNullOrWhiteSpace(address)
             ? null
             : new PlcPropertySpec(
-                property.Name,
-                property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                StructuredKind,
-                address!,
-                memberAddress,
-                GetNamedString(attribute, "WriteAddress"),
-                GetNamedString(attribute, "Id"),
-                GetNamedString(attribute, "ObservableName") ?? (property.Name + "Observable"),
-                GetNamedInt(attribute, "CycleTime", 100),
-                GetNamedInt(attribute, "ArraySize", -1),
+                new PlcPropertyIdentity(
+                    property.Name,
+                    property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                    GetNamedString(attribute, ObservableNameArgument) ?? (property.Name + ObservableSuffix)),
+                new PlcAddressSpec(
+                    StructuredKind,
+                    address!,
+                    memberAddress,
+                    GetNamedString(attribute, "WriteAddress"),
+                    GetNamedString(attribute, "Id")),
+                new PlcNotificationSpec(
+                    GetNamedInt(attribute, "CycleTime", DefaultCycleTime),
+                    GetNamedInt(attribute, ArraySizeArgument, -1)),
                 GetNamedBool(attribute, "CanWrite", true));
     }
 
@@ -352,16 +481,19 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         return string.IsNullOrWhiteSpace(address)
             ? null
             : new PlcPropertySpec(
-                property.Name,
-                property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
-                WriteOnlyKind,
-                address!,
-                null,
-                null,
-                GetNamedString(attribute, "Id"),
-                property.Name + "Observable",
-                100,
-                GetNamedInt(attribute, "ArraySize", -1),
+                new PlcPropertyIdentity(
+                    property.Name,
+                    property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat),
+                    property.Name + ObservableSuffix),
+                new PlcAddressSpec(
+                    WriteOnlyKind,
+                    address!,
+                    null,
+                    null,
+                    GetNamedString(attribute, "Id")),
+                new PlcNotificationSpec(
+                    DefaultCycleTime,
+                    GetNamedInt(attribute, ArraySizeArgument, -1)),
                 true);
     }
 
@@ -378,7 +510,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
                 continue;
             }
 
-            var key = stream.Namespace + "." + stream.ClassName;
+            var key = stream.Surface + ":" + stream.Namespace + "." + stream.ClassName;
             if (!groups.TryGetValue(key, out var group))
             {
                 group = [];
@@ -397,7 +529,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
                 properties.AddRange(stream.Properties);
             }
 
-            context.AddSource(GetHintName(spec.Namespace, spec.ClassName, "TwinCatReactiveStream"), SourceText.From(GenerateLegacy(spec, properties), Encoding.UTF8));
+            context.AddSource(GetHintName(spec.Namespace, spec.ClassName, spec.Surface + ".TwinCatReactiveStream"), SourceText.From(GenerateLegacy(spec, properties), Encoding.UTF8));
         }
     }
 
@@ -413,7 +545,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
                 continue;
             }
 
-            context.AddSource(GetHintName(connection.Namespace, connection.ClassName, "TwinCatPlcConnection"), SourceText.From(GenerateConnection(connection), Encoding.UTF8));
+            context.AddSource(GetHintName(connection.Namespace, connection.ClassName, connection.Surface + ".TwinCatPlcConnection"), SourceText.From(GenerateConnection(connection), Encoding.UTF8));
         }
     }
 
@@ -427,8 +559,10 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         _ = sb.AppendLine("// <auto-generated/>")
             .AppendLine("#nullable enable")
             .AppendLine("using System;")
+            .Append(UsingDirectivePrefix).Append("TwinCatRxClientContract = global::").Append(GetLibraryNamespace(spec.Surface)).AppendLine(".IRxTcAdsClient;")
+            .Append(UsingDirectivePrefix).Append("TwinCatRxObservableBridge = global::").Append(GetLibraryNamespace(spec.Surface)).AppendLine(".ObservableBridgeExtensions;")
+            .Append(UsingDirectivePrefix).Append("TwinCatRxApiExtensions = global::").Append(GetLibraryNamespace(spec.Surface)).AppendLine(".TwinCatRxExtensions;")
             .AppendLine("using ReactiveUI.Primitives.Disposables;")
-            .AppendLine("using ReactiveUI.Primitives.Signals;")
             .AppendLine();
 
         AppendNamespace(sb, spec.Namespace);
@@ -438,33 +572,33 @@ internal sealed class WriteOnlyAttribute : System.Attribute
 
         foreach (var property in properties)
         {
-            _ = sb.Append("    private readonly BehaviorSignal<").Append(property.TypeName).Append("?> _").Append(ToCamel(property.PropertyName)).AppendLine("Subject = new(default);")
+            _ = sb.Append("    private readonly global::ReactiveUI.Primitives.Signals.BehaviorSignal<").Append(property.TypeName).Append("?> _").Append(ToCamel(property.PropertyName)).AppendLine("Subject = new(default);")
                 .Append("    private ").Append(property.TypeName).Append("? _").Append(ToCamel(property.PropertyName)).AppendLine(";")
                 .Append("    public ").Append(property.TypeName).Append("? ").AppendLine(property.PropertyName)
-                .AppendLine("    {")
+                .AppendLine(ClassOpenBrace)
                 .Append("        get => _").Append(ToCamel(property.PropertyName)).AppendLine(";")
                 .AppendLine("        private set")
-                .AppendLine("        {")
+                .AppendLine(BlockOpenBrace)
                 .Append("            _").Append(ToCamel(property.PropertyName)).AppendLine(" = value;")
                 .Append("            _").Append(ToCamel(property.PropertyName)).AppendLine("Subject.OnNext(value);")
-                .AppendLine("        }")
-                .AppendLine("    }")
+                .AppendLine(BlockCloseBrace)
+                .AppendLine(ClassCloseBrace)
                 .Append("    public IObservable<").Append(property.TypeName).Append("?> ").Append(property.ObservableName).Append(" => _").Append(ToCamel(property.PropertyName)).AppendLine("Subject;")
                 .AppendLine();
         }
 
-        _ = sb.AppendLine("    public IDisposable BindTwinCatRx(CP.TwinCatRx.IRxTcAdsClient client)")
-            .AppendLine("    {")
+        _ = sb.AppendLine("    public IDisposable BindTwinCatRx(TwinCatRxClientContract client)")
+            .AppendLine(ClassOpenBrace)
             .AppendLine("        if (client == null)")
-            .AppendLine("        {")
+            .AppendLine(BlockOpenBrace)
             .AppendLine("            throw new ArgumentNullException(nameof(client));")
-            .AppendLine("        }")
+            .AppendLine(BlockCloseBrace)
             .AppendLine()
             .AppendLine("        var subscriptions = new MultipleDisposable();");
 
         foreach (var property in properties)
         {
-            _ = sb.Append("        subscriptions.Add(CP.TwinCatRx.ObservableBridgeExtensions.SubscribeTo(CP.TwinCatRx.TwinCatRxExtensions.Observe<").Append(property.TypeName).Append(">(client, \"").Append(Escape(property.Variable)).Append('"');
+            _ = sb.Append("        subscriptions.Add(TwinCatRxObservableBridge.SubscribeTo(TwinCatRxApiExtensions.Observe<").Append(property.TypeName).Append(">(client, \"").Append(Escape(property.Variable)).Append('"');
             if (property.Id is not null)
             {
                 _ = sb.Append(", \"").Append(Escape(property.Id)).Append('"');
@@ -474,7 +608,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         }
 
         _ = sb.AppendLine("        return subscriptions;")
-            .AppendLine("    }")
+            .AppendLine(ClassCloseBrace)
             .AppendLine("}");
 
         return sb.ToString();
@@ -489,22 +623,27 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         _ = sb.AppendLine("// <auto-generated/>")
             .AppendLine("#nullable enable")
             .AppendLine("using System;")
-            .AppendLine("#if NET5_0_OR_GREATER")
+            .AppendLine(Net5OrGreaterDirective)
             .AppendLine("using System.Diagnostics.CodeAnalysis;")
-            .AppendLine("#endif")
-            .AppendLine("using CP.Collections;")
-            .AppendLine("using CP.TwinCatRx;")
-            .AppendLine("using CP.TwinCatRx.Core;")
+            .AppendLine(EndIfDirective)
+            .Append(UsingDirectivePrefix).Append(GetCollectionsNamespace(spec.Surface)).AppendLine(";")
+            .Append(UsingDirectivePrefix).Append(GetCoreNamespace(spec.Surface)).AppendLine(";")
+            .Append(UsingDirectivePrefix).Append("TwinCatRxHashTable = global::").Append(GetCollectionsNamespace(spec.Surface)).AppendLine(".HashTableRx;")
+            .Append(UsingDirectivePrefix).Append("TwinCatRxHashTableExtensions = global::").Append(GetCollectionsNamespace(spec.Surface)).AppendLine(".HashTableRxExtensions;")
+            .Append(UsingDirectivePrefix).Append("TwinCatRxClientContract = global::").Append(GetLibraryNamespace(spec.Surface)).AppendLine(".IRxTcAdsClient;")
+            .Append(UsingDirectivePrefix).Append("TwinCatRxClient = global::").Append(GetLibraryNamespace(spec.Surface)).AppendLine(".RxTcAdsClient;")
+            .Append(UsingDirectivePrefix).Append("TwinCatRxObservableBridge = global::").Append(GetLibraryNamespace(spec.Surface)).AppendLine(".ObservableBridgeExtensions;")
+            .Append(UsingDirectivePrefix).Append("TwinCatRxApiExtensions = global::").Append(GetLibraryNamespace(spec.Surface)).AppendLine(".TwinCatRxExtensions;")
+            .Append(UsingDirectivePrefix).Append("TwinCatRxSettings = global::").Append(GetCoreNamespace(spec.Surface)).AppendLine(".Settings;")
             .AppendLine("using ReactiveUI.Primitives.Disposables;")
-            .AppendLine("using ReactiveUI.Primitives.Signals;")
             .AppendLine();
 
         AppendNamespace(sb, spec.Namespace);
 
         _ = sb.Append(spec.Accessibility).Append(" partial class ").AppendLine(spec.ClassName)
             .AppendLine("{")
-            .AppendLine("    private CP.TwinCatRx.IRxTcAdsClient? _twinCatRxClient;")
-            .AppendLine("    private readonly System.Collections.Generic.Dictionary<string, HashTableRx> _twinCatRxStructures = new(StringComparer.OrdinalIgnoreCase);")
+            .AppendLine("    private TwinCatRxClientContract? _twinCatRxClient;")
+            .AppendLine("    private readonly System.Collections.Generic.Dictionary<string, TwinCatRxHashTable> _twinCatRxStructures = new(StringComparer.OrdinalIgnoreCase);")
             .AppendLine();
 
         AppendConnectionFields(sb, spec.Properties);
@@ -531,7 +670,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
                 continue;
             }
 
-            _ = sb.Append("    private readonly BehaviorSignal<").Append(property.TypeName).Append("> ").Append(property.SubjectField).AppendLine(" = new(default!);");
+            _ = sb.Append("    private readonly global::ReactiveUI.Primitives.Signals.BehaviorSignal<").Append(property.TypeName).Append("> ").Append(property.SubjectField).AppendLine(" = new(default!);");
         }
 
         if (!HasNotificationProperties(properties))
@@ -547,7 +686,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
     /// <param name="properties">The PLC property specifications.</param>
     private static void AppendConnectionProperties(StringBuilder sb, IReadOnlyList<PlcPropertySpec> properties)
     {
-        _ = sb.AppendLine("    public CP.TwinCatRx.IRxTcAdsClient? TwinCatRxClient => _twinCatRxClient;")
+        _ = sb.AppendLine("    public TwinCatRxClientContract? TwinCatRxClient => _twinCatRxClient;")
             .AppendLine();
 
         foreach (var property in properties)
@@ -570,10 +709,10 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         var notifications = GetNotificationRegistrations(spec.Properties);
         var writeVariables = GetWriteRegistrations(spec.Properties);
 
-        _ = sb.AppendLine("    public CP.TwinCatRx.Core.Settings CreateTwinCatRxSettings()")
-            .AppendLine("    {")
-            .AppendLine("        var settings = new CP.TwinCatRx.Core.Settings")
-            .AppendLine("        {")
+        _ = sb.AppendLine("    public TwinCatRxSettings CreateTwinCatRxSettings()")
+            .AppendLine(ClassOpenBrace)
+            .AppendLine("        var settings = new TwinCatRxSettings")
+            .AppendLine(BlockOpenBrace)
             .Append("            AdsAddress = \"").Append(Escape(spec.AdsAddress)).AppendLine("\",")
             .Append("            Port = ").Append(spec.Port.ToString(CultureInfo.InvariantCulture)).AppendLine(",")
             .Append("            SettingsId = \"").Append(Escape(spec.SettingsId)).AppendLine("\"")
@@ -590,7 +729,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         }
 
         _ = sb.AppendLine("        return settings;")
-            .AppendLine("    }")
+            .AppendLine(ClassCloseBrace)
             .AppendLine();
     }
 
@@ -598,19 +737,19 @@ internal sealed class WriteOnlyAttribute : System.Attribute
     /// <param name="sb">The string builder.</param>
     private static void AppendConnectMethod(StringBuilder sb)
     {
-        _ = sb.AppendLine("#if NET5_0_OR_GREATER")
+        _ = sb.AppendLine(Net5OrGreaterDirective)
             .AppendLine("    [RequiresDynamicCode(\"RxTcAdsClient generates PLC structure types at runtime.\")]")
             .AppendLine("    [RequiresUnreferencedCode(\"RxTcAdsClient uses reflection to materialize PLC structure types.\")]")
-            .AppendLine("#endif")
+            .AppendLine(EndIfDirective)
             .AppendLine("    public IDisposable ConnectTwinCatRx()")
-            .AppendLine("    {")
-            .AppendLine("        var client = new CP.TwinCatRx.RxTcAdsClient();")
+            .AppendLine(ClassOpenBrace)
+            .AppendLine("        var client = new TwinCatRxClient();")
             .AppendLine("        var cleanup = new MultipleDisposable();")
             .AppendLine("        cleanup.Add(client);")
             .AppendLine("        cleanup.Add(BindTwinCatRx(client));")
             .AppendLine("        client.Connect(CreateTwinCatRxSettings());")
             .AppendLine("        return cleanup;")
-            .AppendLine("    }")
+            .AppendLine(ClassCloseBrace)
             .AppendLine();
     }
 
@@ -619,15 +758,15 @@ internal sealed class WriteOnlyAttribute : System.Attribute
     /// <param name="properties">The PLC property specifications.</param>
     private static void AppendBindingMethod(StringBuilder sb, IReadOnlyList<PlcPropertySpec> properties)
     {
-        _ = sb.AppendLine("#if NET5_0_OR_GREATER")
+        _ = sb.AppendLine(Net5OrGreaterDirective)
             .AppendLine("    [RequiresUnreferencedCode(\"Structured notifications use HashTableRx structure materialization.\")]")
-            .AppendLine("#endif")
-            .AppendLine("    public IDisposable BindTwinCatRx(CP.TwinCatRx.IRxTcAdsClient client)")
-            .AppendLine("    {")
+            .AppendLine(EndIfDirective)
+            .AppendLine("    public IDisposable BindTwinCatRx(TwinCatRxClientContract client)")
+            .AppendLine(ClassOpenBrace)
             .AppendLine("        if (client == null)")
-            .AppendLine("        {")
+            .AppendLine(BlockOpenBrace)
             .AppendLine("            throw new ArgumentNullException(nameof(client));")
-            .AppendLine("        }")
+            .AppendLine(BlockCloseBrace)
             .AppendLine()
             .AppendLine("        _twinCatRxClient = client;")
             .AppendLine("        _twinCatRxStructures.Clear();")
@@ -638,7 +777,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         AppendDirectBindings(sb, properties);
 
         _ = sb.AppendLine("        return subscriptions;")
-            .AppendLine("    }")
+            .AppendLine(ClassCloseBrace)
             .AppendLine();
 
         foreach (var property in properties)
@@ -649,10 +788,10 @@ internal sealed class WriteOnlyAttribute : System.Attribute
             }
 
             _ = sb.Append("    private void ").Append(property.SetterName).Append('(').Append(property.TypeName).AppendLine(" value)")
-                .AppendLine("    {")
+                .AppendLine(ClassOpenBrace)
                 .Append("        ").Append(property.PropertyName).AppendLine(" = value;")
                 .Append("        ").Append(property.SubjectField).AppendLine(".OnNext(value);")
-                .AppendLine("    }")
+                .AppendLine(ClassCloseBrace)
                 .AppendLine();
         }
     }
@@ -667,7 +806,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         {
             var variable = structureVariables[i];
             var structureName = GetStructureLocalName(i);
-            _ = sb.Append("        var ").Append(structureName).Append(" = client.CreateStruct(\"").Append(Escape(variable)).AppendLine("\")")
+            _ = sb.Append("        var ").Append(structureName).Append(" = TwinCatRxApiExtensions.CreateStruct(client, \"").Append(Escape(variable)).AppendLine("\")")
                 .Append("            ?? throw new InvalidOperationException(\"The PLC structure '").Append(Escape(variable)).AppendLine("' could not be created.\");")
                 .Append("        _twinCatRxStructures[\"").Append(Escape(variable)).Append("\"] = ").Append(structureName).AppendLine(";")
                 .Append("        subscriptions.Add(").Append(structureName).AppendLine(");");
@@ -679,7 +818,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
                     continue;
                 }
 
-                _ = sb.Append("        subscriptions.Add(CP.TwinCatRx.ObservableBridgeExtensions.SubscribeTo(").Append(structureName).Append(".Observe<").Append(property.TypeName).Append(">(\"").Append(Escape(property.MemberAddress!)).Append("\"), ").Append(property.SetterName).AppendLine("));");
+                _ = sb.Append("        subscriptions.Add(TwinCatRxObservableBridge.SubscribeTo(TwinCatRxHashTableExtensions.Observe<").Append(property.TypeName).Append(">(").Append(structureName).Append(", \"").Append(Escape(property.MemberAddress!)).Append("\"), ").Append(property.SetterName).AppendLine("));");
             }
         }
     }
@@ -696,7 +835,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
                 continue;
             }
 
-            _ = sb.Append("        subscriptions.Add(CP.TwinCatRx.ObservableBridgeExtensions.SubscribeTo(CP.TwinCatRx.TwinCatRxExtensions.Observe<").Append(property.TypeName).Append(">(client, \"").Append(Escape(property.Address)).Append('"');
+            _ = sb.Append("        subscriptions.Add(TwinCatRxObservableBridge.SubscribeTo(TwinCatRxApiExtensions.Observe<").Append(property.TypeName).Append(">(client, \"").Append(Escape(property.Address)).Append('"');
             if (property.Id is not null)
             {
                 _ = sb.Append(", \"").Append(Escape(property.Id)).Append('"');
@@ -719,7 +858,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
             }
 
             _ = sb.Append("    public void ").Append(property.ReadMethodName).AppendLine("()")
-                .AppendLine("    {")
+                .AppendLine(ClassOpenBrace)
                 .AppendLine("        var client = RequireTwinCatRxClient();")
                 .Append("        client.Read(\"").Append(Escape(property.Address)).Append('"');
 
@@ -730,11 +869,11 @@ internal sealed class WriteOnlyAttribute : System.Attribute
 
             if (property.Id is not null)
             {
-                _ = property.ArraySize > 0 ? sb.Append(", id: \"").Append(Escape(property.Id)).Append('"') : sb.Append(", id: \"").Append(Escape(property.Id)).Append('"');
+                _ = sb.Append(IdArgumentPrefix).Append(Escape(property.Id)).Append('"');
             }
 
             _ = sb.AppendLine(");")
-                .AppendLine("    }")
+                .AppendLine(ClassCloseBrace)
                 .AppendLine();
         }
     }
@@ -751,36 +890,36 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         {
             AppendRequiresUnreferencedCodeAttribute(sb);
             _ = sb.Append("    public void ").Append(property.WriteMethodName).Append('(').Append(property.TypeName).AppendLine(" value)")
-                .AppendLine("    {")
+                .AppendLine(ClassOpenBrace)
                 .Append("        WriteTwinCatRx((nameof(").Append(property.PropertyName).AppendLine("), value));")
-                .AppendLine("    }")
+                .AppendLine(ClassCloseBrace)
                 .AppendLine();
         }
 
         AppendRequiresUnreferencedCodeAttribute(sb);
         _ = sb.AppendLine("    public void WriteTwinCatRx(params (string Tag, object? Value)[] values)")
-            .AppendLine("    {")
+            .AppendLine(ClassOpenBrace)
             .AppendLine("        if (values == null)")
-            .AppendLine("        {")
+            .AppendLine(BlockOpenBrace)
             .AppendLine("            throw new ArgumentNullException(nameof(values));")
-            .AppendLine("        }")
+            .AppendLine(BlockCloseBrace)
             .AppendLine()
             .AppendLine("        var client = RequireTwinCatRxClient();")
             .AppendLine("        var structuredWrites = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<(string MemberAddress, string WriteAddress, object Value, string? Id)>>(StringComparer.OrdinalIgnoreCase);")
             .AppendLine("        foreach (var value in values)")
-            .AppendLine("        {")
+            .AppendLine(BlockOpenBrace)
             .AppendLine("            if (TryAddTwinCatRxStructuredWrite(value.Tag, value.Value, structuredWrites))")
-            .AppendLine("            {")
+            .AppendLine(NestedBlockOpenBrace)
             .AppendLine("                continue;")
-            .AppendLine("            }")
+            .AppendLine(NestedBlockCloseBrace)
             .AppendLine()
             .AppendLine("            WriteTwinCatRxValue(client, value.Tag, value.Value);")
-            .AppendLine("        }")
+            .AppendLine(BlockCloseBrace)
             .AppendLine()
             .AppendLine("        WriteTwinCatRxStructures(client, structuredWrites);")
-            .AppendLine("    }")
+            .AppendLine(ClassCloseBrace)
             .AppendLine()
-            .AppendLine("    private CP.TwinCatRx.IRxTcAdsClient RequireTwinCatRxClient() =>")
+            .AppendLine("    private TwinCatRxClientContract RequireTwinCatRxClient() =>")
             .AppendLine("        _twinCatRxClient ?? throw new InvalidOperationException(\"The generated TwinCATRx class is not bound to a PLC client.\");")
             .AppendLine();
 
@@ -788,8 +927,8 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         AppendStructuredWriteFlusher(sb);
 
         AppendRequiresUnreferencedCodeAttribute(sb);
-        _ = sb.AppendLine("    private void WriteTwinCatRxValue(CP.TwinCatRx.IRxTcAdsClient client, string tag, object? value)")
-            .AppendLine("    {")
+        _ = sb.AppendLine("    private void WriteTwinCatRxValue(TwinCatRxClientContract client, string tag, object? value)")
+            .AppendLine(ClassOpenBrace)
             .AppendLine("        var checkedValue = value ?? throw new ArgumentNullException(nameof(value), \"TwinCATRx write values cannot be null.\");");
 
         foreach (var property in writeProperties)
@@ -801,7 +940,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         }
 
         _ = sb.AppendLine("        throw new ArgumentOutOfRangeException(nameof(tag), tag, \"Unknown TwinCATRx generated write tag.\");")
-            .AppendLine("    }")
+            .AppendLine(ClassCloseBrace)
             .AppendLine();
 
         AppendStructuredWriteHelper(sb);
@@ -814,15 +953,15 @@ internal sealed class WriteOnlyAttribute : System.Attribute
     {
         var writeAddress = GetWriteAddress(property);
         _ = sb.Append("        if (string.Equals(tag, nameof(").Append(property.PropertyName).Append("), StringComparison.OrdinalIgnoreCase)")
-            .Append(" || string.Equals(tag, \"").Append(Escape(writeAddress)).Append("\", StringComparison.OrdinalIgnoreCase)");
+            .Append(OrdinalTagComparisonPrefix).Append(Escape(writeAddress)).Append(OrdinalTagComparisonSuffix);
 
         if (property.Kind == StructuredKind && !string.IsNullOrWhiteSpace(property.MemberAddress))
         {
-            _ = sb.Append(" || string.Equals(tag, \"").Append(Escape(property.MemberAddress!)).Append("\", StringComparison.OrdinalIgnoreCase)");
+            _ = sb.Append(OrdinalTagComparisonPrefix).Append(Escape(property.MemberAddress!)).Append(OrdinalTagComparisonSuffix);
         }
 
         _ = sb.AppendLine(")")
-            .AppendLine("        {")
+            .AppendLine(BlockOpenBrace)
             .Append("            var typedValue = (").Append(property.TypeName).AppendLine(")checkedValue;");
 
         if (property.Kind == WriteOnlyKind)
@@ -838,7 +977,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
 
         _ = sb.AppendLine(");")
             .AppendLine("            return;")
-            .AppendLine("        }")
+            .AppendLine(BlockCloseBrace)
             .AppendLine();
     }
 
@@ -849,7 +988,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
     {
         AppendRequiresUnreferencedCodeAttribute(sb);
         _ = sb.AppendLine("    private bool TryAddTwinCatRxStructuredWrite(string tag, object? value, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<(string MemberAddress, string WriteAddress, object Value, string? Id)>> structuredWrites)")
-            .AppendLine("    {")
+            .AppendLine(ClassOpenBrace)
             .AppendLine("        var checkedValue = value ?? throw new ArgumentNullException(nameof(value), \"TwinCATRx write values cannot be null.\");");
 
         foreach (var property in properties)
@@ -858,7 +997,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         }
 
         _ = sb.AppendLine("        return false;")
-            .AppendLine("    }")
+            .AppendLine(ClassCloseBrace)
             .AppendLine();
     }
 
@@ -874,7 +1013,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
             .Append(" || string.Equals(tag, \"").Append(Escape(writeAddress)).Append("\", StringComparison.OrdinalIgnoreCase)")
             .Append(" || string.Equals(tag, \"").Append(Escape(structuredTarget.MemberAddress)).Append("\", StringComparison.OrdinalIgnoreCase)")
             .AppendLine(")")
-            .AppendLine("        {")
+            .AppendLine(BlockOpenBrace)
             .Append("            var typedValue = (").Append(property.TypeName).AppendLine(")checkedValue;");
 
         if (property.Kind == WriteOnlyKind)
@@ -886,7 +1025,7 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         AppendNullableStringLiteral(sb, property.Id);
         _ = sb.AppendLine(");")
             .AppendLine("            return true;")
-            .AppendLine("        }")
+            .AppendLine(BlockCloseBrace)
             .AppendLine();
     }
 
@@ -895,21 +1034,21 @@ internal sealed class WriteOnlyAttribute : System.Attribute
     private static void AppendStructuredWriteFlusher(StringBuilder sb)
     {
         AppendRequiresUnreferencedCodeAttribute(sb);
-        _ = sb.AppendLine("    private void WriteTwinCatRxStructures(CP.TwinCatRx.IRxTcAdsClient client, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<(string MemberAddress, string WriteAddress, object Value, string? Id)>> structuredWrites)")
-            .AppendLine("    {")
+        _ = sb.AppendLine("    private void WriteTwinCatRxStructures(TwinCatRxClientContract client, System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<(string MemberAddress, string WriteAddress, object Value, string? Id)>> structuredWrites)")
+            .AppendLine(ClassOpenBrace)
             .AppendLine("        foreach (var structuredWrite in structuredWrites)")
-            .AppendLine("        {")
+            .AppendLine(BlockOpenBrace)
             .AppendLine("            if (TryWriteTwinCatRxStructure(structuredWrite.Key, structuredWrite.Value))")
-            .AppendLine("            {")
+            .AppendLine(NestedBlockOpenBrace)
             .AppendLine("                continue;")
-            .AppendLine("            }")
+            .AppendLine(NestedBlockCloseBrace)
             .AppendLine()
             .AppendLine("            foreach (var value in structuredWrite.Value)")
-            .AppendLine("            {")
+            .AppendLine(NestedBlockOpenBrace)
             .AppendLine("                client.Write(value.WriteAddress, value.Value, id: value.Id);")
-            .AppendLine("            }")
-            .AppendLine("        }")
-            .AppendLine("    }")
+            .AppendLine(NestedBlockCloseBrace)
+            .AppendLine(BlockCloseBrace)
+            .AppendLine(ClassCloseBrace)
             .AppendLine();
     }
 
@@ -919,45 +1058,45 @@ internal sealed class WriteOnlyAttribute : System.Attribute
     {
         AppendRequiresUnreferencedCodeAttribute(sb);
         _ = sb.AppendLine("    private static void AddTwinCatRxStructuredWrite(System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<(string MemberAddress, string WriteAddress, object Value, string? Id)>> structuredWrites, string variable, string memberAddress, string writeAddress, object value, string? id)")
-            .AppendLine("    {")
+            .AppendLine(ClassOpenBrace)
             .AppendLine("        if (!structuredWrites.TryGetValue(variable, out var values))")
-            .AppendLine("        {")
+            .AppendLine(BlockOpenBrace)
             .AppendLine("            values = [];")
             .AppendLine("            structuredWrites[variable] = values;")
-            .AppendLine("        }")
+            .AppendLine(BlockCloseBrace)
             .AppendLine()
             .AppendLine("        values.Add((memberAddress, writeAddress, value, id));")
-            .AppendLine("    }")
+            .AppendLine(ClassCloseBrace)
             .AppendLine()
             .AppendLine("    private bool TryWriteTwinCatRxStructure(string variable, System.Collections.Generic.IReadOnlyList<(string MemberAddress, string WriteAddress, object Value, string? Id)> values)")
-            .AppendLine("    {")
+            .AppendLine(ClassOpenBrace)
             .AppendLine("        if (!_twinCatRxStructures.TryGetValue(variable, out var structure))")
-            .AppendLine("        {")
-            .AppendLine("            return false;")
-            .AppendLine("        }")
+            .AppendLine(BlockOpenBrace)
+            .AppendLine(IndentedReturnFalse)
+            .AppendLine(BlockCloseBrace)
             .AppendLine()
             .AppendLine("        try")
-            .AppendLine("        {")
-            .AppendLine("        using var clone = structure.CreateClone();")
+            .AppendLine(BlockOpenBrace)
+            .AppendLine("        using var clone = TwinCatRxApiExtensions.CreateClone(structure);")
             .AppendLine("        for (var i = 0; i < values.Count; i++)")
-            .AppendLine("        {")
+            .AppendLine(BlockOpenBrace)
             .AppendLine("            var value = values[i];")
-            .AppendLine("            clone.Value(value.MemberAddress, value.Value);")
-            .AppendLine("        }")
+            .AppendLine("            TwinCatRxHashTableExtensions.Value(clone, value.MemberAddress, value.Value);")
+            .AppendLine(BlockCloseBrace)
             .AppendLine("        var structuredValue = clone.Structure;")
             .AppendLine("        if (structuredValue is null)")
-            .AppendLine("        {")
-            .AppendLine("            return false;")
-            .AppendLine("        }")
+            .AppendLine(BlockOpenBrace)
+            .AppendLine(IndentedReturnFalse)
+            .AppendLine(BlockCloseBrace)
             .AppendLine()
             .AppendLine("        RequireTwinCatRxClient().Write(variable, structuredValue);")
             .AppendLine("        return true;")
-            .AppendLine("        }")
+            .AppendLine(BlockCloseBrace)
             .AppendLine("        catch (Exception)")
-            .AppendLine("        {")
-            .AppendLine("            return false;")
-            .AppendLine("        }")
-            .AppendLine("    }")
+            .AppendLine(BlockOpenBrace)
+            .AppendLine(IndentedReturnFalse)
+            .AppendLine(BlockCloseBrace)
+            .AppendLine(ClassCloseBrace)
             .AppendLine();
     }
 
@@ -965,9 +1104,9 @@ internal sealed class WriteOnlyAttribute : System.Attribute
     /// <param name="sb">The string builder.</param>
     private static void AppendRequiresUnreferencedCodeAttribute(StringBuilder sb)
     {
-        _ = sb.AppendLine("#if NET5_0_OR_GREATER")
+        _ = sb.AppendLine(Net5OrGreaterDirective)
             .AppendLine("    [RequiresUnreferencedCode(\"Structured writes use HashTableRx structure materialization.\")]")
-            .AppendLine("#endif");
+            .AppendLine(EndIfDirective);
     }
 
     /// <summary>Appends a nullable string literal to generated source.</summary>
@@ -1254,6 +1393,32 @@ internal sealed class WriteOnlyAttribute : System.Attribute
     private static string? GetNamespace(INamedTypeSymbol symbol) =>
         symbol.ContainingNamespace.IsGlobalNamespace ? null : symbol.ContainingNamespace.ToDisplayString();
 
+    /// <summary>Gets the API surface represented by an attribute.</summary>
+    /// <param name="attribute">The attribute to inspect.</param>
+    /// <returns>The selected API surface.</returns>
+    private static ApiSurface GetApiSurface(AttributeData attribute) =>
+        attribute.AttributeClass?.ToDisplayString().StartsWith(ReactiveLibraryNamespace + ".", StringComparison.Ordinal) == true
+            ? ApiSurface.Reactive
+            : ApiSurface.Lean;
+
+    /// <summary>Gets the library namespace for an API surface.</summary>
+    /// <param name="surface">The API surface.</param>
+    /// <returns>The library namespace.</returns>
+    private static string GetLibraryNamespace(ApiSurface surface) =>
+        surface == ApiSurface.Reactive ? ReactiveLibraryNamespace : LeanLibraryNamespace;
+
+    /// <summary>Gets the core namespace for an API surface.</summary>
+    /// <param name="surface">The API surface.</param>
+    /// <returns>The core namespace.</returns>
+    private static string GetCoreNamespace(ApiSurface surface) =>
+        surface == ApiSurface.Reactive ? ReactiveCoreNamespace : LeanCoreNamespace;
+
+    /// <summary>Gets the collections namespace for an API surface.</summary>
+    /// <param name="surface">The API surface.</param>
+    /// <returns>The collections namespace.</returns>
+    private static string GetCollectionsNamespace(ApiSurface surface) =>
+        surface == ApiSurface.Reactive ? ReactiveCollectionsNamespace : LeanCollectionsNamespace;
+
     /// <summary>Gets a constructor string argument.</summary>
     /// <param name="attribute">The attribute to inspect.</param>
     /// <param name="index">The constructor argument index.</param>
@@ -1381,12 +1546,14 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         /// <param name="ns">The containing namespace.</param>
         /// <param name="className">The class name.</param>
         /// <param name="accessibility">The class accessibility.</param>
+        /// <param name="surface">The generated API surface.</param>
         /// <param name="properties">The reactive properties.</param>
-        public LegacyStreamSpec(string? ns, string className, string accessibility, IReadOnlyList<LegacyReactivePropertySpec> properties)
+        public LegacyStreamSpec(string? ns, string className, string accessibility, ApiSurface surface, IReadOnlyList<LegacyReactivePropertySpec> properties)
         {
             Namespace = ns;
             ClassName = className;
             Accessibility = accessibility;
+            Surface = surface;
             Properties = properties;
         }
 
@@ -1398,6 +1565,9 @@ internal sealed class WriteOnlyAttribute : System.Attribute
 
         /// <summary>Gets the class accessibility.</summary>
         public string Accessibility { get; }
+
+        /// <summary>Gets the generated API surface.</summary>
+        public ApiSurface Surface { get; }
 
         /// <summary>Gets the reactive properties.</summary>
         public IReadOnlyList<LegacyReactivePropertySpec> Properties { get; }
@@ -1477,42 +1647,115 @@ internal sealed class WriteOnlyAttribute : System.Attribute
         /// <summary>Gets the settings identifier.</summary>
         public string SettingsId { get; }
 
+        /// <summary>Gets or sets the generated API surface.</summary>
+        public ApiSurface Surface { get; set; }
+
         /// <summary>Gets the PLC properties.</summary>
         public IReadOnlyList<PlcPropertySpec> Properties { get; }
+    }
+
+    /// <summary>Groups the generated property identity.</summary>
+    private sealed class PlcPropertyIdentity
+    {
+        /// <summary>Initializes a new instance of the <see cref="PlcPropertyIdentity"/> class.</summary>
+        /// <param name="propertyName">The generated property name.</param>
+        /// <param name="typeName">The fully qualified property type name.</param>
+        /// <param name="observableName">The generated observable name.</param>
+        public PlcPropertyIdentity(string propertyName, string typeName, string observableName)
+        {
+            PropertyName = propertyName;
+            TypeName = typeName;
+            ObservableName = observableName;
+        }
+
+        /// <summary>Gets the generated property name.</summary>
+        public string PropertyName { get; }
+
+        /// <summary>Gets the fully qualified property type name.</summary>
+        public string TypeName { get; }
+
+        /// <summary>Gets the generated observable name.</summary>
+        public string ObservableName { get; }
+    }
+
+    /// <summary>Groups the PLC address metadata for a generated property.</summary>
+    private sealed class PlcAddressSpec
+    {
+        /// <summary>Initializes a new instance of the <see cref="PlcAddressSpec"/> class.</summary>
+        /// <param name="kind">The PLC tag kind.</param>
+        /// <param name="address">The PLC address.</param>
+        /// <param name="memberAddress">The optional structured member address.</param>
+        /// <param name="writeAddress">The optional write address.</param>
+        /// <param name="id">The optional identifier.</param>
+        public PlcAddressSpec(string kind, string address, string? memberAddress, string? writeAddress, string? id)
+        {
+            Kind = kind;
+            Address = address;
+            MemberAddress = memberAddress;
+            WriteAddress = writeAddress;
+            Id = id;
+        }
+
+        /// <summary>Gets the PLC tag kind.</summary>
+        public string Kind { get; }
+
+        /// <summary>Gets the PLC address.</summary>
+        public string Address { get; }
+
+        /// <summary>Gets the optional structured member address.</summary>
+        public string? MemberAddress { get; }
+
+        /// <summary>Gets the optional write address.</summary>
+        public string? WriteAddress { get; }
+
+        /// <summary>Gets the optional identifier.</summary>
+        public string? Id { get; }
+    }
+
+    /// <summary>Groups notification timing and array metadata.</summary>
+    private sealed class PlcNotificationSpec
+    {
+        /// <summary>Initializes a new instance of the <see cref="PlcNotificationSpec"/> class.</summary>
+        /// <param name="cycleTime">The notification cycle time.</param>
+        /// <param name="arraySize">The optional array size.</param>
+        public PlcNotificationSpec(int cycleTime, int arraySize)
+        {
+            CycleTime = cycleTime;
+            ArraySize = arraySize;
+        }
+
+        /// <summary>Gets the notification cycle time.</summary>
+        public int CycleTime { get; }
+
+        /// <summary>Gets the optional array size.</summary>
+        public int ArraySize { get; }
     }
 
     /// <summary>Describes an attributed PLC property.</summary>
     private sealed class PlcPropertySpec
     {
         /// <summary>Initializes a new instance of the <see cref="PlcPropertySpec"/> class.</summary>
-        /// <param name="propertyName">The property name.</param>
-        /// <param name="typeName">The property type name.</param>
-        /// <param name="kind">The PLC tag kind.</param>
-        /// <param name="address">The PLC address.</param>
-        /// <param name="memberAddress">The optional structured member address.</param>
-        /// <param name="writeAddress">The optional write address.</param>
-        /// <param name="id">The optional identifier.</param>
-        /// <param name="observableName">The observable property name.</param>
-        /// <param name="cycleTime">The notification cycle time.</param>
-        /// <param name="arraySize">The array size.</param>
+        /// <param name="identity">The generated property identity.</param>
+        /// <param name="address">The PLC address metadata.</param>
+        /// <param name="notification">The PLC notification metadata.</param>
         /// <param name="canWrite">A value indicating whether writes should be generated.</param>
-        public PlcPropertySpec(string propertyName, string typeName, string kind, string address, string? memberAddress, string? writeAddress, string? id, string observableName, int cycleTime, int arraySize, bool canWrite)
+        public PlcPropertySpec(PlcPropertyIdentity identity, PlcAddressSpec address, PlcNotificationSpec notification, bool canWrite)
         {
-            PropertyName = propertyName;
-            TypeName = typeName;
-            Kind = kind;
-            Address = address;
-            MemberAddress = memberAddress;
-            WriteAddress = writeAddress;
-            Id = id;
-            ObservableName = observableName;
-            CycleTime = cycleTime;
-            ArraySize = arraySize;
-            IsWritable = kind == WriteOnlyKind || canWrite;
-            SubjectField = "_" + ToCamel(propertyName) + "Subject";
-            SetterName = "Set" + propertyName;
-            ReadMethodName = "Read" + propertyName;
-            WriteMethodName = "Write" + propertyName;
+            PropertyName = identity.PropertyName;
+            TypeName = identity.TypeName;
+            Kind = address.Kind;
+            Address = address.Address;
+            MemberAddress = address.MemberAddress;
+            WriteAddress = address.WriteAddress;
+            Id = address.Id;
+            ObservableName = identity.ObservableName;
+            CycleTime = notification.CycleTime;
+            ArraySize = notification.ArraySize;
+            IsWritable = address.Kind == WriteOnlyKind || canWrite;
+            SubjectField = "_" + ToCamel(identity.PropertyName) + "Subject";
+            SetterName = "Set" + identity.PropertyName;
+            ReadMethodName = "Read" + identity.PropertyName;
+            WriteMethodName = "Write" + identity.PropertyName;
         }
 
         /// <summary>Gets the property name.</summary>

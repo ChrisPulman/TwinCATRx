@@ -3,13 +3,30 @@
 // See the LICENSE file in the project root for full license information.
 
 using System.Diagnostics.CodeAnalysis;
+#if REACTIVE_SHIM
+using CP.Collections.Reactive;
+#else
 using CP.Collections;
+#endif
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Reactive;
+#else
 namespace CP.TwinCatRx;
+#endif
 
 /// <summary>Observable TwinCAT extensions.</summary>
 public static class TwinCatRxExtensions
 {
+    /// <summary>Stores the metadata key for a PLC variable name.</summary>
+    private const string VariableTagKey = "Variable";
+
+    /// <summary>Stores the delay before a structure is considered ready.</summary>
+    private const int StructureReadyDelaySeconds = 2;
+
+    /// <summary>Stores the first TwinCAT 3 ADS port.</summary>
+    private const int TwinCat3Port = 851;
+
     /// <summary>Extends HashTableRx instances with TwinCAT write helpers.</summary>
     /// <param name="hashTable">The HashTableRx instance.</param>
     extension(HashTableRx hashTable)
@@ -25,7 +42,7 @@ public static class TwinCatRxExtensions
                 return false;
             }
 
-            if (hashTable.Tag?[nameof(RxTcAdsClient)] is not RxTcAdsClient plc || hashTable.Tag?["Variable"] is not string variable)
+            if (hashTable.Tag?[nameof(RxTcAdsClient)] is not RxTcAdsClient plc || hashTable.Tag?[VariableTagKey] is not string variable)
             {
                 return false;
             }
@@ -115,7 +132,7 @@ public static class TwinCatRxExtensions
                 throw new ArgumentNullException(nameof(hashTable));
             }
 
-            return hashTable.ObserveAll.Where(_ => hashTable.Count > 0).Take(1).Delay(TimeSpan.FromSeconds(2)).Select(_ => hashTable);
+            return hashTable.ObserveAll.Where(_ => hashTable.Count > 0).Take(1).Delay(TimeSpan.FromSeconds(StructureReadyDelaySeconds)).Select(_ => hashTable);
         }
 
         /// <summary>Clones the specified HashTableRx.</summary>
@@ -189,9 +206,9 @@ public static class TwinCatRxExtensions
                 return default;
             }
 
-            var table = new HashTableRx(client.Settings?.Port < 851);
+            var table = new HashTableRx(client.Settings?.Port < TwinCat3Port);
             table.Tag?.Add(nameof(RxTcAdsClient), client);
-            table.Tag?.Add("Variable", variable);
+            table.Tag?.Add(VariableTagKey, variable);
             _ = client.DataReceived
                 .Where(x => string.Equals(x.Variable, variable, StringComparison.OrdinalIgnoreCase) && x.Data is not null)
                 .SubscribeTo(x => table.SetStructure(x.Data!));

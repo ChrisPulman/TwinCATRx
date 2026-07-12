@@ -5,7 +5,11 @@
 using System.Runtime.ExceptionServices;
 using ReactiveUI.Primitives.Async;
 
+#if REACTIVE_SHIM
+namespace CP.TwinCatRx.Reactive;
+#else
 namespace CP.TwinCatRx;
+#endif
 
 /// <summary>Observable bridge helpers.</summary>
 public static class ObservableBridgeExtensions

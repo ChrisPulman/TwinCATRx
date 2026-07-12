@@ -11,6 +11,9 @@ namespace TwinCATRx.Tests.Core;
 /// <summary>Tests for DirectoryInfoGetFilesWhere extension methods.</summary>
 public class DirectoryInfoGetFilesWhereTests
 {
+    /// <summary>The expected number of files accepted by the compound predicate.</summary>
+    private const int ExpectedFilteredFileCount = 2;
+
     /// <summary>Verifies basic predicate filtering.</summary>
     /// <returns>The test task.</returns>
     [Test]
@@ -25,7 +28,7 @@ public class DirectoryInfoGetFilesWhereTests
             await WriteEmptyFileAsync(Path.Combine(dir.FullName, "c.asp"));
 
             var files = dir.GetFilesWhere(f => f.Extension == ".txt" || f.Extension == ".cs");
-            await TUnitAssert.That(files.Length).IsEqualTo(2);
+            await TUnitAssert.That(files.Length).IsEqualTo(ExpectedFilteredFileCount);
         }
         finally
         {

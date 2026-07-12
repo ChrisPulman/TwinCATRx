@@ -18,6 +18,27 @@ internal static class Program
     /// <summary>Stores the source-generated test option.</summary>
     private const string SourceGeneratedOption = "2";
 
+    /// <summary>Stores the PLC notification cycle in milliseconds.</summary>
+    private const int NotificationCycleMilliseconds = 100;
+
+    /// <summary>Stores the initialization polling delay in milliseconds.</summary>
+    private const int InitializationPollMilliseconds = 100;
+
+    /// <summary>Stores the minimum simulated pressure.</summary>
+    private const float MinimumSimulatedPressure = 101F;
+
+    /// <summary>Stores the maximum simulated pressure.</summary>
+    private const float MaximumSimulatedPressure = 160F;
+
+    /// <summary>Stores the simulated pressure increment.</summary>
+    private const float SimulatedPressureIncrement = 5F;
+
+    /// <summary>Provides a replaceable output abstraction for the console sample.</summary>
+    private static readonly TextWriter Output = Console.Out;
+
+    /// <summary>Provides a replaceable input abstraction for the console sample.</summary>
+    private static readonly TextReader Input = Console.In;
+
     /// <summary>Stores the simulation write interval.</summary>
     private static readonly TimeSpan SimulationWriteInterval = TimeSpan.FromSeconds(5);
 
@@ -41,7 +62,7 @@ internal static class Program
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
         {
-            Console.WriteLine("Stopping pressure simulation example.");
+            await Output.WriteLineAsync("Stopping pressure simulation example.").ConfigureAwait(false);
         }
     }
 
@@ -55,11 +76,11 @@ internal static class Program
             return args[0];
         }
 
-        Console.WriteLine("Select a live TwinCATRx test:");
-        Console.WriteLine("1. HashTableRx structure observation and write");
-        Console.WriteLine("2. Source-generated structured observation and write");
-        Console.Write("Option: ");
-        var selected = Console.ReadLine();
+        Output.WriteLine("Select a live TwinCATRx test:");
+        Output.WriteLine("1. HashTableRx structure observation and write");
+        Output.WriteLine("2. Source-generated structured observation and write");
+        Output.Write("Option: ");
+        var selected = Input.ReadLine();
         return IsKnownOption(selected) ? selected! : HashTableOption;
     }
 
@@ -132,8 +153,8 @@ internal static class Program
     private static async Task RunClientAsync(Settings settings, Func<RxTcAdsClient, CancellationToken, Task> runAsync, CancellationToken cancellationToken)
     {
         using var client = new RxTcAdsClient();
-        using var initializeSubscription = client.InitializeComplete.SubscribeTo(_ => Console.WriteLine("TwinCATRx client initialized."));
-        using var errorSubscription = client.ErrorReceived.SubscribeTo(error => Console.WriteLine("ADS error: " + error));
+        using var initializeSubscription = client.InitializeComplete.SubscribeTo(_ => Output.WriteLine("TwinCATRx client initialized."));
+        using var errorSubscription = client.ErrorReceived.SubscribeTo(error => Output.WriteLine("ADS error: " + error));
         try
         {
             client.Connect(settings);
@@ -150,10 +171,10 @@ internal static class Program
     /// <param name="testName">The test name.</param>
     private static void PrintTestHeader(string testName)
     {
-        Console.WriteLine("Running " + testName + ".");
-        Console.WriteLine("Connecting to ADS " + PressureHighVariables.AdsAddress + ":" + PressureHighVariables.AdsPort + ".");
-        Console.WriteLine("Observing " + PressureHighVariables.FullObservedVariable + ".");
-        Console.WriteLine("Writing " + PressureHighVariables.FullSimulationVariable + " with values above 100. Press Ctrl+C to stop.");
+        Output.WriteLine("Running " + testName + ".");
+        Output.WriteLine("Connecting to ADS " + PressureHighVariables.AdsAddress + ":" + PressureHighVariables.AdsPort + ".");
+        Output.WriteLine("Observing " + PressureHighVariables.FullObservedVariable + ".");
+        Output.WriteLine("Writing " + PressureHighVariables.FullSimulationVariable + " with values above 100. Press Ctrl+C to stop.");
     }
 
     /// <summary>Creates the HashTableRx structure test settings.</summary>
@@ -161,7 +182,7 @@ internal static class Program
     private static Settings CreateHashTableSettings()
     {
         var settings = CreateBaseSettings("PressureHighHashTableExample");
-        settings.AddNotification(PressureHighVariables.RootVariable, cycleTime: 100);
+        settings.AddNotification(PressureHighVariables.RootVariable, cycleTime: NotificationCycleMilliseconds);
         return settings;
     }
 
@@ -182,7 +203,7 @@ internal static class Program
     /// <summary>Prints an observed pressure value.</summary>
     /// <param name="value">The observed value.</param>
     private static void PrintObservedPressure(float value) =>
-        Console.WriteLine(DateTimeOffset.Now.ToString("HH:mm:ss.fff") + " " + PressureHighVariables.FullObservedVariable + " = " + value.ToString("F3"));
+        Output.WriteLine(DateTimeOffset.Now.ToString("HH:mm:ss.fff") + " " + PressureHighVariables.FullObservedVariable + " = " + value.ToString("F3"));
 
     /// <summary>Prints a source-generated observed pressure value.</summary>
     /// <param name="value">The observed value.</param>
@@ -198,7 +219,7 @@ internal static class Program
         while (!client.Connected)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await Task.Delay(100, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(InitializationPollMilliseconds, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -209,10 +230,12 @@ internal static class Program
     private static async Task WaitForStructureReadyAsync(HashTableRx values, CancellationToken cancellationToken)
     {
         var completion = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        void SetException(Exception error) => _ = completion.TrySetException(error);
+
         await using var cancellationRegistration = cancellationToken.Register(() => completion.TrySetCanceled(cancellationToken));
         using var subscription = values.StructureReady().SubscribeTo(
             _ => completion.TrySetResult(true),
-            error => completion.TrySetException(error),
+            SetException,
             static () => { });
         await completion.Task.ConfigureAwait(false);
     }
@@ -223,11 +246,13 @@ internal static class Program
     /// <returns>The write loop task.</returns>
     private static async Task WriteSimulationValuesAsync(Func<float, Task> writeValueAsync, CancellationToken cancellationToken)
     {
-        var value = 101F;
+        var value = MinimumSimulatedPressure;
         while (!cancellationToken.IsCancellationRequested)
         {
             await writeValueAsync(value).ConfigureAwait(false);
-            Console.WriteLine("Wrote " + PressureHighVariables.FullSimulationVariable + " = " + value.ToString("F1"));
+            await Output.WriteLineAsync(
+                ("Wrote " + PressureHighVariables.FullSimulationVariable + " = " + value.ToString("F1")).AsMemory(),
+                cancellationToken).ConfigureAwait(false);
             value = GetNextSimulationValue(value);
             await Task.Delay(SimulationWriteInterval, cancellationToken).ConfigureAwait(false);
         }
@@ -264,5 +289,5 @@ internal static class Program
     /// <param name="value">The current value.</param>
     /// <returns>The next value.</returns>
     private static float GetNextSimulationValue(float value) =>
-        value >= 160F ? 101F : value + 5F;
+        value >= MaximumSimulatedPressure ? MinimumSimulatedPressure : value + SimulatedPressureIncrement;
 }

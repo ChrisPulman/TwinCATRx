@@ -9,6 +9,9 @@ namespace TwinCATRx.Tests.Rx;
 /// <summary>Tests async observable bridge behavior.</summary>
 public class AsyncObservableTests
 {
+    /// <summary>The value expected from the selected observable variable.</summary>
+    private const int ExpectedValue = 123;
+
     /// <summary>Verifies async observable observation over a classic stream.</summary>
     /// <returns>The test task.</returns>
     [Test]
@@ -16,7 +19,7 @@ public class AsyncObservableTests
     {
         var data = new[]
         {
-            (Variable: ".A", Data: (object?)123, Id: (string?)null),
+            (Variable: ".A", Data: (object?)ExpectedValue, Id: (string?)null),
             (Variable: ".B", Data: (object?)456, Id: (string?)null),
         };
         var client = new RxFakeClient(Observable.FromEnumerable(data));
@@ -27,7 +30,7 @@ public class AsyncObservableTests
             CancellationToken.None);
 
         await TUnitAssert.That(values.Count).IsEqualTo(1);
-        await TUnitAssert.That(values[0]).IsEqualTo(123);
+        await TUnitAssert.That(values[0]).IsEqualTo(ExpectedValue);
     }
 
     /// <summary>Async observer used by bridge tests.</summary>

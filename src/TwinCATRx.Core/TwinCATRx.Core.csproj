@@ -19,7 +19,7 @@
   <ItemGroup Condition="$([System.String]::new('$(TargetFramework)').StartsWith('net4'))">
     <PackageReference Include="Polyfill" PrivateAssets="all" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="ReactiveUI.Primitives" />
     <PackageReference Include="ReactiveUI.Primitives.Extensions" />

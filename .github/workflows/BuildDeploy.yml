@@ -38,7 +38,7 @@ env:
   configuration: Release
   solutionFile: TwinCATRx.slnx
   solutionFolder: src
-  minMajorMinorVersion: '5.1'
+  minMajorMinorVersion: '2.2'
 
 jobs:
   release:
